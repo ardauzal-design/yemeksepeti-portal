@@ -14,6 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
+    <!-- FIREBASE BULUT VERİTABANI KÜTÜPHANELERİ -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
     
@@ -35,12 +36,13 @@
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
         th { cursor: pointer; user-select: none; }
         th:hover { color: #ff0050; }
-        .league-champ { background: linear-gradient(90deg, rgba(255,215,0,0.1) 0%, transparent 100%); border-left: 4px solid #ffd700; }
     </style>
 </head>
 <body class="bg-[#eaf8f4] dark:bg-slate-900 text-slate-800 dark:text-slate-200 min-h-screen flex flex-col antialiased relative transition-colors duration-300">
 
-    <!-- GİRİŞ EKRANI -->
+    <!-- ========================================== -->
+    <!-- GİRİŞ (LOGIN) EKRANI -->
+    <!-- ========================================== -->
     <div id="view-login" class="fixed inset-0 z-[200] bg-[#eaf8f4] dark:bg-slate-900 flex items-center justify-center p-4 transition-colors duration-300">
         <div class="bg-white dark:bg-slate-800 p-8 md:p-12 rounded-3xl card-shadow w-full max-w-md flex flex-col items-center text-center animate-[fadeIn_0.5s_ease-in-out]">
             <div class="w-20 h-20 rounded-3xl bg-[#ff0050] text-white flex items-center justify-center shadow-lg shadow-pink-500/30 mb-6">
@@ -71,8 +73,11 @@
         </div>
     </div>
 
+    <!-- ========================================== -->
     <!-- ANA UYGULAMA -->
+    <!-- ========================================== -->
     <div id="app-container" class="hidden flex-col flex-1 pb-20 lg:pb-0">
+        
         <header class="bg-white dark:bg-slate-800 border-b border-emerald-100/80 dark:border-slate-700 py-4 px-6 sticky top-0 z-50 shadow-sm transition-colors duration-300 hidden lg:block">
             <div class="max-w-[1400px] mx-auto flex flex-col xl:flex-row justify-between items-center gap-4">
                 <div class="flex items-center gap-3.5">
@@ -84,13 +89,13 @@
                 </div>
 
                 <div class="flex flex-wrap items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-700 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-600">
-                    <button onclick="switchView('dashboard')" id="btn-view-dashboard" class="nav-btn px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-200"><i class="fa-solid fa-chart-column text-indigo-500"></i> Dashboard</button>
-                    <button onclick="switchView('anlik')" id="btn-view-anlik" class="nav-btn px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-200"><i class="fa-solid fa-bolt text-[#ff0050]"></i> Anlık Fark</button>
-                    <button onclick="switchView('detay')" id="btn-view-detay" class="nav-btn px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-200"><i class="fa-solid fa-clipboard-list text-emerald-500"></i> Kusur Kaydı</button>
+                    <button onclick="switchView('dashboard')" id="btn-view-dashboard" class="nav-btn px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:bg-slate-200"><i class="fa-solid fa-chart-column text-indigo-500"></i> Dashboard</button>
+                    <button onclick="switchView('anlik')" id="btn-view-anlik" class="nav-btn px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:bg-slate-200"><i class="fa-solid fa-bolt text-[#ff0050]"></i> Anlık Fark</button>
+                    <button onclick="switchView('detay')" id="btn-view-detay" class="nav-btn px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:bg-slate-200"><i class="fa-solid fa-clipboard-list text-emerald-500"></i> Kusur Kaydı</button>
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <div id="cloud-status" class="flex items-center gap-1.5 text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-3 py-2.5 rounded-xl border border-amber-200"><i class="fa-solid fa-cloud"></i> <span id="cloud-status-text">Bağlantı Yok</span></div>
+                    <div id="cloud-status" class="flex items-center gap-1.5 text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-3 py-2.5 rounded-xl border border-amber-200 transition-colors duration-500"><i class="fa-solid fa-cloud"></i> <span id="cloud-status-text">Bağlantı Yok</span></div>
                     <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-amber-400 font-bold flex items-center justify-center"><i id="theme-icon" class="fa-solid fa-moon"></i></button>
                     <button onclick="exportToExcel()" id="export-btn" class="text-xs bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl shadow-md hover:bg-emerald-600 transition flex items-center gap-2"><i class="fa-solid fa-file-excel"></i> <span id="export-btn-text">İndir</span></button>
                     <button onclick="logout()" class="text-xs bg-red-50 text-red-600 font-bold px-3.5 py-2.5 rounded-xl transition hover:bg-red-100"><i class="fa-solid fa-right-from-bracket"></i></button>
@@ -100,7 +105,9 @@
 
         <main class="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 flex-1 w-full relative">
             
+            <!-- ========================================== -->
             <!-- DASHBOARD -->
+            <!-- ========================================== -->
             <div id="view-dashboard" class="space-y-6 hidden animate-[fadeIn_0.3s_ease-in-out]">
                 <div class="bg-indigo-600 rounded-3xl p-6 lg:p-8 card-shadow text-white relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6">
                     <div class="z-10 w-full">
@@ -159,7 +166,9 @@
                 </div>
             </div>
 
+            <!-- ========================================== -->
             <!-- SAYFA 1: ANLIK İŞLEM (TUTAR FARKI TESPİTİ) -->
+            <!-- ========================================== -->
             <div id="view-anlik" class="space-y-6 hidden animate-[fadeIn_0.3s_ease-in-out]">
                 <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-8 card-shadow border border-emerald-100/60 dark:border-emerald-900/30">
                     <div id="drop-zone-anlik" class="border-2 border-dashed border-emerald-200 dark:border-emerald-700 hover:border-[#ff0050] rounded-2xl p-8 text-center transition cursor-pointer bg-[#f7fcf9] dark:bg-slate-800 relative">
@@ -168,7 +177,7 @@
                             <div class="w-14 h-14 rounded-2xl bg-pink-100 text-[#ff0050] flex items-center justify-center text-2xl"><i class="fa-solid fa-bolt"></i></div>
                             <div>
                                 <p class="text-sm font-bold text-slate-700 dark:text-white">Teslimat CSV ve Sipariş Detay Excel'ini Seçin</p>
-                                <p class="text-xs text-slate-400 mt-1">İki dosyayı aynı anda yükleyin (veya sadece <b>orders.csv</b> dosyasını yükleyin, sistem farkları otomatik bulur).</p>
+                                <p class="text-xs text-slate-400 mt-1">İki dosyayı aynı anda seçip yükleyin. (İptal olan siparişler filtrelenir, sadece **gerçek tutar farkı** olanlar listelenir).</p>
                             </div>
                         </div>
                     </div>
@@ -184,7 +193,7 @@
                         <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-700"><i class="fa-solid fa-boxes-stacked text-xl"></i></div>
                     </div>
                     <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl card-shadow border-l-4 border-l-amber-500 flex items-center justify-between">
-                        <div><p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Farklı / Sorunlu Sipariş</p><h3 id="kpi-diffs" class="text-2xl font-black text-amber-600 mt-1">0</h3></div>
+                        <div><p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Tutar Farkı Olan</p><h3 id="kpi-diffs" class="text-2xl font-black text-amber-600 mt-1">0</h3></div>
                         <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500"><i class="fa-solid fa-triangle-exclamation text-xl"></i></div>
                     </div>
                     <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl card-shadow border-l-4 border-l-[#ff0050] flex items-center justify-between">
@@ -196,7 +205,7 @@
                 <div class="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden card-shadow border border-emerald-100/60 dark:border-slate-700">
                     <div class="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center gap-4">
                         <div class="text-sm font-black text-slate-800 dark:text-white flex items-center gap-2">
-                            <i class="fa-solid fa-circle-exclamation text-[#ff0050]"></i> Farklı Sipariş Listesi
+                            <i class="fa-solid fa-circle-exclamation text-[#ff0050]"></i> Gerçek Tutar Farkı Olan Siparişler
                         </div>
                         <div class="relative w-full md:w-72">
                             <input type="text" id="search-input-anlik" onkeyup="renderAnlikTable()" placeholder="Ara..." class="w-full text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-white rounded-xl pl-9 pr-4 py-2 focus:ring-2 focus:ring-pink-500/30 outline-none">
@@ -213,7 +222,7 @@
                                     <th class="py-3.5 px-4" onclick="sortAnlik('eAmt')">Sipariş Tutarı</th>
                                     <th class="py-3.5 px-4" onclick="sortAnlik('cAmt')">Teslimat Tutarı</th>
                                     <th class="py-3.5 px-4 text-[#ff0050]" onclick="sortAnlik('diffAmt')">Fark</th>
-                                    <th class="py-3.5 px-4">Ürün Detayı / Bilgi</th>
+                                    <th class="py-3.5 px-4">Ürün Detayı</th>
                                 </tr>
                             </thead>
                             <tbody id="table-body-anlik" class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-200 font-medium">
@@ -224,7 +233,9 @@
                 </div>
             </div>
 
+            <!-- ========================================== -->
             <!-- SAYFA 2: KUSURLU SİPARİŞ KAYDI -->
+            <!-- ========================================== -->
             <div id="view-detay" class="space-y-6 hidden animate-[fadeIn_0.3s_ease-in-out]">
                 <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-8 card-shadow border border-indigo-100/60 dark:border-indigo-900/30">
                     <div id="drop-zone-detay" class="border-2 border-dashed border-indigo-200 dark:border-indigo-700 hover:border-indigo-500 rounded-2xl p-8 text-center transition cursor-pointer bg-indigo-50/30 dark:bg-slate-800 relative">
@@ -315,6 +326,42 @@
         let currentDashboardStore = 'Tümü';
         let chartReasons = null, chartPickers = null, chartStores = null;
 
+        // Firebase Entegrasyonu
+        let db = null;
+        try {
+            const firebaseConfig = {
+                apiKey: "AIzaSyDfcJu8IcoJqaE6_R9Icy9wt3Wby9Kb_kc",
+                authDomain: "balcova-pano.firebaseapp.com",
+                projectId: "balcova-pano",
+                storageBucket: "balcova-pano.firebasestorage.app",
+                messagingSenderId: "337497814939",
+                appId: "1:337497814939:web:34f2b9b89a1a94d6ac933e"
+            };
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            const cs = document.getElementById('cloud-status');
+            const ct = document.getElementById('cloud-status-text');
+            if (cs && ct) {
+                cs.className = "flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800 transition-colors duration-500";
+                ct.innerText = "Buluta Bağlı";
+            }
+            syncFromCloud();
+        } catch (e) {
+            console.warn("Firebase başlatılamadı, yerel çalışıyor:", e);
+        }
+
+        async function syncFromCloud() {
+            if(!db) return;
+            try {
+                const pickerDoc = await db.collection('settings').doc('pickerMap').get();
+                if (pickerDoc.exists) {
+                    pickerMap = pickerDoc.data();
+                    localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
+                }
+            } catch(e) {}
+        }
+        async function syncToCloud_Picker() { if(db) await db.collection('settings').doc('pickerMap').set(pickerMap); }
+
         window.onload = () => {
             if(isDarkMode) document.documentElement.classList.add('dark');
             
@@ -386,7 +433,6 @@
         function parseExcelJson(rows) {
             if (!rows || rows.length < 2) return [];
             
-            // Gerçek sütun başlıklarının olduğu satırı bul
             let headerIdx = 0;
             for(let i=0; i<Math.min(6, rows.length); i++) {
                 if(!rows[i]) continue;
@@ -461,7 +507,7 @@
         }
 
         // ==========================================
-        // ANLIK İŞLEM: ÇİFT DOSYA EŞLEŞTİRME VE FARK BULMA
+        // ANLIK İŞLEM: SADECE FARK OLANLARI BULMA (İPTALLER HARİÇ)
         // ==========================================
         async function onAnlikFilesSelected(files) {
             if (!files || files.length === 0) return;
@@ -492,10 +538,10 @@
                 }
                 
                 processAnlikMatching();
-                statusText.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500"></i> Analiz Tamamlandı! Farklar listelendi.`;
+                statusText.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500"></i> Analiz Tamamlandı! Tutar farkı olan siparişler listelendi.`;
             } catch(e) {
                 console.error(e);
-                statusText.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Hata: Dosyalar okunamadı. Lütfen dosya türünü kontrol edin.`;
+                statusText.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Hata: Dosyalar okunamadı.`;
             }
         }
 
@@ -504,7 +550,7 @@
             const csvMap = new Map();
             const excelMap = new Map();
 
-            // 1. CSV'deki verileri ayrıştır (orders.csv)
+            // 1. orders.csv verileri
             anlikCsvRows.forEach(r => {
                 const keys = Object.keys(r);
                 const idKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'order id' || s.includes('sipariş no'); });
@@ -516,13 +562,7 @@
 
                 let origAmt = parseCurrency(r['Original Amount'] || r['Sipariş Tutarı']);
                 let finalAmt = parseCurrency(r['Final Amount'] || r['Teslimat Tutarı']);
-                
                 let statusVal = statusKey ? String(r[statusKey]).trim() : '';
-
-                // Eğer sipariş İptal (CANCELLED) edildiyse veya teslim edilmediyse Teslimat tutarı 0 TL'dir!
-                if (statusVal.toUpperCase() === 'CANCELLED' || statusVal.toUpperCase() === 'İPTAL') {
-                    finalAmt = 0.0;
-                }
 
                 csvMap.set(oid, {
                     orig: origAmt,
@@ -532,7 +572,7 @@
                 });
             });
 
-            // 2. Excel'deki verileri ayrıştır (orderDetails.xlsx)
+            // 2. orderDetails.xlsx verileri
             anlikExcelRows.forEach(r => {
                 const keys = Object.keys(r);
                 const idKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'sipariş no' || s === 'order id'; });
@@ -550,7 +590,6 @@
                 });
             });
 
-            // 3. Eşleştirme ve Farkları Bulma
             const allIds = new Set([...csvMap.keys(), ...excelMap.keys()]);
             let totalOrderCount = allIds.size;
 
@@ -562,42 +601,33 @@
                 let status = (c && c.status) ? c.status : (e ? e.status : 'Tamamlandı');
                 let prods = (e && e.prods) ? e.prods : 'Ürün dökümü yok';
 
-                // Sipariş ilk tutarı (Excel'deki Ara Toplam veya CSV'deki Original Amount)
+                // İPTAL OLANLARI TAMAMEN HARİÇ TUT
+                const stUpper = status.toUpperCase();
+                if (stUpper.includes('CANCEL') || stUpper.includes('İPTAL')) {
+                    return; // İptal edilen siparişleri atla
+                }
+
+                // Sipariş tutarı (Excel Ara Toplam veya CSV Original Amount)
                 let eAmt = (e && e.araToplam !== null) ? e.araToplam : (c ? c.orig : null);
                 
-                // Teslim edilen son tutar (CSV'deki Final Amount)
+                // Teslimat son tutarı (CSV Final Amount)
                 let cAmt = c ? c.final : null;
 
-                // Durum iptal ise teslimat tutarı 0 olarak hesaplanır
-                if (status.toUpperCase() === 'CANCELLED' || status.toUpperCase() === 'İPTAL EDİLDİ') {
-                    cAmt = 0.0;
+                // Teslimat tutarı yoksa veya 0 ise (iptal veya henüz yolda) atla
+                if (eAmt === null || cAmt === null || cAmt === 0) {
+                    return;
                 }
 
-                let isDiff = false;
-                let diffAmt = 0;
-
-                // Eğer iki tutar da mevcutsa farkı kontrol et
-                if (eAmt !== null && cAmt !== null) {
-                    diffAmt = eAmt - cAmt;
-                    if (Math.abs(diffAmt) >= 0.01) {
-                        isDiff = true;
-                    }
-                } 
-                // Eğer teslimat tutarı boş/eksikse ve sipariş tutarı varsa
-                else if (eAmt !== null && cAmt === null && (status.toUpperCase() === 'STARTED' || status.toUpperCase() === 'CANCELLED')) {
-                    diffAmt = eAmt;
-                    isDiff = true;
-                    cAmt = 0;
-                }
-
-                if (isDiff) {
+                // Gerçek Tutar Farkı Kontrolü (En az 0.05 ₺ fark olmalı)
+                let diff = eAmt - cAmt;
+                if (Math.abs(diff) >= 0.05) {
                     anlikMergedData.push({
                         id: id,
                         cust: cust,
                         status: status,
                         eAmt: eAmt,
                         cAmt: cAmt,
-                        diffAmt: Math.abs(diffAmt),
+                        diffAmt: Math.abs(diff),
                         prods: prods
                     });
                 }
@@ -632,8 +662,7 @@
             let filtered = anlikMergedData.filter(m => 
                 m.id.toLowerCase().includes(search) || 
                 (m.cust && m.cust.toLowerCase().includes(search)) || 
-                (m.prods && m.prods.toLowerCase().includes(search)) ||
-                (m.status && m.status.toLowerCase().includes(search))
+                (m.prods && m.prods.toLowerCase().includes(search))
             );
             
             if(sortColAnlik) {
@@ -645,27 +674,21 @@
             }
             
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-16 text-slate-400">Farklı sipariş bulunamadı.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-16 text-slate-400">Tutar farkı olan sipariş bulunamadı.</td></tr>`;
                 return;
             }
             
-            tbody.innerHTML = filtered.map(m => {
-                let statusBadge = m.status === 'CANCELLED' || m.status === 'İptal Edildi' ? 
-                    `<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold">İptal</span>` : 
-                    `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold">${m.status}</span>`;
-                
-                return `
+            tbody.innerHTML = filtered.map(m => `
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-700 transition border-b border-slate-100 dark:border-slate-700">
-                    <td class="py-3 px-4 font-mono text-pink-600 dark:text-pink-400 font-bold">${m.id}</td>
-                    <td class="py-3 px-4 font-bold truncate max-w-[140px]" title="${m.cust}">${m.cust}</td>
-                    <td class="py-3 px-4">${statusBadge}</td>
-                    <td class="py-3 px-4 font-semibold text-slate-600 dark:text-slate-300">${formatCurrency(m.eAmt)}</td>
-                    <td class="py-3 px-4 font-semibold text-slate-600 dark:text-slate-300">${formatCurrency(m.cAmt)}</td>
-                    <td class="py-3 px-4 font-black text-[#ff0050] text-sm">${formatCurrency(m.diffAmt)}</td>
-                    <td class="py-3 px-4 text-slate-500 dark:text-slate-400 text-[11px] truncate max-w-[220px]" title="${m.prods}">${m.prods}</td>
+                    <td class="py-3.5 px-4 font-mono text-pink-600 dark:text-pink-400 font-bold">${m.id}</td>
+                    <td class="py-3.5 px-4 font-bold truncate max-w-[140px]" title="${m.cust}">${m.cust}</td>
+                    <td class="py-3.5 px-4"><span class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 px-2 py-0.5 rounded text-[10px] font-bold">${m.status}</span></td>
+                    <td class="py-3.5 px-4 font-semibold text-slate-600 dark:text-slate-300">${formatCurrency(m.eAmt)}</td>
+                    <td class="py-3.5 px-4 font-semibold text-slate-600 dark:text-slate-300">${formatCurrency(m.cAmt)}</td>
+                    <td class="py-3.5 px-4 font-black text-[#ff0050] text-sm">${formatCurrency(m.diffAmt)}</td>
+                    <td class="py-3.5 px-4 text-slate-500 dark:text-slate-400 text-[11px] truncate max-w-[220px]" title="${m.prods}">${m.prods}</td>
                 </tr>
-                `;
-            }).join('');
+            `).join('');
         }
 
         // ==========================================
@@ -761,7 +784,7 @@
             `).join('');
         }
 
-        // PERSONEL DB
+        // PERSONEL DB İŞLEMLERİ
         function openPickerModal() { document.getElementById('picker-modal').classList.remove('hidden'); document.getElementById('picker-modal').classList.add('flex'); renderPickerList(); }
         function closePickerModal() { document.getElementById('picker-modal').classList.add('hidden'); document.getElementById('picker-modal').classList.remove('flex'); }
 
@@ -785,6 +808,7 @@
             if(!id || !name) return alert("Picker ID ve İsim giriniz.");
             pickerMap[id] = name;
             localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
+            syncToCloud_Picker();
             document.getElementById('new-picker-id').value = '';
             document.getElementById('new-picker-name').value = '';
             renderPickerList();
@@ -795,6 +819,7 @@
         function deletePicker(id) {
             delete pickerMap[id];
             localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
+            syncToCloud_Picker();
             renderPickerList();
             detayParsedData.forEach(p => { if(p.picker === id) p.pickerName = `ID: ${id}`; });
             renderDetayTable();
@@ -803,6 +828,7 @@
         function clearAllPickers() {
             pickerMap = {};
             localStorage.removeItem('yS_Picker_Map');
+            syncToCloud_Picker();
             renderPickerList();
             detayParsedData.forEach(p => { p.pickerName = `ID: ${p.picker}`; });
             renderDetayTable();
