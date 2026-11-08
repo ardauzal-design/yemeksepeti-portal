@@ -15,6 +15,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
+    <!-- FIREBASE BULUT VERİTABANI KÜTÜPHANELERİ -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+    
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -112,6 +116,11 @@
                 </div>
 
                 <div class="flex items-center gap-3">
+                    <!-- BULUT DURUM BELİRTECİ -->
+                    <div id="cloud-status" class="flex items-center gap-1.5 text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-3 py-2.5 rounded-xl border border-amber-200 dark:border-amber-800 transition-colors duration-500">
+                        <i class="fa-solid fa-cloud"></i> <span id="cloud-status-text">Bağlantı Yok</span>
+                    </div>
+
                     <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-amber-400 font-bold transition hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center shadow-sm">
                         <i id="theme-icon" class="fa-solid fa-moon"></i>
                     </button>
@@ -131,13 +140,12 @@
             <!-- SAYFA 0: DASHBOARD & YZ UYARILARI -->
             <!-- ========================================== -->
             <div id="view-dashboard" class="space-y-6 hidden animate-[fadeIn_0.3s_ease-in-out]">
-                
                 <div class="bg-indigo-600 rounded-3xl p-6 lg:p-8 card-shadow text-white relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6">
                     <div class="z-10 w-full">
                         <div class="flex justify-between items-start">
                             <div>
                                 <h2 class="text-2xl font-black mb-1">Performans Dashboard</h2>
-                                <p class="text-indigo-200 text-sm mb-4">Kusurlu Sipariş verilerini yüklediğinizde grafikler ve analizler oluşacaktır.</p>
+                                <p class="text-indigo-200 text-sm mb-4">Kusurlu Sipariş verilerini yüklediğinizde grafikler ve AI analizleri oluşacaktır.</p>
                             </div>
                             <div class="flex lg:hidden gap-2">
                                 <button onclick="toggleDarkMode()" class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><i id="theme-icon-mobile" class="fa-solid fa-moon"></i></button>
@@ -145,6 +153,7 @@
                             </div>
                         </div>
                         
+                        <!-- YAPAY ZEKA UYARI SİSTEMİ -->
                         <div class="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-xl w-full">
                             <h3 class="text-xs font-bold text-indigo-100 uppercase tracking-wider mb-2 flex items-center gap-2">
                                 <i class="fa-solid fa-robot"></i> Sistem İçgörüleri & Anormallik Tespiti
@@ -166,7 +175,7 @@
                         </div>
                     </div>
                     <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl card-shadow border border-slate-100 dark:border-slate-700 lg:col-span-2">
-                        <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2"><i class="fa-solid fa-users text-indigo-500"></i> Personel Hata Dağılımı</h3>
+                        <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2"><i class="fa-solid fa-users text-indigo-500"></i> Personel Hata Dağılımı (Picker)</h3>
                         <div class="relative h-64 w-full flex items-center justify-center">
                             <canvas id="chart-pickers"></canvas>
                             <p id="chart-pickers-empty" class="absolute text-xs text-slate-400 italic">Veri Bekleniyor...</p>
@@ -307,7 +316,7 @@
                                 <i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp
                             </button>
 
-                            <!-- YÖNETİCİ BÖLGESİ FİLTRESİ (Multi-Select Yapıldı) -->
+                            <!-- YÖNETİCİ BÖLGESİ FİLTRESİ -->
                             <div class="relative w-full sm:w-44" id="multi-manager-container">
                                 <div id="multi-manager-btn" onclick="toggleMultiManager()" class="cursor-pointer text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-white rounded-xl px-3 py-2 outline-none font-bold flex justify-between items-center gap-2">
                                     <span id="multi-manager-text" class="truncate max-w-[100px]">Tüm Yöneticiler</span>
@@ -316,7 +325,7 @@
                                 <div id="multi-manager-menu" class="hidden absolute z-[60] mt-1 w-full sm:w-56 right-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-60 overflow-y-auto"></div>
                             </div>
                             
-                            <!-- MAĞAZA BÖLGESİ FİLTRESİ (Multi-Select) -->
+                            <!-- MAĞAZA BÖLGESİ FİLTRESİ -->
                             <div class="relative w-full sm:w-40" id="multi-store-container">
                                 <div id="multi-store-btn" onclick="toggleMultiStore()" class="cursor-pointer text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-white rounded-xl px-3 py-2 outline-none font-bold flex justify-between items-center gap-2">
                                     <span id="multi-store-text" class="truncate max-w-[100px]">Tüm Mağazalar</span>
@@ -374,6 +383,7 @@
     <!-- MODALLAR VE AÇILIR PENCERELER -->
     <!-- ========================================== -->
 
+    <!-- PERSONEL VERİTABANI MODALI -->
     <div id="picker-modal" class="fixed inset-0 bg-slate-900/80 z-[80] hidden items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-lg flex flex-col shadow-2xl overflow-hidden animate-[fadeIn_0.3s_ease-in-out]">
             <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
@@ -383,6 +393,7 @@
                 <button onclick="closePickerModal()" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-times text-xl"></i></button>
             </div>
             <div class="p-5 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3">Yeni bir personeli manuel olarak buraya kaydedebilirsiniz. Sistem, iade raporu yüklendiğinde "Picker ID" üzerinden ismini bulup tabloya yansıtacaktır.</p>
                 <div class="flex gap-2">
                     <input type="text" id="new-picker-id" placeholder="Picker ID" class="w-1/3 text-xs bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-indigo-500 dark:text-white">
                     <input type="text" id="new-picker-name" placeholder="İsim Soyisim" class="w-2/3 text-xs bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-indigo-500 dark:text-white">
@@ -419,7 +430,7 @@
                 
                 <div id="whatsapp-final-image-container" class="w-full p-4 hidden flex-col items-center gap-3">
                     <div class="bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs font-bold px-4 py-2 rounded-lg text-center w-full max-w-md">
-                        💡 Rapor görsele dönüştürüldü. Lütfen aşağıdaki resme <b class="underline">SAĞ TIKLAYIP > Resmi Kopyala</b> diyerek WhatsApp'a yapıştırın.
+                        💡 Rapor görsele dönüştürüldü. Lütfen aşağıdaki resme <b class="underline">SAĞ TIKLAYIP > Resmi Kopyala</b> (veya Mobilde basılı tutup Kopyala) diyerek WhatsApp'a yapıştırın.
                     </div>
                     <img id="whatsapp-final-image" src="" class="rounded-xl shadow-lg border border-slate-300 dark:border-slate-600 max-w-full">
                 </div>
@@ -444,18 +455,66 @@
         <img id="modal-image" src="" class="max-w-full max-h-[90vh] rounded-lg shadow-2xl border-4 border-white/10">
     </div>
 
-    <!-- BULUT VERİTABANI İÇİN HAZIRLIK BİLGİ MODALI -->
-    <div id="cloud-modal" class="fixed inset-0 bg-slate-900/80 z-[300] hidden items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-800 p-8 rounded-3xl max-w-md text-center card-shadow relative">
-            <button onclick="document.getElementById('cloud-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-red-500"><i class="fa-solid fa-times text-xl"></i></button>
-            <i class="fa-solid fa-cloud-arrow-up text-5xl text-indigo-500 mb-4"></i>
-            <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2">Bulut (Firebase) Hazırlığı</h2>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Şu an <b>Yapay Zeka ve Mobil (PWA)</b> modülleri aktif edildi. Verileriniz (notlar/resimler) geçici olarak yerel cihazınızda (offline) tutuluyor. Tüm Türkiye ağını gerçek zamanlı birbirine bağlamak için ücretsiz bir Google Firebase hesabı açarak <code>API_KEY</code> almanız gerekmektedir. Hazır olduğunuzda asistanınızdan entegrasyonu isteyebilirsiniz.</p>
-            <button onclick="document.getElementById('cloud-modal').classList.add('hidden')" class="w-full bg-slate-800 text-white font-bold py-3 rounded-xl hover:bg-slate-700">Şimdilik Offline Devam Et</button>
-        </div>
-    </div>
-
     <script>
+        // =========================================================================
+        // FIREBASE ENTEGRASYONU (API ANAHTARLARINIZ ENTEGRE EDİLDİ)
+        // =========================================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDfcJu8IcoJqaE6_R9Icy9wt3Wby9Kb_kc",
+            authDomain: "balcova-pano.firebaseapp.com",
+            projectId: "balcova-pano",
+            storageBucket: "balcova-pano.firebasestorage.app",
+            messagingSenderId: "337497814939",
+            appId: "1:337497814939:web:34f2b9b89a1a94d6ac933e",
+            measurementId: "G-LHFZ31KGDX"
+        };
+        
+        let db = null;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            
+            // Eğer başarıyla bağlanırsa, üst menüdeki bulut simgesini yeşile çevir
+            const cloudStatus = document.getElementById('cloud-status');
+            const cloudText = document.getElementById('cloud-status-text');
+            if (cloudStatus && cloudText) {
+                cloudStatus.className = "flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800 transition-colors duration-500";
+                cloudText.innerText = "Buluta Bağlı";
+            }
+            
+            // Açılışta buluttaki eski verileri çek
+            syncFromCloud();
+        } catch (error) { 
+            console.error("Firebase başlatılamadı:", error); 
+        }
+
+        // --- BULUT (FIREBASE) SENKRONİZASYON FONKSİYONLARI ---
+        async function syncFromCloud() {
+            if(!db) return;
+            try {
+                // Personelleri Çek
+                const pickerDoc = await db.collection('settings').doc('pickerMap').get();
+                if (pickerDoc.exists) pickerMap = pickerDoc.data();
+                
+                // Notları ve Fotoğrafları Çek
+                const notesSnap = await db.collection('notes').get();
+                notesSnap.forEach(doc => { savedNotes[doc.id] = doc.data(); });
+                
+                // Yerel hafızayı güncelle
+                localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
+                localStorage.setItem('yS_NextDay_Notes', JSON.stringify(savedNotes));
+            } catch(e) { console.error("Buluttan veri çekilemedi:", e); }
+        }
+
+        async function syncToCloud_Picker() { if(db) await db.collection('settings').doc('pickerMap').set(pickerMap); }
+        async function syncToCloud_Note(uid) { if(db) await db.collection('notes').doc(uid).set(savedNotes[uid]); }
+        async function syncToCloud_ClearNotes() {
+            if(db) {
+                const notesSnap = await db.collection('notes').get();
+                notesSnap.forEach(doc => doc.ref.delete());
+            }
+        }
+
         // ==========================================
         // SİSTEM DEĞİŞKENLERİ VE SETUP
         // ==========================================
@@ -467,21 +526,10 @@
         let detayParsedData = [];
         let detayUniqueData = { regions: new Set(), storeMap: new Map(), managers: new Set() };
         
-        let pickerMap = JSON.parse(localStorage.getItem('yS_Picker_Map')) || {};
-        let savedNotes = {};
-        let rawWhatsAppText = "";
-
-        try {
-            const rawNotes = JSON.parse(localStorage.getItem('yS_NextDay_Notes')) || {};
-            for(let key in rawNotes) {
-                if(typeof rawNotes[key] === 'string') savedNotes[key] = { text: rawNotes[key], img: null };
-                else savedNotes[key] = rawNotes[key];
-            }
-        } catch(e) { savedNotes = {}; }
-
         let sortColAnlik = '', sortAscAnlik = true;
         let sortColDetay = '', sortAscDetay = true;
         let chartReasons = null, chartPickers = null;
+        let rawWhatsAppText = "";
 
         const managerMapping = {
             "Balçova": "Onur Kadıoğlu (Güney Ege)",
@@ -498,7 +546,6 @@
             "Pamukkale": "Kazım Özgün Şencan (Batı Ege)"
         };
 
-        // Kapatma Fonksiyonları (Dropdown için)
         document.addEventListener('click', function(event) {
             const btnS = document.getElementById('multi-store-btn');
             const menuS = document.getElementById('multi-store-menu');
@@ -524,9 +571,6 @@
             }
         };
 
-        // ==========================================
-        // YÖNETİCİ GİRİŞİ / ÇIKIŞI & TEMA
-        // ==========================================
         function handleLogin() {
             const pass = document.getElementById('login-password').value;
             const region = document.getElementById('login-region').value;
@@ -538,12 +582,6 @@
                 document.getElementById('app-container').classList.add('flex');
                 document.getElementById('active-region-badge').innerText = region + " Portalı";
                 switchView('dashboard');
-                
-                if(!localStorage.getItem('yS_Cloud_Warned')) {
-                    document.getElementById('cloud-modal').classList.remove('hidden');
-                    document.getElementById('cloud-modal').classList.add('flex');
-                    localStorage.setItem('yS_Cloud_Warned', 'true');
-                }
             } else { document.getElementById('login-error').classList.remove('hidden'); }
         }
 
@@ -605,9 +643,6 @@
             }
         }
 
-        // ==========================================
-        // YARDIMCI VE PARSER FONKSİYONLAR
-        // ==========================================
         function parseCurrency(val) {
             if (!val) return null;
             let str = String(val).replace('TRY', '').replace('₺', '').trim();
@@ -651,9 +686,6 @@
             return { store: storeStr, region: 'Belirtilmemiş' };
         }
 
-        // ==========================================
-        // DASHBOARD & YAPAY ZEKA UYARILARI
-        // ==========================================
         function updateDashboard() {
             if(currentView !== 'dashboard') return;
             if(detayParsedData.length === 0) {
@@ -738,9 +770,6 @@
             document.getElementById('ai-alerts-container').innerHTML = alertsHtml;
         }
 
-        // ==========================================
-        // SAYFA 1: ANLIK İŞLEM (TUTAR FARKLARI)
-        // ==========================================
         async function onAnlikFilesSelected(files) {
             if (!files || files.length === 0) return;
             const statusBox = document.getElementById('upload-status-anlik');
@@ -868,7 +897,7 @@
         }
 
         // ==========================================
-        // SAYFA 2: KUSURLU SİPARİŞ KAYDI (DETAY)
+        // SAYFA 2: DETAY İŞLEM & PERSONEL EŞLEŞTİRME
         // ==========================================
         function openPickerModal() {
             document.getElementById('picker-modal').classList.remove('hidden');
@@ -909,6 +938,8 @@
             
             pickerMap[id] = name;
             localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
+            syncToCloud_Picker(); // BULUT SENK.
+            
             document.getElementById('new-picker-id').value = '';
             document.getElementById('new-picker-name').value = '';
             renderPickerList();
@@ -920,6 +951,7 @@
             if(confirm(`ID: ${id} numaralı personeli silmek istediğinize emin misiniz?`)) {
                 delete pickerMap[id];
                 localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
+                syncToCloud_Picker(); // BULUT SENK.
                 renderPickerList();
                 detayParsedData.forEach(p => { if(p.picker === id) p.pickerName = 'İsim Bulunamadı'; });
                 renderDetayTable();
@@ -930,6 +962,7 @@
             if(confirm("Tüm personel veritabanını SİLMEK istediğinize emin misiniz?")) {
                 pickerMap = {};
                 localStorage.removeItem('yS_Picker_Map');
+                syncToCloud_Picker(); // BULUT SENK.
                 renderPickerList();
                 detayParsedData.forEach(p => { if(p.picker !== '-') p.pickerName = 'İsim Bulunamadı'; });
                 renderDetayTable();
@@ -968,6 +1001,7 @@
                                 }
                             });
                             localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
+                            syncToCloud_Picker(); // BULUT SENK.
                         } 
                         else if (keys.includes('order id') || keys.some(k => k.includes('sipariş'))) detailDataList = dataList;
                     }
@@ -1068,10 +1102,9 @@
 
         function populateManagerDropdown() {
             const managerMenu = document.getElementById('multi-manager-menu');
-            if(!managerMenu) return; // Güvenlik kontrolü
+            if(!managerMenu) return; 
             
             let managers = Array.from(detayUniqueData.managers).sort();
-            
             let htmlM = `
                 <label class="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer text-xs font-bold text-slate-800 dark:text-white border-b border-slate-100 dark:border-slate-700">
                     <input type="checkbox" id="check-all-managers" onchange="toggleAllManagers(this.checked)" class="accent-indigo-500 w-3.5 h-3.5" checked>
@@ -1111,8 +1144,8 @@
             if(total === 0) textEl.innerText = "Yönetici Yok";
             else if(checked === 0) textEl.innerText = "Yönetici Seçilmedi";
             else if(checked === total) textEl.innerText = "Tüm Yöneticiler";
-            else if(checked === 1) textEl.innerText = document.querySelector('.manager-checkbox:checked').value;
-            else textEl.innerText = `${checked} Yönetici Seçildi`;
+            else if(checked === 1) textEl.innerText = document.querySelector('.manager-checkbox:checked').value.split(' ')[0];
+            else textEl.innerText = `${checked} Yönetici`;
         }
 
         function getSelectedManagers() {
@@ -1266,7 +1299,24 @@
             `).join('');
         }
 
-        // FOTOĞRAF İŞLEMLERİ
+        function saveNote(uid) {
+            const textarea = document.getElementById(`note-${uid}`);
+            const btn = document.getElementById(`btn-${uid}`);
+            if(!savedNotes[uid]) savedNotes[uid] = { text: '', img: null };
+            savedNotes[uid].text = textarea.value;
+            localStorage.setItem('yS_NextDay_Notes', JSON.stringify(savedNotes));
+            
+            syncToCloud_Note(uid); // BULUT SENKRONİZASYONU
+            
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-check"></i>`;
+            btn.classList.replace('bg-emerald-500', 'bg-slate-800');
+            const row = detayParsedData.find(p => p.uid === uid);
+            if(row) row.note = textarea.value;
+
+            setTimeout(() => { btn.innerHTML = originalText; btn.classList.replace('bg-slate-800', 'bg-emerald-500'); }, 1500);
+        }
+
         function handleImageUpload(event, uid) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1288,6 +1338,9 @@
                     if(!savedNotes[uid]) savedNotes[uid] = { text: '', img: null };
                     savedNotes[uid].img = dataUrl;
                     
+                    localStorage.setItem('yS_NextDay_Notes', JSON.stringify(savedNotes));
+                    syncToCloud_Note(uid); // BULUT SENKRONİZASYONU
+                    
                     const row = detayParsedData.find(p => p.uid === uid);
                     if (row) row.img = dataUrl;
 
@@ -1302,6 +1355,8 @@
 
         function removeImage(uid) {
             if(savedNotes[uid]) savedNotes[uid].img = null;
+            localStorage.setItem('yS_NextDay_Notes', JSON.stringify(savedNotes));
+            syncToCloud_Note(uid); // BULUT SENK.
             const row = detayParsedData.find(p => p.uid === uid);
             if (row) row.img = null;
             document.getElementById(`img-preview-container-${uid}`).innerHTML = '';
@@ -1321,24 +1376,8 @@
             document.getElementById('modal-image').src = '';
         }
 
-        function saveNote(uid) {
-            const textarea = document.getElementById(`note-${uid}`);
-            const btn = document.getElementById(`btn-${uid}`);
-            if(!savedNotes[uid]) savedNotes[uid] = { text: '', img: null };
-            savedNotes[uid].text = textarea.value;
-            localStorage.setItem('yS_NextDay_Notes', JSON.stringify(savedNotes));
-            
-            const originalText = btn.innerHTML;
-            btn.innerHTML = `<i class="fa-solid fa-check"></i>`;
-            btn.classList.replace('bg-emerald-500', 'bg-slate-800');
-            const row = detayParsedData.find(p => p.uid === uid);
-            if(row) row.note = textarea.value;
-
-            setTimeout(() => { btn.innerHTML = originalText; btn.classList.replace('bg-slate-800', 'bg-emerald-500'); }, 1500);
-        }
-
         // ==========================================
-        // WHATSAPP RAPORU YÖNETİMİ & BYPASS GÖRSEL
+        // WHATSAPP RAPORU YÖNETİMİ & KOPYALAMA
         // ==========================================
         function openWhatsAppModal() {
             if (detayParsedData.length === 0) return alert("Lütfen önce Kusurlu Sipariş Kaydı için veri yükleyin.");
@@ -1364,6 +1403,7 @@
             if(confirm("Tüm yönetici notlarınızı ve fotoğrafları silmek istediğinize emin misiniz? (Bu işlem geri alınamaz!)")) {
                 savedNotes = {};
                 localStorage.removeItem('yS_NextDay_Notes');
+                syncToCloud_ClearNotes(); // BULUT SENK.
                 detayParsedData.forEach(p => { p.note = ''; p.img = null; });
                 renderDetayTable();
                 closeWhatsAppModal();
@@ -1471,9 +1511,10 @@
                         navigator.clipboard.write([item]).then(() => {
                             btn.innerHTML = `<i class="fa-solid fa-check text-lg"></i> Kopyalandı! (Yapıştırabilirsiniz)`;
                             setTimeout(() => { btn.innerHTML = originalText; }, 3000);
-                        }).catch(e => { /* Hata yok sayılır */ });
-                    } catch (e) { /* Hata yok sayılır */ }
+                        }).catch(e => {  });
+                    } catch (e) {  }
                 }, 'image/png');
+
             });
         }
 
@@ -1518,16 +1559,4 @@
         tailwind.config.theme.extend.keyframes = { fadeIn: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } } };
     </script>
 </body>
-    // =========================================================================
-        // FIREBASE ENTEGRASYONU (API ANAHTARLARINIZI BURAYA YAPIŞTIRIN)
-        // =========================================================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyDfcJu8IcoJqaE6_R9Icy9wt3Wby9Kb_kc",
-            authDomain: "balcova-pano.firebaseapp.com",
-            projectId: "balcova-pano",
-            storageBucket: "balcova-pano.firebasestorage.app",
-            messagingSenderId: "337497814939",
-            appId: "1:337497814939:web:34f2b9b89a1a94d6ac933e",
-            measurementId: "G-LHFZ31KGDX"
-        };
 </html>
