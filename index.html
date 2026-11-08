@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- PWA / Mobil Uygulama Etiketleri -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0f172a">
@@ -243,8 +244,8 @@
                         <div class="flex flex-col items-center justify-center space-y-3 pointer-events-none">
                             <div class="w-14 h-14 rounded-2xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-2xl"><i class="fa-solid fa-users-gear"></i></div>
                             <div>
-                                <p class="text-sm font-bold text-slate-700 dark:text-white">Kusurlu Sipariş Raporunu ve <span class="text-indigo-600 dark:text-indigo-400 underline">Personel Listesini</span> Seçin</p>
-                                <p class="text-xs text-slate-400 mt-1">İki dosyayı aynı anda yükleyebilirsiniz. Sistem isimleri otomatik öğrenecektir.</p>
+                                <p class="text-sm font-bold text-slate-700 dark:text-white">Kusurlu Sipariş Raporunu Seçin</p>
+                                <p class="text-xs text-slate-400 mt-1">İade/Kusur dökümünüzü veya Personel Listenizi buraya sürükleyin.</p>
                             </div>
                         </div>
                     </div>
@@ -398,7 +399,7 @@
                     renderAnlikTable();
                 }
                 
-                switchView('anlik');
+                switchView('detay');
             }
         };
 
@@ -413,7 +414,7 @@
                 document.getElementById('app-container').classList.remove('hidden');
                 document.getElementById('app-container').classList.add('flex');
                 document.getElementById('active-region-badge').innerText = region + " Portalı";
-                switchView('anlik');
+                switchView('detay');
             } else { 
                 document.getElementById('login-error').classList.remove('hidden'); 
             }
@@ -446,25 +447,26 @@
         }
 
         // ==========================================
-        // ESNEK DOSYA OKUMA MOTORU (XLSX & CSV İÇİN)
+        // ESNEK DOSYA OKUMA MOTORU VE YARDIMCILAR
         // ==========================================
         function parseExcelJson(rows) {
             if (!rows || rows.length < 2) return [];
             
             let headerIdx = 0;
-            // Hem sipariş detayları hem de standart raporlar için gerçek başlık satırını bul
-            for(let i=0; i<Math.min(6, rows.length); i++) {
+            // İlk 10 satırı tara ve en çok anahtar kelime barındıran satırı "başlık" olarak seç
+            for(let i=0; i<Math.min(10, rows.length); i++) {
                 if(!rows[i]) continue;
                 let matchCount = 0;
                 rows[i].forEach(cell => {
                     const str = String(cell).toLowerCase().trim();
-                    if(str.includes('sipariş no') || str.includes('order id') || str.includes('ara toplam') || 
-                       str.includes('original amount') || str.includes('final amount') || str.includes('restoran adı') ||
-                       str.includes('customer') || str.includes('müşteri') || str.includes('ürün') || str.includes('product') ||
-                       str.includes('employee id') || str.includes('employee name') || str.includes('ccr3')) {
+                    if(str === 'sipariş no' || str === 'order id' || str === 'ara toplam' || 
+                       str === 'original amount' || str === 'final amount' || str === 'restoran adı' ||
+                       str === 'customer' || str === 'müşteri' || str === 'product name' || str === 'ürün adı' ||
+                       str === 'employee id' || str === 'employee name' || str === 'ccr3' || str === 'date' || str === 'tarih') {
                         matchCount++;
                     }
                 });
+                // Eğer bir satırda en az 2 adet eşleşen spesifik başlık bulursak, bu satır gerçek başlık satırıdır.
                 if(matchCount >= 2) { 
                     headerIdx = i; 
                     break; 
@@ -498,149 +500,154 @@
             if (n === null || n === undefined || isNaN(n)) return '-';
             return '₺' + n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
+        
+        // EXCEL SERİAL TARİHLERİNİ KUSURSUZ ÇEVİREN FONKSİYON
+        function parseDateString(val) {
+            if (!val) return '';
+            
+            // Eğer Excel bize seri numarası (örn: 46327.125 veya "46327") döndürdüyse:
+            const asNum = Number(val);
+            if (!isNaN(asNum) && asNum > 40000 && asNum < 60000) {
+                // Excel tarihi 1900'den başlar. 25569 gün çıkarılarak JS formatına çevrilir.
+                const d = new Date(Math.round((asNum - 25569) * 86400 * 1000));
+                // Türkiye saat dilimindeki ofseti hesaba katarak bozulmaları önlüyoruz
+                return d.toISOString().split('T')[0]; // YYYY-MM-DD
+            }
 
-        function extractStoreAndRegion(storeStr) {
-            if (!storeStr) return { store: 'Bilinmiyor', region: 'Bilinmiyor' };
-            storeStr = String(storeStr).replace('Yemeksepeti Market,', '').trim();
-            const match = storeStr.match(/(.*?)\((.*?)\)/);
-            if (match) return { store: match[1].trim(), region: match[2].trim() };
-            return { store: storeStr, region: 'Belirtilmemiş' };
+            // Aksi halde string olarak işliyoruz
+            let str = String(val).trim().split(' ')[0]; // Örn "2026-11-08 14:12" ise saati atar
+            
+            // Format: DD.MM.YYYY veya DD/MM/YYYY ise YYYY-MM-DD'ye çevir
+            if (str.match(/^\d{1,2}[\.\/]\d{1,2}[\.\/]\d{4}$/)) {
+                let sep = str.includes('.') ? '.' : '/';
+                let p = str.split(sep);
+                return `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`; // YYYY-MM-DD
+            }
+            
+            // Zaten YYYY-MM-DD formatındaysa
+            if (str.match(/^\d{4}-\d{2}-\d{2}/)) return str.substring(0, 10);
+            
+            return str; 
+        }
+
+        async function readAnyExcelFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        let data;
+                        if(file.name.toLowerCase().endsWith('.csv')) {
+                            data = e.target.result;
+                            resolve(XLSX.read(data, { type: 'string' }));
+                        } else {
+                            data = new Uint8Array(e.target.result);
+                            resolve(XLSX.read(data, { type: 'array' }));
+                        }
+                    } catch(err) {
+                        reject(err);
+                    }
+                };
+                reader.onerror = reject;
+                
+                if(file.name.toLowerCase().endsWith('.csv')) {
+                    reader.readAsText(file);
+                } else {
+                    reader.readAsArrayBuffer(file);
+                }
+            });
         }
 
         // ==========================================
-        // KUSURLU SİPARİŞ İŞLEMLERİ (ORİJİNAL ÇALIŞAN ALTYAPI)
+        // KUSURLU SİPARİŞ İŞLEMLERİ 
         // ==========================================
-        function onDetayFileSelected(files) {
+        async function onDetayFileSelected(files) {
             if (!files || files.length === 0) return;
             const statusBox = document.getElementById('upload-status-detay');
             if(statusBox) {
                 statusBox.classList.remove('hidden');
-                statusBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-indigo-600"></i> İşleniyor...`;
+                statusBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-indigo-600"></i> Dosyalar işleniyor...`;
             }
 
-            setTimeout(async () => {
+            try {
                 let detailDataList = null;
-                try {
-                    for (let file of files) {
-                        let wb;
-                        if (file.name.toLowerCase().endsWith('.csv')) {
-                            const text = await file.text();
-                            wb = XLSX.read(text, { type: 'string' });
-                        } else {
-                            const buf = await file.arrayBuffer();
-                            wb = XLSX.read(buf, { type: 'array' });
-                        }
-                        const sheet = wb.Sheets[wb.SheetNames[0]];
-                        let dataList = parseExcelJson(XLSX.utils.sheet_to_json(sheet, { header: 1 }));
+
+                for (let file of files) {
+                    const wb = await readAnyExcelFile(file);
+                    const sheet = wb.Sheets[wb.SheetNames[0]];
+                    const dataList = parseExcelJson(XLSX.utils.sheet_to_json(sheet, { header: 1 }));
+                    
+                    if (dataList.length > 0) {
+                        const keys = Object.keys(dataList[0]).map(k => String(k).toLowerCase().trim());
                         
-                        if (dataList.length > 0) {
-                            const keys = Object.keys(dataList[0]).map(k => String(k).toLowerCase().trim());
-                            if (keys.includes('employee id') && keys.includes('employee name')) {
-                                dataList.forEach(row => {
-                                    const iK = Object.keys(row).find(k => String(k).toLowerCase().trim() === 'employee id');
-                                    const nK = Object.keys(row).find(k => String(k).toLowerCase().trim() === 'employee name');
-                                    if (iK && nK && row[iK] && row[nK]) {
-                                        let pId = String(row[iK]).replace('.0', '').trim();
-                                        pickerMap[pId] = String(row[nK]).trim();
-                                    }
-                                });
-                                localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
-                                syncToCloud_Picker();
-                            } 
-                            else if (keys.includes('order id') || keys.some(k => k.includes('sipariş'))) {
-                                detailDataList = dataList;
-                            }
+                        // Personel Listesi Excel'i mi?
+                        if (keys.includes('employee id') && keys.includes('employee name')) {
+                            dataList.forEach(row => {
+                                const iK = Object.keys(row).find(k => String(k).toLowerCase().trim() === 'employee id');
+                                const nK = Object.keys(row).find(k => String(k).toLowerCase().trim() === 'employee name');
+                                if (iK && nK && row[iK] && row[nK]) {
+                                    let pId = String(row[iK]).replace('.0', '').trim();
+                                    pickerMap[pId] = String(row[nK]).trim();
+                                }
+                            });
+                            localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
+                            syncToCloud_Picker();
+                        } 
+                        // Kusurlu Siparişler Dosyası mı?
+                        else if (keys.includes('order id') || keys.some(k => k.includes('sipariş'))) {
+                            detailDataList = dataList;
                         }
                     }
-                    
-                    if (detailDataList) {
-                        processDetayData(detailDataList);
-                        if(statusBox) statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> Rapor başarıyla işlendi! Dashboard'ı kontrol edebilirsiniz.`;
-                    } else {
-                        detayParsedData.forEach(p => { 
-                            if (p.picker && p.picker !== '-') p.pickerName = pickerMap[p.picker] || 'İsim Bulunamadı'; 
+                }
+
+                if (detailDataList && detailDataList.length > 0) {
+                    detayParsedData = [];
+                    detailDataList.forEach((row, idx) => {
+                        const keys = Object.keys(row);
+                        const idKey = keys.find(k => String(k).toLowerCase().trim() === 'order id' || String(k).toLowerCase().includes('sipariş'));
+                        if(!idKey || !row[idKey]) return;
+
+                        const dateKey = keys.find(k => String(k).toLowerCase().includes('date') || String(k).toLowerCase().includes('tarih'));
+                        const storeKey = keys.find(k => String(k).toLowerCase().includes('store') || String(k).toLowerCase().includes('mağaza'));
+                        const prodKey = keys.find(k => String(k).toLowerCase().includes('product') || String(k).toLowerCase().includes('ürün'));
+                        const reasonKey = keys.find(k => String(k).toLowerCase().includes('ccr3') || String(k).toLowerCase().includes('sebep'));
+                        const pickerKey = keys.find(k => String(k).toLowerCase().includes('picker'));
+
+                        let storeStr = storeKey ? String(row[storeKey]) : 'Bilinmiyor';
+                        if (storeStr.includes('(')) storeStr = storeStr.split('(')[0].trim();
+                        let pickerIdRaw = pickerKey ? String(row[pickerKey]).replace('.0','') : '-';
+
+                        detayParsedData.push({
+                            uid: row[idKey] + '_' + idx,
+                            // BURASI DÜZELTİLDİ: Artık parseDateString ile çalışıyor
+                            date: dateKey ? parseDateString(row[dateKey]) : '-',
+                            store: storeStr,
+                            orderId: row[idKey],
+                            product: prodKey ? row[prodKey] : 'Ürün Yok',
+                            reason: reasonKey ? row[reasonKey] : 'Belirtilmemiş',
+                            picker: pickerIdRaw,
+                            pickerName: pickerMap[pickerIdRaw] || `ID: ${pickerIdRaw}`
                         });
-                        renderDetayTable();
-                        if(statusBox) statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> Personel veritabanı güncellendi!`;
-                    }
-                } catch(err) {
-                    console.error("Detay okuma hatası:", err);
-                    if(statusBox) statusBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Dosya okuma hatası! Dosya formatınız uyumsuz.`;
-                    alert("Dosya okuma hatası! Lütfen dosya formatınızı kontrol edin.");
-                }
-            }, 50);
-        }
-
-        function processDetayData(dataList) {
-            if (dataList.length === 0) return;
-            detayParsedData = [];
-
-            dataList.forEach((row, index) => {
-                const keys = Object.keys(row);
-                
-                const countryKey = keys.find(k => String(k).toLowerCase().trim() === 'country' || String(k).toLowerCase().trim() === 'ülke');
-                if (countryKey && row[countryKey]) {
-                    const cVal = String(row[countryKey]).toLowerCase().trim();
-                    if (cVal !== 'turkey' && cVal !== 'türkiye') return;
-                }
-
-                const storeKey = keys.find(k => String(k).toLowerCase().trim() === 'store' || String(k).toLowerCase().includes('mağaza'));
-                let regionStr = '', storeStr = '';
-                if(storeKey && row[storeKey]) {
-                    const extracted = extractStoreAndRegion(row[storeKey]);
-                    regionStr = extracted.region;
-                    storeStr = extracted.store;
-                }
-                if(currentUserRegion && currentUserRegion !== 'Tüm Türkiye' && regionStr !== currentUserRegion) return;
-
-                const idKey = keys.find(k => String(k).toLowerCase().trim() === 'order id' || String(k).toLowerCase().includes('sipariş'));
-                const skuKey = keys.find(k => String(k).toLowerCase().trim() === 'sku' || String(k).toLowerCase().includes('kodu'));
-                const pickerKey = keys.find(k => String(k).toLowerCase().trim() === 'picker id' || String(k).toLowerCase().includes('picker'));
-                
-                let prodKey = keys.find(k => String(k).toLowerCase().trim() === 'product name' || String(k).toLowerCase().trim() === 'ürün adı');
-                let reasonKey = keys.find(k => String(k).toLowerCase().trim() === 'ccr3' || String(k).toLowerCase().trim() === 'iade sebebi');
-                let dateKey = keys.find(k => String(k).toLowerCase().trim().includes('tarih') || String(k).toLowerCase().trim().includes('date'));
-
-                if (idKey && row[idKey]) {
-                    const orderId = String(row[idKey]).trim();
-                    if (!orderId) return;
-
-                    let product = prodKey ? row[prodKey] : '';
-                    let sku = skuKey ? row[skuKey] : '';
-                    let rawPicker = pickerKey ? row[pickerKey] : '';
-                    let reason = reasonKey ? row[reasonKey] : '';
-                    let dateStr = dateKey ? String(row[dateKey]).substring(0, 10) : '';
-
-                    product = (!product || String(product).toLowerCase() === 'null' || String(product).trim() === '') ? 'Ürün Bilgisi Yok' : product;
-                    sku = (!sku || String(sku).toLowerCase() === 'null' || String(sku).trim() === '') ? '-' : sku;
-                    reason = (!reason || String(reason).toLowerCase() === 'null' || String(reason).trim() === '') ? 'Sebep Belirtilmemiş' : reason;
-                    
-                    let picker = (!rawPicker || String(rawPicker).toLowerCase() === 'null' || String(rawPicker).trim() === '') ? '-' : String(rawPicker).replace('.0', '').trim();
-                    let pickerName = picker !== '-' ? (pickerMap[picker] || 'İsim Bulunamadı') : '-';
-
-                    const uniqueRowId = orderId + "_" + index; 
-
-                    detayParsedData.push({
-                        uid: uniqueRowId, 
-                        orderId: orderId, 
-                        region: regionStr, 
-                        store: storeStr, 
-                        sku: sku,
-                        picker: picker, 
-                        pickerName: pickerName, 
-                        product: product, 
-                        reason: reason, 
-                        date: dateStr,
-                        note: ''
                     });
+
+                    localStorage.setItem('yS_Detay_Data', JSON.stringify(detayParsedData));
+                    populateDashboardFilter();
+                    renderDetayTable();
+                    updateDashboard();
+
+                    if(statusBox) statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> Kusurlu sipariş raporu başarıyla işlendi!`;
+                } else {
+                    // Sadece Personel listesi yüklendiyse isimleri güncelle
+                    detayParsedData.forEach(p => {
+                        if (p.picker && p.picker !== '-') p.pickerName = pickerMap[p.picker] || `ID: ${p.picker}`;
+                    });
+                    renderDetayTable();
+                    if(statusBox) statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> Personel veritabanı başarıyla güncellendi!`;
                 }
-            });
 
-            try { localStorage.setItem('yS_Detay_Data', JSON.stringify(detayParsedData)); } catch(e){}
-
-            populateDashboardFilter();
-            renderDetayTable();
-            updateDashboard();
+            } catch(e) {
+                console.error("Detay okuma hatası:", e);
+                if(statusBox) statusBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Dosya okuma hatası! Lütfen geçerli bir Excel (.xlsx) veya CSV dosyası seçtiğinizden emin olun.`;
+            }
         }
 
         let sortColDetay = '', sortAscDetay = true;
@@ -652,10 +659,8 @@
 
         function renderDetayTable() {
             const tbody = document.getElementById('table-body-detay');
-            const searchEl = document.getElementById('search-input-detay');
-            const search = searchEl ? searchEl.value.toLowerCase() : '';
-            const fDateEl = document.getElementById('filter-date-detay');
-            const fDate = fDateEl ? fDateEl.value : '';
+            const search = document.getElementById('search-input-detay').value.toLowerCase();
+            const fDate = document.getElementById('filter-date-detay').value;
 
             let filtered = detayParsedData.filter(p => {
                 const oid = String(p.orderId || '').toLowerCase();
@@ -698,7 +703,7 @@
         }
 
         // ==========================================
-        // ANLIK İŞLEM: SADECE GERÇEK FARKI BULMA (AKILLI BİRLEŞTİRME)
+        // ANLIK İŞLEM: SADECE GERÇEK FARKI BULMA 
         // ==========================================
         async function onAnlikFilesSelected(files) {
             if (!files || files.length === 0) return;
@@ -708,6 +713,10 @@
             
             statusBox.classList.remove('hidden');
             statusText.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-[#ff0050]"></i> Dosyalar analiz ediliyor...`;
+            badgesBox.innerHTML = '';
+
+            anlikCsvRows = [];
+            anlikExcelRows = [];
 
             try {
                 for (let file of files) {
@@ -729,7 +738,7 @@
                 statusText.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500"></i> Analiz Tamamlandı! Tutar farkı olan siparişler listelendi.`;
             } catch(e) {
                 console.error(e);
-                statusText.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Hata: Dosyalar okunamadı.`;
+                statusText.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Hata: Dosyalar okunamadı. Lütfen kontrol edin.`;
             }
         }
 
@@ -904,7 +913,9 @@
             document.getElementById('new-picker-id').value = '';
             document.getElementById('new-picker-name').value = '';
             renderPickerList();
+            
             detayParsedData.forEach(p => { if(p.picker === id) p.pickerName = name; });
+            localStorage.setItem('yS_Detay_Data', JSON.stringify(detayParsedData));
             renderDetayTable();
         }
 
@@ -914,6 +925,7 @@
             syncToCloud_Picker();
             renderPickerList();
             detayParsedData.forEach(p => { if(p.picker === id) p.pickerName = `ID: ${id}`; });
+            localStorage.setItem('yS_Detay_Data', JSON.stringify(detayParsedData));
             renderDetayTable();
         }
 
@@ -923,6 +935,7 @@
             syncToCloud_Picker();
             renderPickerList();
             detayParsedData.forEach(p => { p.pickerName = `ID: ${p.picker}`; });
+            localStorage.setItem('yS_Detay_Data', JSON.stringify(detayParsedData));
             renderDetayTable();
         }
 
@@ -948,11 +961,21 @@
             
             document.getElementById('kpi-financial-loss').innerText = `₺${(dataToAnalyze.length * 150).toLocaleString('tr-TR')}`;
 
-            const reasonCounts = {}, pickerCounts = {}, storeCounts = {};
+            const reasonCounts = {}, pickerCounts = {}, storeCounts = {}, dateCounts = {};
             dataToAnalyze.forEach(p => {
                 reasonCounts[p.reason] = (reasonCounts[p.reason] || 0) + 1;
                 if(p.picker !== '-') pickerCounts[p.pickerName] = (pickerCounts[p.pickerName] || 0) + 1;
                 storeCounts[p.store] = (storeCounts[p.store] || 0) + 1;
+                if(p.date && p.date !== '-') dateCounts[p.date] = (dateCounts[p.date] || 0) + 1;
+            });
+
+            // Trend
+            const sortedDates = Object.keys(dateCounts).sort();
+            if(chartTrend) chartTrend.destroy();
+            chartTrend = new Chart(document.getElementById('chart-trend'), {
+                type: 'line',
+                data: { labels: sortedDates, datasets: [{ label: 'Kusur', data: sortedDates.map(d => dateCounts[d]), borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
             if(chartReasons) chartReasons.destroy();
