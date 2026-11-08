@@ -15,6 +15,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
+    <!-- FIREBASE -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+    
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -84,7 +88,7 @@
                 <div class="flex items-center gap-3.5">
                     <div class="w-11 h-11 rounded-2xl bg-[#ff0050] text-white flex items-center justify-center shadow-lg"><i class="fa-solid fa-chart-pie text-lg"></i></div>
                     <div>
-                        <h1 class="text-lg font-black text-slate-900 dark:text-white">Yemeksepeti Market <span id="active-region-badge" class="text-[10px] bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full uppercase ml-2">Portal</span></h1>
+                        <h1 class="text-lg font-black text-slate-900 dark:text-white">Yemeksepeti Market <span id="active-region-badge" class="text-[10px] bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full uppercase ml-2">İzmir</span></h1>
                         <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Analiz & Oyunlaştırma Portalı</p>
                     </div>
                 </div>
@@ -97,6 +101,7 @@
                 </div>
 
                 <div class="flex items-center gap-3">
+                    <div id="cloud-status" class="flex items-center gap-1.5 text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-3 py-2.5 rounded-xl border border-amber-200 dark:border-amber-800 transition-colors duration-500"><i class="fa-solid fa-cloud"></i> <span id="cloud-status-text">Bağlantı Yok</span></div>
                     <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-amber-400 font-bold transition hover:bg-slate-200 flex items-center justify-center"><i id="theme-icon" class="fa-solid fa-moon"></i></button>
                     <button onclick="exportToExcel()" id="export-btn" class="text-xs bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl shadow-md hover:bg-emerald-600 transition flex items-center gap-2"><i class="fa-solid fa-file-excel"></i> <span id="export-btn-text">İndir</span></button>
                     <button onclick="logout()" class="text-xs bg-red-50 text-red-600 font-bold px-3.5 py-2.5 rounded-xl transition hover:bg-red-100"><i class="fa-solid fa-right-from-bracket"></i></button>
@@ -184,7 +189,7 @@
                         <div>
                             <h2 class="text-3xl font-black mb-2 uppercase italic tracking-wider">D-MART LİGİ BAŞLIYOR! <i class="fa-solid fa-bullhorn text-yellow-300"></i></h2>
                             <p class="text-pink-100 text-sm max-w-2xl">
-                                Haftalık Lig Puanı; Yükleyeceğiniz <b>Picker Performans CSV</b> (Hız ve Verimlilik) ve <b>Kusur Kaydı</b> raporlarındaki (Hata Oranı) verilerin harmanlanmasıyla otomatik hesaplanır. Yalnızca <b>Türkiye</b> mağazaları lige dahil edilir.
+                                Haftalık Lig Puanı; Yükleyeceğiniz <b>Picker Performans Raporu (CSV)</b> (Hız ve Verimlilik) ve <b>Kusur Kaydı</b> raporlarındaki (Hata Oranı) verilerin harmanlanmasıyla otomatik hesaplanır. Yalnızca <b>Türkiye</b> mağazaları lige dahil edilir.
                             </p>
                         </div>
                         <div class="bg-white/20 backdrop-blur-md p-4 rounded-xl text-center min-w-[200px]">
@@ -233,6 +238,8 @@
                     <div class="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex flex-wrap justify-between items-center gap-4">
                         <div class="text-sm font-black flex items-center gap-2"><i class="fa-solid fa-list-check text-indigo-600"></i> Kayıtlar (<span id="record-count-detay">0</span>)</div>
                         <div class="flex flex-wrap items-center gap-2">
+                            <!-- YENİ: PERSONEL (PİCKER DB) BUTONU EKLENDİ -->
+                            <button onclick="openPickerModal()" class="bg-slate-800 dark:bg-slate-600 text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-slate-700 transition flex items-center gap-1.5 shadow-sm"><i class="fa-solid fa-user-tie"></i> Personel DB</button>
                             <button onclick="openWhatsAppModal()" class="bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-600 transition flex items-center gap-1.5 shadow-sm"><i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp</button>
                             <input type="date" id="filter-date-detay" onchange="renderDetayTable()" class="text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 outline-none font-bold">
                             <input type="text" id="search-input-detay" onkeyup="renderDetayTable()" placeholder="Ara..." class="text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 outline-none">
@@ -314,6 +321,32 @@
         </div>
     </div>
 
+    <!-- PERSONEL EKLEME (PİCKER DB) MODALI - GERİ EKLENDİ -->
+    <div id="picker-modal" class="fixed inset-0 bg-slate-900/80 z-[80] hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-lg flex flex-col shadow-2xl overflow-hidden animate-[fadeIn_0.3s_ease-in-out]">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+                <h2 class="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-user-tie text-indigo-500"></i> Personel Veritabanı
+                </h2>
+                <button onclick="closePickerModal()" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            <div class="p-5 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
+                <div class="flex gap-2">
+                    <input type="text" id="new-picker-id" placeholder="Picker ID" class="w-1/3 text-xs bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-indigo-500 dark:text-white">
+                    <input type="text" id="new-picker-name" placeholder="İsim Soyisim" class="w-2/3 text-xs bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-indigo-500 dark:text-white">
+                    <button onclick="addManualPicker()" class="bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg px-4 py-2 text-xs font-bold transition"><i class="fa-solid fa-plus"></i></button>
+                </div>
+            </div>
+            <div class="p-5 flex-1 max-h-[40vh] overflow-y-auto bg-slate-50 dark:bg-slate-900">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300">Kayıtlı Personeller</h3>
+                    <button onclick="clearAllPickers()" class="text-[10px] text-red-500 hover:text-red-700 font-bold underline"><i class="fa-solid fa-trash-can"></i> Tümünü Sil</button>
+                </div>
+                <div id="picker-list" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- PICKER (TOPLAYICI) KARNESİ MODALI -->
     <div id="picker-stats-modal" class="fixed inset-0 bg-slate-900/80 z-[100] hidden items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-md flex flex-col shadow-2xl overflow-hidden animate-[fadeIn_0.3s_ease-in-out]">
@@ -361,11 +394,38 @@
 
         let detayParsedData = JSON.parse(localStorage.getItem('yS_Detay')) || [];
         let pickerParsedData = JSON.parse(localStorage.getItem('yS_PickerData')) || [];
+        // Picker İsim Eşleştirme Veritabanı (Personel DB)
+        let pickerMap = JSON.parse(localStorage.getItem('yS_Picker_Map')) || {};
+        
         let leagueStores = [];
         let anlikMergedData = [];
         let currentDashboardStore = 'Tümü';
 
         let chartTrend = null, chartReasons = null, chartPickers = null, chartStores = null;
+
+        // Firebase (Orijinal veritabanı senkronizasyonu)
+        let db = null;
+        try {
+            firebase.initializeApp({
+                apiKey: "AIzaSyDfcJu8IcoJqaE6_R9Icy9wt3Wby9Kb_kc", authDomain: "balcova-pano.firebaseapp.com",
+                projectId: "balcova-pano", storageBucket: "balcova-pano.firebasestorage.app",
+                messagingSenderId: "337497814939", appId: "1:337497814939:web:34f2b9b89a1a94d6ac933e"
+            });
+            db = firebase.firestore();
+            const cs = document.getElementById('cloud-status');
+            if (cs) { cs.className = "flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-2.5 rounded-xl border border-emerald-200"; document.getElementById('cloud-status-text').innerText = "Buluta Bağlı"; }
+            syncFromCloud();
+        } catch (error) { console.warn("Firebase bağlantısı yok."); }
+
+        async function syncFromCloud() {
+            if(!db) return;
+            try {
+                const pickerDoc = await db.collection('settings').doc('pickerMap').get();
+                if (pickerDoc.exists) pickerMap = pickerDoc.data();
+                localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
+            } catch(e) {}
+        }
+        async function syncToCloud_Picker() { if(db) await db.collection('settings').doc('pickerMap').set(pickerMap); }
 
         window.onload = () => {
             if(isDarkMode) document.documentElement.classList.add('dark');
@@ -429,7 +489,7 @@
         }
 
         // ==========================================
-        // YARDIMCI EXCEL / CSV FONKSİYONLARI
+        // YARDIMCI EXCEL / CSV FONKSİYONLARI (DÜZELTİLDİ)
         // ==========================================
         function parseExcelJson(rows) {
             if (rows.length < 2) return [];
@@ -464,23 +524,36 @@
             return ''; 
         }
 
-        // ÇEVRİMİÇİ DOSYA OKUMA FIXI (CSV VE XLSX DESTEĞİ)
-        async function readExcelFile(file) {
+        // CSV VE EXCEL DOSYALARINI GÜVENLİ OKUYAN ASIL FONKSİYON (TEXT VEYA ARRAYBUFFER)
+        async function readAnyExcelFile(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     try {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, { type: 'array' });
-                        resolve(workbook);
+                        let data;
+                        if(file.name.endsWith('.csv')) {
+                            // CSV ise string oku
+                            data = e.target.result;
+                            resolve(XLSX.read(data, { type: 'string' }));
+                        } else {
+                            // Excel ise array buffer oku
+                            data = new Uint8Array(e.target.result);
+                            resolve(XLSX.read(data, { type: 'array' }));
+                        }
                     } catch(err) {
                         reject(err);
                     }
                 };
                 reader.onerror = reject;
-                reader.readAsArrayBuffer(file);
+                
+                if(file.name.endsWith('.csv')) {
+                    reader.readAsText(file);
+                } else {
+                    reader.readAsArrayBuffer(file);
+                }
             });
         }
+
 
         // ==========================================
         // D-MART LİGİ VE PİCKER PERFORMANS CSV İŞLEME
@@ -488,7 +561,7 @@
         async function onPickerFileSelected(files) {
             if (!files || files.length === 0) return;
             try {
-                const wb = await readExcelFile(files[0]);
+                const wb = await readAnyExcelFile(files[0]);
                 const data = parseExcelJson(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }));
                 
                 pickerParsedData = [];
@@ -623,12 +696,12 @@
         }
 
         // ==========================================
-        // KUSUR KAYDI İŞLEMLERİ VE PİCKER KARNESİ
+        // KUSUR KAYDI İŞLEMLERİ VE PİCKER DB
         // ==========================================
         async function onDetayFileSelected(files) {
             if (!files || files.length === 0) return;
             try {
-                const wb = await readExcelFile(files[0]);
+                const wb = await readAnyExcelFile(files[0]);
                 const data = parseExcelJson(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }));
                 
                 detayParsedData = [];
@@ -646,6 +719,8 @@
                     let storeStr = storeKey ? String(row[storeKey]) : 'Bilinmiyor';
                     if (storeStr.includes('(')) storeStr = storeStr.split('(')[0].trim();
 
+                    let pickerIdRaw = pickerKey ? String(row[pickerKey]).replace('.0','') : '-';
+
                     detayParsedData.push({
                         uid: row[idKey] + '_' + idx,
                         date: dateKey ? parseDateString(row[dateKey]) : '',
@@ -654,7 +729,8 @@
                         product: prodKey ? row[prodKey] : 'Ürün Yok',
                         sku: row['SKU'] || '-',
                         reason: reasonKey ? row[reasonKey] : 'Belirtilmemiş',
-                        picker: pickerKey ? String(row[pickerKey]).replace('.0','') : '-',
+                        picker: pickerIdRaw,
+                        pickerName: pickerMap[pickerIdRaw] || `ID: ${pickerIdRaw}`
                     });
                 });
 
@@ -682,7 +758,7 @@
             const fDate = document.getElementById('filter-date-detay').value;
 
             let filtered = detayParsedData.filter(p => 
-                p.orderId.toLowerCase().includes(search) || p.picker.includes(search) || p.product.toLowerCase().includes(search) || p.store.toLowerCase().includes(search)
+                p.orderId.toLowerCase().includes(search) || p.picker.includes(search) || p.pickerName.toLowerCase().includes(search) || p.product.toLowerCase().includes(search) || p.store.toLowerCase().includes(search)
             );
             if(fDate) filtered = filtered.filter(p => p.date === fDate);
 
@@ -701,7 +777,10 @@
                 return;
             }
 
-            tbody.innerHTML = filtered.map(p => `
+            tbody.innerHTML = filtered.map(p => {
+                // Eğer isimlendirilmemişse sadece ID göster, isimlendirilmişse İsmi göster.
+                let displayName = p.pickerName !== `ID: ${p.picker}` ? p.pickerName : `ID: ${p.picker}`;
+                return `
                 <tr class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                     <td class="py-3 px-4 font-mono text-xs text-slate-500">${p.date}</td>
                     <td class="py-3 px-4 font-mono font-bold text-indigo-600">${p.orderId}</td>
@@ -709,15 +788,100 @@
                     <td class="py-3 px-4 truncate max-w-[150px] text-xs" title="${p.product}">${p.product}</td>
                     <td class="py-3 px-4"><span class="bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-[10px] font-bold">${p.reason}</span></td>
                     <td class="py-3 px-4">
-                        <button onclick="openPickerStats('${p.picker}', '${p.store}')" class="text-indigo-600 dark:text-indigo-400 hover:underline font-bold text-xs flex items-center gap-1"><i class="fa-solid fa-id-badge"></i> ID: ${p.picker}</button>
+                        <button onclick="openPickerStats('${p.picker}', '${p.store}')" class="text-indigo-600 dark:text-indigo-400 hover:underline font-bold text-xs flex items-center gap-1"><i class="fa-solid fa-id-badge"></i> ${displayName}</button>
                     </td>
                     <td class="py-3 px-4"><input type="text" class="w-full text-[11px] p-1.5 border rounded outline-none focus:ring-1 focus:ring-indigo-500" placeholder="Not ekle..."></td>
                 </tr>
-            `).join('');
+                `;
+            }).join('');
         }
 
+        // ==========================================
+        // PİCKER (PERSONEL) VERİTABANI YÖNETİMİ
+        // ==========================================
+        function openPickerModal() {
+            document.getElementById('picker-modal').classList.remove('hidden');
+            document.getElementById('picker-modal').classList.add('flex');
+            renderPickerList();
+        }
+
+        function closePickerModal() {
+            document.getElementById('picker-modal').classList.add('hidden');
+            document.getElementById('picker-modal').classList.remove('flex');
+        }
+
+        function renderPickerList() {
+            const listEl = document.getElementById('picker-list');
+            listEl.innerHTML = '';
+            const keys = Object.keys(pickerMap);
+            if(keys.length === 0) {
+                listEl.innerHTML = '<div class="text-xs text-slate-400 dark:text-slate-500 text-center py-4">Kayıtlı personel yok.</div>';
+                return;
+            }
+            keys.forEach(k => {
+                listEl.innerHTML += `
+                    <div class="flex justify-between items-center bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <div class="flex flex-col">
+                            <span class="font-bold text-slate-800 dark:text-white text-xs">${pickerMap[k]}</span>
+                            <span class="text-[9px] text-slate-400 font-mono">ID: ${k}</span>
+                        </div>
+                        <button onclick="deletePicker('${k}')" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+            });
+        }
+
+        function addManualPicker() {
+            const id = document.getElementById('new-picker-id').value.trim();
+            const name = document.getElementById('new-picker-name').value.trim();
+            if(!id || !name) return alert("Lütfen hem Picker ID hem de İsim girin.");
+            
+            pickerMap[id] = name;
+            localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
+            syncToCloud_Picker(); 
+            
+            document.getElementById('new-picker-id').value = '';
+            document.getElementById('new-picker-name').value = '';
+            renderPickerList();
+            
+            // Tablodaki veriyi güncelle
+            detayParsedData.forEach(p => { if(p.picker === id) p.pickerName = name; });
+            localStorage.setItem('yS_Detay', JSON.stringify(detayParsedData));
+            renderDetayTable();
+        }
+
+        function deletePicker(id) {
+            if(confirm(`ID: ${id} numaralı personeli silmek istediğinize emin misiniz?`)) {
+                delete pickerMap[id];
+                localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
+                syncToCloud_Picker(); 
+                renderPickerList();
+                detayParsedData.forEach(p => { if(p.picker === id) p.pickerName = `ID: ${id}`; });
+                localStorage.setItem('yS_Detay', JSON.stringify(detayParsedData));
+                renderDetayTable();
+            }
+        }
+
+        function clearAllPickers() {
+            if(confirm("Tüm personel veritabanını SİLMEK istediğinize emin misiniz?")) {
+                pickerMap = {};
+                localStorage.removeItem('yS_Picker_Map');
+                syncToCloud_Picker(); 
+                renderPickerList();
+                detayParsedData.forEach(p => { p.pickerName = `ID: ${p.picker}`; });
+                localStorage.setItem('yS_Detay', JSON.stringify(detayParsedData));
+                renderDetayTable();
+            }
+        }
+
+        // ==========================================
+        // PİCKER KARNESİ (MODAL)
+        // ==========================================
         function openPickerStats(pickerId, storeName) {
-            document.getElementById('ps-name').innerText = `Picker: ${pickerId}`;
+            // İsimlendirilmişse ismini al, yoksa ID göster
+            const displayName = pickerMap[pickerId] ? pickerMap[pickerId] : `Picker: ${pickerId}`;
+            
+            document.getElementById('ps-name').innerText = displayName;
             document.getElementById('ps-id').innerText = `ID: ${pickerId}`;
             document.getElementById('ps-store').innerText = storeName;
             
@@ -851,13 +1015,11 @@
         // ANLIK DOSYA İŞLEMLERİ 
         // ==========================================
         async function onAnlikFilesSelected(files) {
-            // Sizin önceki anlık kod yapınız buraya bağlanabilir veya ExcelReader eklenebilir. 
-            // Şu an lig ve detay (kusur) bölümleri tamamen sorunsuz aktifleştirildi.
             alert("Anlık dosya yükleme özelliği mevcut yapıdadır.");
         }
 
         // ==========================================
-        // İNDİRME VE DİĞER FONKSİYONLAR
+        // İNDİRME VE WHATSAPP
         // ==========================================
         function exportToExcel() {
             if(detayParsedData.length === 0) return alert("İndirilecek veri yok.");
