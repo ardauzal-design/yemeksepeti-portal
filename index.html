@@ -141,12 +141,22 @@
             <div id="view-dashboard" class="space-y-6 hidden animate-[fadeIn_0.3s_ease-in-out]">
                 <div class="bg-indigo-600 rounded-3xl p-6 lg:p-8 card-shadow text-white relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6">
                     <div class="z-10 w-full">
-                        <div class="flex justify-between items-start">
+                        <div class="flex justify-between items-start flex-col sm:flex-row gap-4 mb-4">
                             <div>
                                 <h2 class="text-2xl font-black mb-1">Performans Dashboard</h2>
-                                <p class="text-indigo-200 text-sm mb-4">Kusurlu Sipariş verilerini yüklediğinizde grafikler ve AI analizleri oluşacaktır.</p>
+                                <p class="text-indigo-200 text-sm">Kusurlu Sipariş verilerini yüklediğinizde grafikler ve AI analizleri oluşacaktır.</p>
                             </div>
-                            <div class="flex lg:hidden gap-2">
+                            
+                            <!-- Dashboard Mağaza Seçici -->
+                            <div class="w-full sm:w-auto relative z-20 flex items-center gap-2">
+                                <label class="text-xs font-bold text-indigo-200 whitespace-nowrap"><i class="fa-solid fa-filter"></i> Analiz Görünümü:</label>
+                                <select id="dashboard-store-filter" onchange="onDashboardStoreChange()" class="bg-indigo-700 border border-indigo-500 text-white text-sm font-bold rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-white/50 cursor-pointer shadow-sm appearance-none pr-8">
+                                    <option value="Tümü">Genel Bakış (Tüm Mağazalar)</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-xs text-indigo-300 pointer-events-none"></i>
+                            </div>
+                            
+                            <div class="flex lg:hidden gap-2 absolute right-0 top-0">
                                 <button onclick="toggleDarkMode()" class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><i id="theme-icon-mobile" class="fa-solid fa-moon"></i></button>
                                 <button onclick="logout()" class="w-8 h-8 rounded-full bg-red-500/80 flex items-center justify-center"><i class="fa-solid fa-power-off"></i></button>
                             </div>
@@ -165,6 +175,7 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- 1. Grafik: Kusur Sebepleri -->
                     <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl card-shadow border border-slate-100 dark:border-slate-700">
                         <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2"><i class="fa-solid fa-circle-exclamation text-amber-500"></i> Kusur Sebepleri</h3>
                         <div class="relative h-64 w-full flex items-center justify-center">
@@ -172,11 +183,22 @@
                             <p id="chart-reasons-empty" class="absolute text-xs text-slate-400 italic">Veri Bekleniyor...</p>
                         </div>
                     </div>
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl card-shadow border border-slate-100 dark:border-slate-700 lg:col-span-2">
+                    
+                    <!-- 2. Grafik: Personel Hata Dağılımı -->
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl card-shadow border border-slate-100 dark:border-slate-700">
                         <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2"><i class="fa-solid fa-users text-indigo-500"></i> Personel Hata Dağılımı</h3>
                         <div class="relative h-64 w-full flex items-center justify-center">
                             <canvas id="chart-pickers"></canvas>
                             <p id="chart-pickers-empty" class="absolute text-xs text-slate-400 italic">Veri Bekleniyor...</p>
+                        </div>
+                    </div>
+                
+                    <!-- 3. Grafik: Mağaza Hata Dağılımı -->
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl card-shadow border border-slate-100 dark:border-slate-700">
+                        <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2"><i class="fa-solid fa-store text-emerald-500"></i> Mağazalara Göre Kusurlar</h3>
+                        <div class="relative h-64 w-full flex items-center justify-center">
+                            <canvas id="chart-stores"></canvas>
+                            <p id="chart-stores-empty" class="absolute text-xs text-slate-400 italic">Veri Bekleniyor...</p>
                         </div>
                     </div>
                 </div>
@@ -504,6 +526,7 @@
         let isDarkMode = localStorage.getItem('yS_DarkMode') === 'true';
 
         let currentView = 'dashboard'; 
+        let currentDashboardStore = 'Tümü';
         
         // YENİLEME (REFRESH) İÇİN LOCAL STORAGE'DEN VERİLERİ ÇEK
         let detayParsedData = [];
@@ -529,7 +552,7 @@
 
         let sortColAnlik = '', sortAscAnlik = true;
         let sortColDetay = '', sortAscDetay = true;
-        let chartReasons = null, chartPickers = null;
+        let chartReasons = null, chartPickers = null, chartStores = null;
 
         // Kapatma Fonksiyonları (Dropdown için)
         document.addEventListener('click', function(event) {
@@ -554,6 +577,7 @@
                 if (detayParsedData.length > 0) {
                     rebuildDetayUniqueData();
                     populateRegionDropdown();
+                    populateDashboardFilter();
                 }
                 if (anlikMergedData.length > 0) {
                     updateAnlikKPIs();
@@ -696,13 +720,36 @@
         // ==========================================
         // DASHBOARD & YAPAY ZEKA UYARILARI
         // ==========================================
+        function populateDashboardFilter() {
+            const dashFilter = document.getElementById('dashboard-store-filter');
+            dashFilter.innerHTML = '<option value="Tümü">Genel Bakış (Tüm Mağazalar)</option>';
+            
+            const allStores = new Set();
+            detayParsedData.forEach(p => allStores.add(p.store));
+            
+            Array.from(allStores).sort().forEach(store => {
+                if(store && store.trim() !== '') {
+                    dashFilter.innerHTML += `<option value="${store}">${store}</option>`;
+                }
+            });
+        }
+
+        function onDashboardStoreChange() {
+            currentDashboardStore = document.getElementById('dashboard-store-filter').value;
+            updateDashboard();
+        }
+
         function updateDashboard() {
             if(currentView !== 'dashboard') return;
             if(detayParsedData.length === 0) {
                 document.getElementById('chart-reasons').style.display = 'none';
                 document.getElementById('chart-pickers').style.display = 'none';
+                document.getElementById('chart-stores').style.display = 'none';
+                
                 document.getElementById('chart-reasons-empty').style.display = 'block';
                 document.getElementById('chart-pickers-empty').style.display = 'block';
+                document.getElementById('chart-stores-empty').style.display = 'block';
+                
                 document.getElementById('top-products-body').innerHTML = `<tr><td colspan="2" class="text-center py-8 text-slate-400">Excel dosyası yüklediğinizde grafikler oluşacaktır.</td></tr>`;
                 document.getElementById('ai-alerts-container').innerHTML = '<div class="text-xs text-indigo-200 italic">Analiz edilecek veri bekleniyor...</div>';
                 return;
@@ -710,22 +757,35 @@
 
             document.getElementById('chart-reasons').style.display = 'block';
             document.getElementById('chart-pickers').style.display = 'block';
+            
+            // Eğer belirli bir mağaza seçiliyse, Mağaza grafiğini gizle
+            const isGeneral = currentDashboardStore === 'Tümü';
+            document.getElementById('chart-stores').parentElement.parentElement.classList.toggle('lg:grid-cols-3', isGeneral);
+            document.getElementById('chart-stores').parentElement.parentElement.classList.toggle('lg:grid-cols-2', !isGeneral);
+            document.getElementById('chart-stores').parentElement.style.display = isGeneral ? 'block' : 'none';
+
             document.getElementById('chart-reasons-empty').style.display = 'none';
             document.getElementById('chart-pickers-empty').style.display = 'none';
+            document.getElementById('chart-stores-empty').style.display = 'none';
 
             const textColor = isDarkMode ? '#cbd5e1' : '#475569';
             const gridColor = isDarkMode ? '#334155' : '#f1f5f9';
-            const reasonCounts = {}, pickerCounts = {}, productStats = {};
+            const reasonCounts = {}, pickerCounts = {}, productStats = {}, storeCounts = {};
 
-            detayParsedData.forEach(p => {
+            // FİLTRELEME
+            const dataToAnalyze = isGeneral ? detayParsedData : detayParsedData.filter(p => p.store === currentDashboardStore);
+
+            dataToAnalyze.forEach(p => {
                 if(!reasonCounts[p.reason]) reasonCounts[p.reason] = 0;
                 reasonCounts[p.reason]++;
                 
                 const pName = p.pickerName !== '-' ? p.pickerName : `ID: ${p.picker}`;
                 if(p.picker !== '-') { if(!pickerCounts[pName]) pickerCounts[pName] = 0; pickerCounts[pName]++; }
                 if(p.product !== 'Ürün Bilgisi Yok') { if(!productStats[p.product]) productStats[p.product] = { count: 0 }; productStats[p.product].count++; }
+                if(p.store) { if(!storeCounts[p.store]) storeCounts[p.store] = 0; storeCounts[p.store]++; }
             });
 
+            // Kusur Sebepleri Grafiği
             if(chartReasons) chartReasons.destroy();
             chartReasons = new Chart(document.getElementById('chart-reasons'), {
                 type: 'doughnut',
@@ -733,22 +793,54 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: textColor, font: {family: 'Plus Jakarta Sans'} } } } }
             });
 
-            const sortedPickers = Object.entries(pickerCounts).sort((a,b) => b[1] - a[1]).slice(0,7);
+            // Picker Hata Grafiği
+            const sortedPickers = Object.entries(pickerCounts).sort((a,b) => b[1] - a[1]).slice(0,5);
             if(chartPickers) chartPickers.destroy();
             chartPickers = new Chart(document.getElementById('chart-pickers'), {
                 type: 'bar',
-                data: { labels: sortedPickers.map(i => i[0]), datasets: [{ label: 'Kusur Adedi', data: sortedPickers.map(i => i[1]), backgroundColor: '#6366f1', borderRadius: 6 }] },
+                data: { labels: sortedPickers.map(i => i[0].split(' ')[0]), datasets: [{ label: 'Kusurlu Sipariş', data: sortedPickers.map(i => i[1]), backgroundColor: '#6366f1', borderRadius: 6 }] },
                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } }, x: { ticks: { color: textColor, font: {size: 10} }, grid: { display: false } } }, plugins: { legend: { display: false } } }
             });
 
+            // YENİ: Mağaza Hata Grafiği (Yatay Bar)
+            if(isGeneral) {
+                const sortedStores = Object.entries(storeCounts).sort((a,b) => b[1] - a[1]).slice(0,5);
+                if(chartStores) chartStores.destroy();
+                chartStores = new Chart(document.getElementById('chart-stores'), {
+                    type: 'bar',
+                    data: { labels: sortedStores.map(i => i[0].length > 18 ? i[0].substring(0, 18) + '...' : i[0]), datasets: [{ label: 'Kusur', data: sortedStores.map(i => i[1]), backgroundColor: '#10b981', borderRadius: 6 }] },
+                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } }, y: { ticks: { color: textColor, font: {size: 10} }, grid: { display: false } } }, plugins: { legend: { display: false } } }
+                });
+            }
+
+            // Ürünler Tablosu
             const sortedProducts = Object.entries(productStats).sort((a,b) => b[1].count - a[1].count).slice(0,10);
             const tbody = document.getElementById('top-products-body');
             tbody.innerHTML = sortedProducts.map(prod => `<tr class="border-b border-slate-100 dark:border-slate-700"><td class="py-3 px-4 font-bold text-xs truncate max-w-[200px]">${prod[0]}</td><td class="py-3 px-4 font-semibold">${prod[1].count} Adet</td></tr>`).join('');
+            if(sortedProducts.length === 0) tbody.innerHTML = `<tr><td colspan="2" class="text-center py-4 text-slate-400">Bu görünüm için kusurlu ürün bulunamadı.</td></tr>`;
 
+            // YAPAY ZEKA GELİŞİM FIRSATLARI VE İÇGÖRÜLER
             let alertsHtml = '';
-            if (sortedProducts.length > 0 && sortedProducts[0][1].count >= 3) { alertsHtml += `<div class="bg-red-500/20 border-l-4 border-red-400 p-3 rounded-r-xl text-xs text-white font-medium flex gap-2 items-start"><i class="fa-solid fa-triangle-exclamation mt-0.5 text-red-300"></i> <span><b>Kritik Ürün Uyarısı:</b> "${sortedProducts[0][0]}" ürününde anormal bir kusur artışı (${sortedProducts[0][1].count} adet) tespit edildi. SKT, barkod uyumsuzluğu veya depo sıcaklıklarını kontrol edin.</span></div>`; }
-            if (sortedPickers.length > 0 && sortedPickers[0][1] >= 3) { alertsHtml += `<div class="bg-amber-500/20 border-l-4 border-amber-400 p-3 rounded-r-xl text-xs text-white font-medium flex gap-2 items-start mt-2"><i class="fa-solid fa-user-shield mt-0.5 text-amber-300"></i> <span><b>Personel Performansı:</b> ${sortedPickers[0][0]} isimli personelde yüksek hata oranı (${sortedPickers[0][1]} sipariş) var. Olası bir fraud veya eğitim eksikliği kontrol edilmelidir.</span></div>`; }
-            if(!alertsHtml) alertsHtml = `<div class="text-xs text-indigo-200 italic">Şu an için olağandışı bir anomali tespit edilmedi.</div>`;
+            const topReason = Object.entries(reasonCounts).sort((a,b) => b[1] - a[1])[0];
+            
+            if (!isGeneral && dataToAnalyze.length > 0 && topReason) {
+                alertsHtml += `<div class="bg-indigo-800/50 border-l-4 border-indigo-400 p-3 rounded-r-xl text-xs text-white font-medium flex gap-2 items-start mb-2"><i class="fa-solid fa-lightbulb mt-0.5 text-indigo-300"></i> <span><b>${currentDashboardStore} İçin Gelişim Fırsatı:</b> Bu mağazada en sık karşılaşılan hata sebebi <b>"${topReason[0]}"</b> (${topReason[1]} vaka). Bu durum kronikleşmeden önce ${topReason[0].toLowerCase().includes('ürün') ? 'depo mal kabul süreçlerini ve ürün SKT kontrollerini' : 'picker paketleme eğitimlerini ve ürün yerleşimini'} gözden geçirmeniz operasyon kalitesini hızla artıracaktır.</span></div>`;
+            }
+
+            if (sortedProducts.length > 0 && sortedProducts[0][1].count >= (isGeneral ? 3 : 2)) { 
+                alertsHtml += `<div class="bg-red-500/20 border-l-4 border-red-400 p-3 rounded-r-xl text-xs text-white font-medium flex gap-2 items-start mb-2"><i class="fa-solid fa-box-open mt-0.5 text-red-300"></i> <span><b>Kritik Ürün Uyarısı:</b> "${sortedProducts[0][0]}" ürününde anormal bir kusur artışı (${sortedProducts[0][1].count} adet) tespit edildi. SKT, barkod uyumsuzluğu veya depo sıcaklıklarını kontrol edin.</span></div>`; 
+            }
+            if (sortedPickers.length > 0 && sortedPickers[0][1] >= (isGeneral ? 3 : 2)) { 
+                alertsHtml += `<div class="bg-amber-500/20 border-l-4 border-amber-400 p-3 rounded-r-xl text-xs text-white font-medium flex gap-2 items-start mb-2"><i class="fa-solid fa-user-shield mt-0.5 text-amber-300"></i> <span><b>Personel Koçluk Fırsatı:</b> ${sortedPickers[0][0]} adlı personelde yüksek hata oranı mevcut. Odaklanma sorunu veya prosedür eksikliği için birebir geri bildirim verilmesi önerilir.</span></div>`; 
+            }
+            if (isGeneral && Object.keys(storeCounts).length > 0) { 
+                const topStore = Object.entries(storeCounts).sort((a,b) => b[1] - a[1])[0];
+                if(topStore[1] >= 5) {
+                    alertsHtml += `<div class="bg-emerald-500/20 border-l-4 border-emerald-400 p-3 rounded-r-xl text-xs text-white font-medium flex gap-2 items-start"><i class="fa-solid fa-store mt-0.5 text-emerald-300"></i> <span><b>Bölgesel Odak:</b> "${topStore[0]}" mağazası ${topStore[1]} kusur ile öne çıkıyor. Operasyon liderinin bu mağazaya yerinde destek ziyareti yapması faydalı olabilir.</span></div>`; 
+                }
+            }
+            if(!alertsHtml) alertsHtml = `<div class="text-xs text-indigo-200 italic">Harika! Şu an için ${isGeneral ? 'bölgenizde' : 'bu mağazada'} dikkat çeken bir operasyonel anomali görünmüyor.</div>`;
+            
             document.getElementById('ai-alerts-container').innerHTML = alertsHtml;
         }
 
@@ -841,7 +933,6 @@
                 if (isDiff) anlikMergedData.push({ id: id, cust: cust, eAmt: eAmt, cAmt: cAmt, diffAmt: Math.abs(diffAmt), prods: prods });
             });
 
-            // Cache'e kaydet (Sayfa yenilendiğinde veriler uçmasın)
             try { localStorage.setItem('yS_Anlik_Data', JSON.stringify(anlikMergedData)); } catch(e){}
 
             updateAnlikKPIs();
@@ -852,14 +943,12 @@
         }
 
         function updateAnlikKPIs() {
-            // Toplam siparişi cache'den sayamayız ama eldeki filtrelenmiş diff'i gösterebiliriz
             let totalDiffSum = 0;
             anlikMergedData.forEach(m => totalDiffSum += m.diffAmt);
             
-            document.getElementById('kpi-orders').innerText = "-"; // CSV kaybolursa toplam sipariş sayısı bilinemez
+            document.getElementById('kpi-orders').innerText = "-"; 
             document.getElementById('kpi-diffs').innerText = anlikMergedData.length;
             document.getElementById('kpi-sum').innerText = formatCurrency(totalDiffSum);
-            document.getElementById('badge-diffs-anlik').innerText = anlikMergedData.length;
         }
 
         function sortAnlik(col) {
@@ -938,7 +1027,7 @@
             
             pickerMap[id] = name;
             localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
-            syncToCloud_Picker(); // BULUT SENK.
+            syncToCloud_Picker(); 
             
             document.getElementById('new-picker-id').value = '';
             document.getElementById('new-picker-name').value = '';
@@ -951,7 +1040,7 @@
             if(confirm(`ID: ${id} numaralı personeli silmek istediğinize emin misiniz?`)) {
                 delete pickerMap[id];
                 localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
-                syncToCloud_Picker(); // BULUT SENK.
+                syncToCloud_Picker(); 
                 renderPickerList();
                 detayParsedData.forEach(p => { if(p.picker === id) p.pickerName = 'İsim Bulunamadı'; });
                 renderDetayTable();
@@ -962,7 +1051,7 @@
             if(confirm("Tüm personel veritabanını SİLMEK istediğinize emin misiniz?")) {
                 pickerMap = {};
                 localStorage.removeItem('yS_Picker_Map');
-                syncToCloud_Picker(); // BULUT SENK.
+                syncToCloud_Picker(); 
                 renderPickerList();
                 detayParsedData.forEach(p => { if(p.picker !== '-') p.pickerName = 'İsim Bulunamadı'; });
                 renderDetayTable();
@@ -1002,7 +1091,7 @@
                                     }
                                 });
                                 localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
-                                syncToCloud_Picker(); // BULUT SENK.
+                                syncToCloud_Picker(); 
                             } 
                             else if (keys.includes('order id') || keys.some(k => k.includes('sipariş'))) {
                                 detailDataList = dataList;
@@ -1036,7 +1125,6 @@
 
             dataList.forEach((row, index) => {
                 const keys = Object.keys(row);
-                
                 const countryKey = keys.find(k => String(k).toLowerCase().trim() === 'country' || String(k).toLowerCase().trim() === 'ülke');
                 if (countryKey && row[countryKey]) {
                     const cVal = String(row[countryKey]).toLowerCase().trim();
@@ -1094,10 +1182,10 @@
                 }
             });
 
-            // Cache'e kaydet (Sayfa yenilendiğinde veriler uçmasın)
             try { localStorage.setItem('yS_Detay_Data', JSON.stringify(detayParsedData)); } catch(e){}
 
             populateRegionDropdown();
+            populateDashboardFilter();
         }
 
         // ==========================================
@@ -1290,7 +1378,7 @@
                     savedNotes[uid].img = dataUrl;
                     
                     localStorage.setItem('yS_NextDay_Notes', JSON.stringify(savedNotes));
-                    syncToCloud_Note(uid); // BULUT SENKRONİZASYONU
+                    syncToCloud_Note(uid); 
                     
                     const row = detayParsedData.find(p => p.uid === uid);
                     if (row) row.img = dataUrl;
@@ -1307,7 +1395,7 @@
         function removeImage(uid) {
             if(savedNotes[uid]) savedNotes[uid].img = null;
             localStorage.setItem('yS_NextDay_Notes', JSON.stringify(savedNotes));
-            syncToCloud_Note(uid); // BULUT SENK.
+            syncToCloud_Note(uid); 
             const row = detayParsedData.find(p => p.uid === uid);
             if (row) row.img = null;
             document.getElementById(`img-preview-container-${uid}`).innerHTML = '';
@@ -1334,7 +1422,7 @@
             savedNotes[uid].text = textarea.value;
             localStorage.setItem('yS_NextDay_Notes', JSON.stringify(savedNotes));
             
-            syncToCloud_Note(uid); // BULUT SENKRONİZASYONU
+            syncToCloud_Note(uid); 
             
             const originalText = btn.innerHTML;
             btn.innerHTML = `<i class="fa-solid fa-check"></i>`;
@@ -1372,7 +1460,7 @@
             if(confirm("Tüm yönetici notlarınızı ve fotoğrafları silmek istediğinize emin misiniz? (Bu işlem geri alınamaz!)")) {
                 savedNotes = {};
                 localStorage.removeItem('yS_NextDay_Notes');
-                syncToCloud_ClearNotes(); // BULUT SENK.
+                syncToCloud_ClearNotes(); 
                 detayParsedData.forEach(p => { p.note = ''; p.img = null; });
                 renderDetayTable();
                 closeWhatsAppModal();
