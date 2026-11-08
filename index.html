@@ -116,7 +116,6 @@
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <!-- BULUT DURUM BELİRTECİ -->
                     <div id="cloud-status" class="flex items-center gap-1.5 text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-3 py-2.5 rounded-xl border border-amber-200 dark:border-amber-800 transition-colors duration-500">
                         <i class="fa-solid fa-cloud"></i> <span id="cloud-status-text">Bağlantı Yok</span>
                     </div>
@@ -153,7 +152,6 @@
                             </div>
                         </div>
                         
-                        <!-- YAPAY ZEKA UYARI SİSTEMİ -->
                         <div class="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-xl w-full">
                             <h3 class="text-xs font-bold text-indigo-100 uppercase tracking-wider mb-2 flex items-center gap-2">
                                 <i class="fa-solid fa-robot"></i> Sistem İçgörüleri & Anormallik Tespiti
@@ -175,7 +173,7 @@
                         </div>
                     </div>
                     <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl card-shadow border border-slate-100 dark:border-slate-700 lg:col-span-2">
-                        <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2"><i class="fa-solid fa-users text-indigo-500"></i> Personel Hata Dağılımı (Picker)</h3>
+                        <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2"><i class="fa-solid fa-users text-indigo-500"></i> Personel Hata Dağılımı</h3>
                         <div class="relative h-64 w-full flex items-center justify-center">
                             <canvas id="chart-pickers"></canvas>
                             <p id="chart-pickers-empty" class="absolute text-xs text-slate-400 italic">Veri Bekleniyor...</p>
@@ -316,16 +314,12 @@
                                 <i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp
                             </button>
 
-                            <!-- YÖNETİCİ BÖLGESİ FİLTRESİ -->
-                            <div class="relative w-full sm:w-44" id="multi-manager-container">
-                                <div id="multi-manager-btn" onclick="toggleMultiManager()" class="cursor-pointer text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-white rounded-xl px-3 py-2 outline-none font-bold flex justify-between items-center gap-2">
-                                    <span id="multi-manager-text" class="truncate max-w-[100px]">Tüm Yöneticiler</span>
-                                    <i class="fa-solid fa-chevron-down text-[10px]"></i>
-                                </div>
-                                <div id="multi-manager-menu" class="hidden absolute z-[60] mt-1 w-full sm:w-56 right-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-60 overflow-y-auto"></div>
-                            </div>
+                            <!-- BÖLGE FİLTRESİ (Standart Tekli Seçim) -->
+                            <select id="filter-region-detay" onchange="updateStoreDropdown()" class="w-full sm:w-auto text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-white rounded-xl px-3 py-2 outline-none font-bold">
+                                <option value="">Tüm Bölgeler</option>
+                            </select>
                             
-                            <!-- MAĞAZA BÖLGESİ FİLTRESİ -->
+                            <!-- MAĞAZA FİLTRESİ (Çoklu Seçim) -->
                             <div class="relative w-full sm:w-40" id="multi-store-container">
                                 <div id="multi-store-btn" onclick="toggleMultiStore()" class="cursor-pointer text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-white rounded-xl px-3 py-2 outline-none font-bold flex justify-between items-center gap-2">
                                     <span id="multi-store-text" class="truncate max-w-[100px]">Tüm Mağazalar</span>
@@ -334,7 +328,7 @@
                                 <div id="multi-store-menu" class="hidden absolute z-[60] mt-1 w-full sm:w-56 right-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-60 overflow-y-auto"></div>
                             </div>
 
-                            <div class="relative w-full sm:w-52">
+                            <div class="relative w-full sm:w-48">
                                 <input type="text" id="search-input-detay" onkeyup="renderDetayTable()" placeholder="Ara..." class="w-full text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-white rounded-xl pl-9 pr-4 py-2 focus:ring-2 focus:ring-indigo-500/30 outline-none">
                                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400"></i>
                             </div>
@@ -364,7 +358,7 @@
 
         </main>
         
-        <!-- MOBİL ALT MENÜ (APP GÖRÜNÜMÜ İÇİN) -->
+        <!-- MOBİL ALT MENÜ -->
         <div class="fixed bottom-0 w-full bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex justify-around p-2 lg:hidden z-50">
             <button onclick="switchView('dashboard')" class="flex flex-col items-center p-2 text-indigo-500 w-1/3">
                 <i class="fa-solid fa-chart-column text-lg mb-1"></i> <span class="text-[10px] font-bold">Dashboard</span>
@@ -382,8 +376,6 @@
     <!-- ========================================== -->
     <!-- MODALLAR VE AÇILIR PENCERELER -->
     <!-- ========================================== -->
-
-    <!-- PERSONEL VERİTABANI MODALI -->
     <div id="picker-modal" class="fixed inset-0 bg-slate-900/80 z-[80] hidden items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-lg flex flex-col shadow-2xl overflow-hidden animate-[fadeIn_0.3s_ease-in-out]">
             <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
@@ -393,7 +385,6 @@
                 <button onclick="closePickerModal()" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-times text-xl"></i></button>
             </div>
             <div class="p-5 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3">Yeni bir personeli manuel olarak buraya kaydedebilirsiniz. Sistem, iade raporu yüklendiğinde "Picker ID" üzerinden ismini bulup tabloya yansıtacaktır.</p>
                 <div class="flex gap-2">
                     <input type="text" id="new-picker-id" placeholder="Picker ID" class="w-1/3 text-xs bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-indigo-500 dark:text-white">
                     <input type="text" id="new-picker-name" placeholder="İsim Soyisim" class="w-2/3 text-xs bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-indigo-500 dark:text-white">
@@ -410,7 +401,7 @@
         </div>
     </div>
 
-    <!-- WHATSAPP YENİ ZENGİN METİN MODALI -->
+    <!-- WHATSAPP ZENGİN METİN MODALI -->
     <div id="whatsapp-modal" class="fixed inset-0 bg-slate-900/80 z-[80] hidden items-center justify-center p-2 sm:p-4">
         <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-2xl max-h-[95vh] flex flex-col shadow-2xl overflow-hidden animate-[fadeIn_0.3s_ease-in-out]">
             <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
@@ -473,39 +464,30 @@
         try {
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore();
-            
-            // Eğer başarıyla bağlanırsa, üst menüdeki bulut simgesini yeşile çevir
             const cloudStatus = document.getElementById('cloud-status');
             const cloudText = document.getElementById('cloud-status-text');
             if (cloudStatus && cloudText) {
                 cloudStatus.className = "flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800 transition-colors duration-500";
                 cloudText.innerText = "Buluta Bağlı";
             }
-            
-            // Açılışta buluttaki eski verileri çek
             syncFromCloud();
         } catch (error) { 
             console.error("Firebase başlatılamadı:", error); 
         }
 
-        // --- BULUT (FIREBASE) SENKRONİZASYON FONKSİYONLARI ---
         async function syncFromCloud() {
             if(!db) return;
             try {
-                // Personelleri Çek
                 const pickerDoc = await db.collection('settings').doc('pickerMap').get();
                 if (pickerDoc.exists) pickerMap = pickerDoc.data();
                 
-                // Notları ve Fotoğrafları Çek
                 const notesSnap = await db.collection('notes').get();
                 notesSnap.forEach(doc => { savedNotes[doc.id] = doc.data(); });
                 
-                // Yerel hafızayı güncelle
                 localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
                 localStorage.setItem('yS_NextDay_Notes', JSON.stringify(savedNotes));
-            } catch(e) { console.error("Buluttan veri çekilemedi:", e); }
+            } catch(e) {}
         }
-
         async function syncToCloud_Picker() { if(db) await db.collection('settings').doc('pickerMap').set(pickerMap); }
         async function syncToCloud_Note(uid) { if(db) await db.collection('notes').doc(uid).set(savedNotes[uid]); }
         async function syncToCloud_ClearNotes() {
@@ -522,38 +504,38 @@
         let isDarkMode = localStorage.getItem('yS_DarkMode') === 'true';
 
         let currentView = 'dashboard'; 
-        let anlikCsvRows = [], anlikExcelRows = [], anlikMergedData = [];
-        let detayParsedData = [];
-        let detayUniqueData = { regions: new Set(), storeMap: new Map(), managers: new Set() };
         
+        // YENİLEME (REFRESH) İÇİN LOCAL STORAGE'DEN VERİLERİ ÇEK
+        let detayParsedData = [];
+        let anlikMergedData = [];
+        try {
+            detayParsedData = JSON.parse(localStorage.getItem('yS_Detay_Data')) || [];
+            anlikMergedData = JSON.parse(localStorage.getItem('yS_Anlik_Data')) || [];
+        } catch(e) { console.error("Cache okuma hatası", e); }
+        
+        let detayUniqueData = { regions: new Set(), storeMap: new Map() };
+        
+        let pickerMap = JSON.parse(localStorage.getItem('yS_Picker_Map')) || {};
+        let savedNotes = {};
+        let rawWhatsAppText = "";
+
+        try {
+            const rawNotes = JSON.parse(localStorage.getItem('yS_NextDay_Notes')) || {};
+            for(let key in rawNotes) {
+                if(typeof rawNotes[key] === 'string') savedNotes[key] = { text: rawNotes[key], img: null };
+                else savedNotes[key] = rawNotes[key];
+            }
+        } catch(e) { savedNotes = {}; }
+
         let sortColAnlik = '', sortAscAnlik = true;
         let sortColDetay = '', sortAscDetay = true;
         let chartReasons = null, chartPickers = null;
-        let rawWhatsAppText = "";
 
-        const managerMapping = {
-            "Balçova": "Onur Kadıoğlu (Güney Ege)",
-            "Buca": "Onur Kadıoğlu (Güney Ege)",
-            "Çiğli": "Onur Kadıoğlu (Güney Ege)",
-            "Menteşe": "Onur Kadıoğlu (Güney Ege)",
-            "Kuşadası": "Onur Kadıoğlu (Güney Ege)",
-            "Alsancak": "Kazım Özgün Şencan (Batı Ege)",
-            "Bornova": "Kazım Özgün Şencan (Batı Ege)",
-            "Ege Üniversitesi": "Kazım Özgün Şencan (Batı Ege)",
-            "Gaziemir": "Kazım Özgün Şencan (Batı Ege)",
-            "Gümbet": "Kazım Özgün Şencan (Batı Ege)",
-            "İmbatlı": "Kazım Özgün Şencan (Batı Ege)",
-            "Pamukkale": "Kazım Özgün Şencan (Batı Ege)"
-        };
-
+        // Kapatma Fonksiyonları (Dropdown için)
         document.addEventListener('click', function(event) {
             const btnS = document.getElementById('multi-store-btn');
             const menuS = document.getElementById('multi-store-menu');
             if(btnS && menuS && !btnS.contains(event.target) && !menuS.contains(event.target)) menuS.classList.add('hidden');
-            
-            const btnM = document.getElementById('multi-manager-btn');
-            const menuM = document.getElementById('multi-manager-menu');
-            if(btnM && menuM && !btnM.contains(event.target) && !menuM.contains(event.target)) menuM.classList.add('hidden');
         });
 
         window.onload = () => {
@@ -567,10 +549,36 @@
                 document.getElementById('app-container').classList.remove('hidden');
                 document.getElementById('app-container').classList.add('flex');
                 document.getElementById('active-region-badge').innerText = currentUserRegion + " Portalı";
+                
+                // KALICI HAFIZA YÜKLEMESİ (SAYFA YENİLENİRSE VERİLER GERİ GELSİN)
+                if (detayParsedData.length > 0) {
+                    rebuildDetayUniqueData();
+                    populateRegionDropdown();
+                }
+                if (anlikMergedData.length > 0) {
+                    updateAnlikKPIs();
+                    renderAnlikTable();
+                    document.getElementById('export-btn').disabled = false;
+                    document.getElementById('export-btn').classList.remove('opacity-40', 'cursor-not-allowed');
+                }
+                
                 switchView('dashboard');
             }
         };
 
+        function rebuildDetayUniqueData() {
+            detayUniqueData.regions.clear();
+            detayUniqueData.storeMap.clear();
+            detayParsedData.forEach(p => {
+                detayUniqueData.regions.add(p.region);
+                if (!detayUniqueData.storeMap.has(p.region)) detayUniqueData.storeMap.set(p.region, new Set());
+                detayUniqueData.storeMap.get(p.region).add(p.store);
+            });
+        }
+
+        // ==========================================
+        // YÖNETİCİ GİRİŞİ / ÇIKIŞI & TEMA
+        // ==========================================
         function handleLogin() {
             const pass = document.getElementById('login-password').value;
             const region = document.getElementById('login-region').value;
@@ -597,7 +605,6 @@
                 if(isDarkMode) icon.classList.replace('fa-moon', 'fa-sun');
                 else icon.classList.replace('fa-sun', 'fa-moon');
             }
-            
             const iconMobile = document.getElementById('theme-icon-mobile');
             if(iconMobile) {
                 if(isDarkMode) iconMobile.classList.replace('fa-moon', 'fa-sun');
@@ -686,6 +693,9 @@
             return { store: storeStr, region: 'Belirtilmemiş' };
         }
 
+        // ==========================================
+        // DASHBOARD & YAPAY ZEKA UYARILARI
+        // ==========================================
         function updateDashboard() {
             if(currentView !== 'dashboard') return;
             if(detayParsedData.length === 0) {
@@ -705,7 +715,6 @@
 
             const textColor = isDarkMode ? '#cbd5e1' : '#475569';
             const gridColor = isDarkMode ? '#334155' : '#f1f5f9';
-
             const reasonCounts = {}, pickerCounts = {}, productStats = {};
 
             detayParsedData.forEach(p => {
@@ -713,24 +722,14 @@
                 reasonCounts[p.reason]++;
                 
                 const pName = p.pickerName !== '-' ? p.pickerName : `ID: ${p.picker}`;
-                if(p.picker !== '-') {
-                    if(!pickerCounts[pName]) pickerCounts[pName] = 0;
-                    pickerCounts[pName]++;
-                }
-
-                if(p.product !== 'Ürün Bilgisi Yok') {
-                    if(!productStats[p.product]) productStats[p.product] = { count: 0 };
-                    productStats[p.product].count++;
-                }
+                if(p.picker !== '-') { if(!pickerCounts[pName]) pickerCounts[pName] = 0; pickerCounts[pName]++; }
+                if(p.product !== 'Ürün Bilgisi Yok') { if(!productStats[p.product]) productStats[p.product] = { count: 0 }; productStats[p.product].count++; }
             });
 
             if(chartReasons) chartReasons.destroy();
             chartReasons = new Chart(document.getElementById('chart-reasons'), {
                 type: 'doughnut',
-                data: {
-                    labels: Object.keys(reasonCounts),
-                    datasets: [{ data: Object.values(reasonCounts), backgroundColor: ['#ff0050', '#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#64748b'], borderWidth: 0 }]
-                },
+                data: { labels: Object.keys(reasonCounts), datasets: [{ data: Object.values(reasonCounts), backgroundColor: ['#ff0050', '#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#64748b'], borderWidth: 0 }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: textColor, font: {family: 'Plus Jakarta Sans'} } } } }
             });
 
@@ -738,38 +737,24 @@
             if(chartPickers) chartPickers.destroy();
             chartPickers = new Chart(document.getElementById('chart-pickers'), {
                 type: 'bar',
-                data: {
-                    labels: sortedPickers.map(i => i[0]),
-                    datasets: [{ label: 'Kusur Adedi', data: sortedPickers.map(i => i[1]), backgroundColor: '#6366f1', borderRadius: 6 }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    scales: { y: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } }, x: { ticks: { color: textColor, font: {size: 10} }, grid: { display: false } } },
-                    plugins: { legend: { display: false } }
-                }
+                data: { labels: sortedPickers.map(i => i[0]), datasets: [{ label: 'Kusur Adedi', data: sortedPickers.map(i => i[1]), backgroundColor: '#6366f1', borderRadius: 6 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } }, x: { ticks: { color: textColor, font: {size: 10} }, grid: { display: false } } }, plugins: { legend: { display: false } } }
             });
 
             const sortedProducts = Object.entries(productStats).sort((a,b) => b[1].count - a[1].count).slice(0,10);
             const tbody = document.getElementById('top-products-body');
-            tbody.innerHTML = sortedProducts.map(prod => `
-                <tr class="border-b border-slate-100 dark:border-slate-700">
-                    <td class="py-3 px-4 font-bold text-xs truncate max-w-[200px]" title="${prod[0]}">${prod[0]}</td>
-                    <td class="py-3 px-4 font-semibold">${prod[1].count} Adet</td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = sortedProducts.map(prod => `<tr class="border-b border-slate-100 dark:border-slate-700"><td class="py-3 px-4 font-bold text-xs truncate max-w-[200px]">${prod[0]}</td><td class="py-3 px-4 font-semibold">${prod[1].count} Adet</td></tr>`).join('');
 
-            // YAPAY ZEKA ALGORİTMASI (Anomali Tespiti)
             let alertsHtml = '';
-            if (sortedProducts.length > 0 && sortedProducts[0][1].count >= 3) {
-                alertsHtml += `<div class="bg-red-500/20 border-l-4 border-red-400 p-3 rounded-r-xl text-xs text-white font-medium flex gap-2 items-start"><i class="fa-solid fa-triangle-exclamation mt-0.5 text-red-300"></i> <span><b>Kritik Ürün Uyarısı:</b> "${sortedProducts[0][0]}" ürününde anormal bir kusur artışı (${sortedProducts[0][1].count} adet) tespit edildi. SKT, barkod uyumsuzluğu veya depo sıcaklıklarını kontrol edin.</span></div>`;
-            }
-            if (sortedPickers.length > 0 && sortedPickers[0][1] >= 3) {
-                alertsHtml += `<div class="bg-amber-500/20 border-l-4 border-amber-400 p-3 rounded-r-xl text-xs text-white font-medium flex gap-2 items-start mt-2"><i class="fa-solid fa-user-shield mt-0.5 text-amber-300"></i> <span><b>Personel Performansı:</b> ${sortedPickers[0][0]} isimli personelde yüksek hata oranı (${sortedPickers[0][1]} sipariş) var. Olası bir fraud veya eğitim eksikliği kontrol edilmelidir.</span></div>`;
-            }
+            if (sortedProducts.length > 0 && sortedProducts[0][1].count >= 3) { alertsHtml += `<div class="bg-red-500/20 border-l-4 border-red-400 p-3 rounded-r-xl text-xs text-white font-medium flex gap-2 items-start"><i class="fa-solid fa-triangle-exclamation mt-0.5 text-red-300"></i> <span><b>Kritik Ürün Uyarısı:</b> "${sortedProducts[0][0]}" ürününde anormal bir kusur artışı (${sortedProducts[0][1].count} adet) tespit edildi. SKT, barkod uyumsuzluğu veya depo sıcaklıklarını kontrol edin.</span></div>`; }
+            if (sortedPickers.length > 0 && sortedPickers[0][1] >= 3) { alertsHtml += `<div class="bg-amber-500/20 border-l-4 border-amber-400 p-3 rounded-r-xl text-xs text-white font-medium flex gap-2 items-start mt-2"><i class="fa-solid fa-user-shield mt-0.5 text-amber-300"></i> <span><b>Personel Performansı:</b> ${sortedPickers[0][0]} isimli personelde yüksek hata oranı (${sortedPickers[0][1]} sipariş) var. Olası bir fraud veya eğitim eksikliği kontrol edilmelidir.</span></div>`; }
             if(!alertsHtml) alertsHtml = `<div class="text-xs text-indigo-200 italic">Şu an için olağandışı bir anomali tespit edilmedi.</div>`;
             document.getElementById('ai-alerts-container').innerHTML = alertsHtml;
         }
 
+        // ==========================================
+        // SAYFA 1: ANLIK İŞLEM (TUTAR FARKLARI)
+        // ==========================================
         async function onAnlikFilesSelected(files) {
             if (!files || files.length === 0) return;
             const statusBox = document.getElementById('upload-status-anlik');
@@ -780,23 +765,28 @@
             statusText.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-[#ff0050]"></i> Analiz ediliyor...`;
 
             setTimeout(async () => {
-                for (let file of files) {
-                    let wb;
-                    if (file.name.endsWith('.csv')) {
-                        const text = await file.text();
-                        wb = XLSX.read(text, { type: 'string' });
-                        badgesBox.innerHTML += `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-pink-50 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 border border-pink-200 dark:border-pink-800"><i class="fa-solid fa-file"></i> ${file.name}</span>`;
-                    } else {
-                        const buf = await file.arrayBuffer();
-                        wb = XLSX.read(buf, { type: 'array' });
-                        badgesBox.innerHTML += `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"><i class="fa-solid fa-file"></i> ${file.name}</span>`;
+                try {
+                    for (let file of files) {
+                        let wb;
+                        if (file.name.endsWith('.csv')) {
+                            const text = await file.text();
+                            wb = XLSX.read(text, { type: 'string' });
+                            badgesBox.innerHTML += `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-pink-50 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 border border-pink-200 dark:border-pink-800"><i class="fa-solid fa-file"></i> ${file.name}</span>`;
+                        } else {
+                            const buf = await file.arrayBuffer();
+                            wb = XLSX.read(buf, { type: 'array' });
+                            badgesBox.innerHTML += `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"><i class="fa-solid fa-file"></i> ${file.name}</span>`;
+                        }
+                        const parsedData = parseExcelJson(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }));
+                        if (file.name.endsWith('.csv')) anlikCsvRows = parsedData;
+                        else anlikExcelRows = parsedData;
                     }
-                    const parsedData = parseExcelJson(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }));
-                    if (file.name.endsWith('.csv')) anlikCsvRows = parsedData;
-                    else anlikExcelRows = parsedData;
+                    processAnlikMatching();
+                    statusText.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500"></i> Anlık Eşleştirme Tamamlandı!`;
+                } catch(e) {
+                    console.error(e);
+                    statusText.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Dosya okuma hatası! Yanlış format.`;
                 }
-                statusText.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500"></i> Anlık Eşleştirme Tamamlandı!`;
-                processAnlikMatching();
             }, 50);
         }
 
@@ -836,8 +826,7 @@
             });
 
             const allIds = new Set([...csvMap.keys(), ...excelMap.keys()]);
-            let totalDiffSum = 0;
-
+            
             allIds.forEach(id => {
                 const c = csvMap.get(id), e = excelMap.get(id);
                 const cust = (c && c.cust !== 'Müşteri') ? c.cust : (e ? e.cust : 'Bilinmeyen Müşteri');
@@ -847,19 +836,30 @@
                 let diffAmt = 0, isDiff = false;
                 if (eAmt !== null && cAmt !== null) {
                     diffAmt = eAmt - cAmt;
-                    if (Math.abs(diffAmt) >= 0.01) { isDiff = true; totalDiffSum += Math.abs(diffAmt); }
+                    if (Math.abs(diffAmt) >= 0.01) { isDiff = true; }
                 }
                 if (isDiff) anlikMergedData.push({ id: id, cust: cust, eAmt: eAmt, cAmt: cAmt, diffAmt: Math.abs(diffAmt), prods: prods });
             });
 
-            document.getElementById('kpi-orders').innerText = allIds.size;
-            document.getElementById('kpi-diffs').innerText = anlikMergedData.length;
-            document.getElementById('kpi-sum').innerText = formatCurrency(totalDiffSum);
-            document.getElementById('badge-diffs-anlik').innerText = anlikMergedData.length;
+            // Cache'e kaydet (Sayfa yenilendiğinde veriler uçmasın)
+            try { localStorage.setItem('yS_Anlik_Data', JSON.stringify(anlikMergedData)); } catch(e){}
+
+            updateAnlikKPIs();
+            renderAnlikTable();
             
             document.getElementById('export-btn').disabled = false;
             document.getElementById('export-btn').classList.remove('opacity-40', 'cursor-not-allowed');
-            renderAnlikTable();
+        }
+
+        function updateAnlikKPIs() {
+            // Toplam siparişi cache'den sayamayız ama eldeki filtrelenmiş diff'i gösterebiliriz
+            let totalDiffSum = 0;
+            anlikMergedData.forEach(m => totalDiffSum += m.diffAmt);
+            
+            document.getElementById('kpi-orders').innerText = "-"; // CSV kaybolursa toplam sipariş sayısı bilinemez
+            document.getElementById('kpi-diffs').innerText = anlikMergedData.length;
+            document.getElementById('kpi-sum').innerText = formatCurrency(totalDiffSum);
+            document.getElementById('badge-diffs-anlik').innerText = anlikMergedData.length;
         }
 
         function sortAnlik(col) {
@@ -897,7 +897,7 @@
         }
 
         // ==========================================
-        // SAYFA 2: DETAY İŞLEM & PERSONEL EŞLEŞTİRME
+        // SAYFA 2: DETAY İŞLEM (KUSURLU SİPARİŞ)
         // ==========================================
         function openPickerModal() {
             document.getElementById('picker-modal').classList.remove('hidden');
@@ -977,47 +977,54 @@
 
             setTimeout(async () => {
                 let detailDataList = null;
-                for (let file of files) {
-                    let wb;
-                    if (file.name.endsWith('.csv')) {
-                        const text = await file.text();
-                        wb = XLSX.read(text, { type: 'string' });
-                    } else {
-                        const buf = await file.arrayBuffer();
-                        wb = XLSX.read(buf, { type: 'array' });
+                try {
+                    for (let file of files) {
+                        let wb;
+                        if (file.name.endsWith('.csv')) {
+                            const text = await file.text();
+                            wb = XLSX.read(text, { type: 'string' });
+                        } else {
+                            const buf = await file.arrayBuffer();
+                            wb = XLSX.read(buf, { type: 'array' });
+                        }
+                        const sheet = wb.Sheets[wb.SheetNames[0]];
+                        let dataList = parseExcelJson(XLSX.utils.sheet_to_json(sheet, { header: 1 }));
+                        
+                        if (dataList.length > 0) {
+                            const keys = Object.keys(dataList[0]).map(k => String(k).toLowerCase().trim());
+                            if (keys.includes('employee id') && keys.includes('employee name')) {
+                                dataList.forEach(row => {
+                                    const iK = keys.find(k => String(k).toLowerCase().trim() === 'employee id');
+                                    const nK = keys.find(k => String(k).toLowerCase().trim() === 'employee name');
+                                    if (iK && nK && row[iK] && row[nK]) {
+                                        let pId = String(row[iK]).replace('.0', '').trim();
+                                        pickerMap[pId] = String(row[nK]).trim();
+                                    }
+                                });
+                                localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
+                                syncToCloud_Picker(); // BULUT SENK.
+                            } 
+                            else if (keys.includes('order id') || keys.some(k => k.includes('sipariş'))) {
+                                detailDataList = dataList;
+                            }
+                        }
                     }
-                    const sheet = wb.Sheets[wb.SheetNames[0]];
-                    let dataList = parseExcelJson(XLSX.utils.sheet_to_json(sheet, { header: 1 }));
                     
-                    if (dataList.length > 0) {
-                        const keys = Object.keys(dataList[0]).map(k => String(k).toLowerCase().trim());
-                        if (keys.includes('employee id') && keys.includes('employee name')) {
-                            dataList.forEach(row => {
-                                const iK = keys.find(k => String(k).toLowerCase().trim() === 'employee id');
-                                const nK = keys.find(k => String(k).toLowerCase().trim() === 'employee name');
-                                if (iK && nK && row[iK] && row[nK]) {
-                                    let pId = String(row[iK]).replace('.0', '').trim();
-                                    pickerMap[pId] = String(row[nK]).trim();
-                                }
-                            });
-                            localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
-                            syncToCloud_Picker(); // BULUT SENK.
-                        } 
-                        else if (keys.includes('order id') || keys.some(k => k.includes('sipariş'))) detailDataList = dataList;
+                    if (detailDataList) {
+                        processDetayData(detailDataList);
+                        statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> Rapor başarıyla işlendi! Dashboard'ı kontrol edebilirsiniz.`;
+                    } else {
+                        detayParsedData.forEach(p => { if (p.picker && p.picker !== '-') p.pickerName = pickerMap[p.picker] || 'İsim Bulunamadı'; });
+                        renderDetayTable();
+                        statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> Personel veritabanı güncellendi!`;
                     }
+                    
+                    document.getElementById('export-btn').disabled = false;
+                    document.getElementById('export-btn').classList.remove('opacity-40', 'cursor-not-allowed');
+                } catch(err) {
+                    console.error(err);
+                    statusBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Dosya okuma hatası! Dosya formatınız uyumsuz.`;
                 }
-                
-                if (detailDataList) {
-                    processDetayData(detailDataList);
-                    statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> Rapor başarıyla işlendi! Dashboard'ı kontrol edebilirsiniz.`;
-                } else {
-                    detayParsedData.forEach(p => { if (p.picker && p.picker !== '-') p.pickerName = pickerMap[p.picker] || 'İsim Bulunamadı'; });
-                    renderDetayTable();
-                    statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> Personel veritabanı güncellendi!`;
-                }
-                
-                document.getElementById('export-btn').disabled = false;
-                document.getElementById('export-btn').classList.remove('opacity-40', 'cursor-not-allowed');
             }, 50);
         }
 
@@ -1026,7 +1033,6 @@
             detayParsedData = [];
             detayUniqueData.regions.clear();
             detayUniqueData.storeMap.clear();
-            detayUniqueData.managers.clear();
 
             dataList.forEach((row, index) => {
                 const keys = Object.keys(row);
@@ -1072,10 +1078,7 @@
                     let picker = (!rawPicker || String(rawPicker).toLowerCase() === 'null' || String(rawPicker).trim() === '') ? '-' : String(rawPicker).replace('.0', '').trim();
                     let pickerName = picker !== '-' ? (pickerMap[picker] || 'İsim Bulunamadı') : '-';
 
-                    let managerStr = managerMapping[storeStr] || 'Diğer Bölgeler / Atanmamış';
-
                     detayUniqueData.regions.add(regionStr);
-                    detayUniqueData.managers.add(managerStr);
                     if (!detayUniqueData.storeMap.has(regionStr)) detayUniqueData.storeMap.set(regionStr, new Set());
                     detayUniqueData.storeMap.get(regionStr).add(storeStr);
 
@@ -1084,86 +1087,51 @@
                     if(savedNotes[uniqueRowId]) { noteText = savedNotes[uniqueRowId].text || ''; noteImg = savedNotes[uniqueRowId].img || null; }
 
                     detayParsedData.push({
-                        uid: uniqueRowId, orderId: orderId, region: regionStr, store: storeStr, sku: sku, manager: managerStr,
+                        uid: uniqueRowId, orderId: orderId, region: regionStr, store: storeStr, sku: sku,
                         picker: picker, pickerName: pickerName, product: product, reason: reason, 
                         note: noteText, img: noteImg
                     });
                 }
             });
 
-            populateManagerDropdown();
+            // Cache'e kaydet (Sayfa yenilendiğinde veriler uçmasın)
+            try { localStorage.setItem('yS_Detay_Data', JSON.stringify(detayParsedData)); } catch(e){}
+
+            populateRegionDropdown();
         }
 
         // ==========================================
-        // YENİ ÇOKLU SEÇİM FİLTRELERİ (MANAGER & STORE)
+        // FİLTRELEME: BÖLGE (TEKLİ) & MAĞAZA (ÇOKLU)
         // ==========================================
-        function toggleMultiManager() { document.getElementById('multi-manager-menu').classList.toggle('hidden'); }
         function toggleMultiStore() { document.getElementById('multi-store-menu').classList.toggle('hidden'); }
 
-        function populateManagerDropdown() {
-            const managerMenu = document.getElementById('multi-manager-menu');
-            if(!managerMenu) return; 
-            
-            let managers = Array.from(detayUniqueData.managers).sort();
-            let htmlM = `
-                <label class="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer text-xs font-bold text-slate-800 dark:text-white border-b border-slate-100 dark:border-slate-700">
-                    <input type="checkbox" id="check-all-managers" onchange="toggleAllManagers(this.checked)" class="accent-indigo-500 w-3.5 h-3.5" checked>
-                    Tüm Yöneticiler
-                </label>
-            `;
-            managers.forEach(m => {
-                htmlM += `
-                <label class="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer text-xs font-medium text-slate-700 dark:text-slate-300">
-                    <input type="checkbox" value="${m}" onchange="handleManagerSelection()" class="manager-checkbox accent-indigo-500 w-3.5 h-3.5" checked>
-                    <span class="truncate">${m}</span>
-                </label>`;
-            });
-            managerMenu.innerHTML = htmlM;
-            updateMultiManagerBtnText();
+        function populateRegionDropdown() {
+            const regionSelect = document.getElementById('filter-region-detay');
+            if(currentUserRegion && currentUserRegion !== 'Tüm Türkiye') {
+                regionSelect.innerHTML = `<option value="${currentUserRegion}">${currentUserRegion}</option>`;
+            } else {
+                regionSelect.innerHTML = '<option value="">Tüm Bölgeler</option>';
+                Array.from(detayUniqueData.regions).sort().forEach(r => {
+                    regionSelect.innerHTML += `<option value="${r}">${r}</option>`;
+                });
+            }
             updateStoreDropdown();
-        }
-
-        function toggleAllManagers(isChecked) {
-            document.querySelectorAll('.manager-checkbox').forEach(cb => cb.checked = isChecked);
-            updateMultiManagerBtnText();
-            updateStoreDropdown();
-        }
-
-        function handleManagerSelection() {
-            const total = document.querySelectorAll('.manager-checkbox').length;
-            const checked = document.querySelectorAll('.manager-checkbox:checked').length;
-            document.getElementById('check-all-managers').checked = (total === checked && total > 0);
-            updateMultiManagerBtnText();
-            updateStoreDropdown();
-        }
-
-        function updateMultiManagerBtnText() {
-            const total = document.querySelectorAll('.manager-checkbox').length;
-            const checked = document.querySelectorAll('.manager-checkbox:checked').length;
-            const textEl = document.getElementById('multi-manager-text');
-            if(total === 0) textEl.innerText = "Yönetici Yok";
-            else if(checked === 0) textEl.innerText = "Yönetici Seçilmedi";
-            else if(checked === total) textEl.innerText = "Tüm Yöneticiler";
-            else if(checked === 1) textEl.innerText = document.querySelector('.manager-checkbox:checked').value.split(' ')[0];
-            else textEl.innerText = `${checked} Yönetici`;
-        }
-
-        function getSelectedManagers() {
-            const selected = [];
-            document.querySelectorAll('.manager-checkbox:checked').forEach(cb => selected.push(cb.value));
-            return selected;
         }
 
         function updateStoreDropdown() {
-            const selectedManagers = getSelectedManagers();
+            const regionSelect = document.getElementById('filter-region-detay');
+            const selectedRegion = regionSelect.value;
             const menu = document.getElementById('multi-store-menu');
             if(!menu) return;
             
-            let availableStores = new Set();
-            detayParsedData.forEach(p => {
-                if(selectedManagers.includes(p.manager)) availableStores.add(p.store);
-            });
-            let stores = Array.from(availableStores).sort();
+            let stores = [];
+            if (selectedRegion && detayUniqueData.storeMap.has(selectedRegion)) {
+                stores = Array.from(detayUniqueData.storeMap.get(selectedRegion)).sort();
+            } else if (!selectedRegion) {
+                const allStores = new Set();
+                detayUniqueData.storeMap.forEach(sSet => sSet.forEach(s => allStores.add(s)));
+                stores = Array.from(allStores).sort();
+            }
 
             let html = `
                 <label class="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer text-xs font-bold text-slate-800 dark:text-white border-b border-slate-100 dark:border-slate-700">
@@ -1217,7 +1185,7 @@
 
         function getDetayFilteredData() {
             const search = document.getElementById('search-input-detay').value.toLowerCase();
-            const selectedManagers = getSelectedManagers();
+            const filterRegion = document.getElementById('filter-region-detay').value;
             const selectedStores = getSelectedStores();
 
             return detayParsedData.filter(p => {
@@ -1227,10 +1195,11 @@
                                     p.picker.toLowerCase().includes(search) ||
                                     p.pickerName.toLowerCase().includes(search) ||
                                     p.reason.toLowerCase().includes(search);
-                const matchManager = selectedManagers.length === 0 ? false : selectedManagers.includes(p.manager);
+                
+                const matchRegion = filterRegion ? p.region === filterRegion : true;
                 const matchStore = selectedStores.length === 0 ? false : selectedStores.includes(p.store);
                 
-                return matchSearch && matchManager && matchStore;
+                return matchSearch && matchRegion && matchStore;
             });
         }
 
@@ -1263,7 +1232,6 @@
                     <td class="py-3.5 px-5 font-mono text-indigo-600 dark:text-indigo-400 font-bold">${p.orderId}</td>
                     <td class="py-3.5 px-5 text-slate-600 dark:text-slate-300 font-semibold text-[11px] leading-tight">
                         ${p.region} <br> <span class="font-bold text-slate-800 dark:text-white text-xs">${p.store}</span>
-                        <br><span class="text-[9px] text-slate-400 truncate max-w-[120px] block" title="${p.manager}">${p.manager}</span>
                     </td>
                     <td class="py-3.5 px-5 text-slate-500 dark:text-slate-400 font-mono text-xs">${p.sku}</td>
                     <td class="py-3.5 px-5 font-bold text-slate-700 dark:text-slate-200 max-w-[200px] truncate" title="${p.product}">${p.product}</td>
@@ -1299,24 +1267,7 @@
             `).join('');
         }
 
-        function saveNote(uid) {
-            const textarea = document.getElementById(`note-${uid}`);
-            const btn = document.getElementById(`btn-${uid}`);
-            if(!savedNotes[uid]) savedNotes[uid] = { text: '', img: null };
-            savedNotes[uid].text = textarea.value;
-            localStorage.setItem('yS_NextDay_Notes', JSON.stringify(savedNotes));
-            
-            syncToCloud_Note(uid); // BULUT SENKRONİZASYONU
-            
-            const originalText = btn.innerHTML;
-            btn.innerHTML = `<i class="fa-solid fa-check"></i>`;
-            btn.classList.replace('bg-emerald-500', 'bg-slate-800');
-            const row = detayParsedData.find(p => p.uid === uid);
-            if(row) row.note = textarea.value;
-
-            setTimeout(() => { btn.innerHTML = originalText; btn.classList.replace('bg-slate-800', 'bg-emerald-500'); }, 1500);
-        }
-
+        // FOTOĞRAF İŞLEMLERİ
         function handleImageUpload(event, uid) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1376,8 +1327,26 @@
             document.getElementById('modal-image').src = '';
         }
 
+        function saveNote(uid) {
+            const textarea = document.getElementById(`note-${uid}`);
+            const btn = document.getElementById(`btn-${uid}`);
+            if(!savedNotes[uid]) savedNotes[uid] = { text: '', img: null };
+            savedNotes[uid].text = textarea.value;
+            localStorage.setItem('yS_NextDay_Notes', JSON.stringify(savedNotes));
+            
+            syncToCloud_Note(uid); // BULUT SENKRONİZASYONU
+            
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-check"></i>`;
+            btn.classList.replace('bg-emerald-500', 'bg-slate-800');
+            const row = detayParsedData.find(p => p.uid === uid);
+            if(row) row.note = textarea.value;
+
+            setTimeout(() => { btn.innerHTML = originalText; btn.classList.replace('bg-slate-800', 'bg-emerald-500'); }, 1500);
+        }
+
         // ==========================================
-        // WHATSAPP RAPORU YÖNETİMİ & KOPYALAMA
+        // WHATSAPP RAPORU YÖNETİMİ & BYPASS GÖRSEL
         // ==========================================
         function openWhatsAppModal() {
             if (detayParsedData.length === 0) return alert("Lütfen önce Kusurlu Sipariş Kaydı için veri yükleyin.");
@@ -1480,6 +1449,7 @@
             }
         }
 
+        // --- html2canvas GÖRSEL KOPYALAMA BYPASS ---
         function generateWhatsAppImage() {
             const btn = document.getElementById('generate-img-btn');
             const originalText = btn.innerHTML;
@@ -1511,8 +1481,8 @@
                         navigator.clipboard.write([item]).then(() => {
                             btn.innerHTML = `<i class="fa-solid fa-check text-lg"></i> Kopyalandı! (Yapıştırabilirsiniz)`;
                             setTimeout(() => { btn.innerHTML = originalText; }, 3000);
-                        }).catch(e => {  });
-                    } catch (e) {  }
+                        }).catch(e => { /* Hata yok sayılır */ });
+                    } catch (e) { /* Hata yok sayılır */ }
                 }, 'image/png');
 
             });
@@ -1547,10 +1517,10 @@
                 const filteredDetay = getDetayFilteredData();
                 if (filteredDetay.length === 0) return;
                 const exportData = filteredDetay.map(p => ({
-                    'Yönetici Bölgesi': p.manager, 'Mağaza Bölgesi': p.region, 'Mağaza': p.store, 'Sipariş No': p.orderId, 'Ürün Kodu (SKU)': p.sku, 'İade Edilen Ürün': p.product, 'Kusur Sebebi': p.reason, 'Toplayan İsim': p.pickerName, 'Toplayan (Picker ID)': p.picker, 'Yönetici Açıklaması': p.note, 'Ekli Fotoğraf': p.img ? 'Var (Portalda)' : 'Yok'
+                    'Bölge': p.region, 'Mağaza': p.store, 'Sipariş No': p.orderId, 'Ürün Kodu (SKU)': p.sku, 'İade Edilen Ürün': p.product, 'Kusur Sebebi': p.reason, 'Toplayan İsim': p.pickerName, 'Toplayan (Picker ID)': p.picker, 'Yönetici Açıklaması': p.note, 'Ekli Fotoğraf': p.img ? 'Var (Portalda)' : 'Yok'
                 }));
                 const ws = XLSX.utils.json_to_sheet(exportData);
-                ws['!cols'] = [{wch: 35}, {wch: 15}, {wch: 25}, {wch: 25}, {wch: 20}, {wch: 40}, {wch: 30}, {wch: 25}, {wch: 20}, {wch: 50}, {wch: 20}];
+                ws['!cols'] = [{wch: 15}, {wch: 25}, {wch: 25}, {wch: 20}, {wch: 40}, {wch: 30}, {wch: 25}, {wch: 20}, {wch: 50}, {wch: 20}];
                 XLSX.utils.book_append_sheet(wb, ws, "Kusurlu Sipariş Raporu");
                 XLSX.writeFile(wb, "Kusurlu_Siparis_Raporu.xlsx");
             }
