@@ -334,7 +334,7 @@
         let currentUserRegion = localStorage.getItem('yS_User_Region') || null;
         let isDarkMode = localStorage.getItem('yS_DarkMode') === 'true';
 
-        let detayParsedData = JSON.parse(localStorage.getItem('yS_Detay')) || [];
+        let detayParsedData = JSON.parse(localStorage.getItem('yS_Detay_Data')) || [];
         let pickerMap = JSON.parse(localStorage.getItem('yS_Picker_Map')) || {};
         
         let anlikCsvRows = [];
@@ -446,38 +446,23 @@
         }
 
         // ==========================================
-        // ESNEK DOSYA OKUMA MOTORU (XLSX & CSV)
+        // ORİJİNAL, SAĞLAM PARSER (ESKİDEN ÇALIŞAN HALİ)
         // ==========================================
         function parseExcelJson(rows) {
             if (!rows || rows.length < 2) return [];
-            
             let headerIdx = 0;
-            for(let i=0; i<Math.min(6, rows.length); i++) {
-                if(!rows[i]) continue;
-                let matchCount = 0;
-                rows[i].forEach(cell => {
-                    const str = String(cell).toLowerCase().trim();
-                    if(str.includes('sipariş no') || str.includes('order id') || str.includes('ara toplam') || 
-                       str.includes('original amount') || str.includes('final amount') || str.includes('restoran adı') ||
-                       str.includes('customer') || str.includes('müşteri') || str.includes('ürün') || str.includes('product') ||
-                       str.includes('employee id') || str.includes('employee name') || str.includes('ccr3')) {
-                        matchCount++;
-                    }
-                });
-                if(matchCount >= 2) { 
-                    headerIdx = i; 
-                    break; 
-                }
+            for(let i=0; i<Math.min(5, rows.length); i++) {
+                if(rows[i] && rows[i].some(h => {
+                    const strH = String(h).toLowerCase();
+                    return strH.includes('order') || strH.includes('sipariş') || strH.includes('employee') || strH.includes('customer');
+                })) { headerIdx = i; break; }
             }
-
             let headers = rows[headerIdx];
             const list = [];
             for (let i = headerIdx + 1; i < rows.length; i++) {
                 if (!rows[i] || rows[i].length === 0) continue;
                 const obj = {};
-                headers.forEach((h, idx) => { 
-                    if (h) obj[String(h).trim()] = rows[i][idx] !== undefined ? rows[i][idx] : ''; 
-                });
+                headers.forEach((h, idx) => { if (h) obj[String(h).trim()] = rows[i][idx] !== undefined ? rows[i][idx] : ''; });
                 list.push(obj);
             }
             return list;
@@ -498,124 +483,148 @@
             return '₺' + n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
-        async function readAnyExcelFile(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        let data;
-                        if(file.name.toLowerCase().endsWith('.csv')) {
-                            data = e.target.result;
-                            resolve(XLSX.read(data, { type: 'string' }));
-                        } else {
-                            data = new Uint8Array(e.target.result);
-                            resolve(XLSX.read(data, { type: 'array' }));
-                        }
-                    } catch(err) {
-                        reject(err);
-                    }
-                };
-                reader.onerror = reject;
-                
-                if(file.name.toLowerCase().endsWith('.csv')) {
-                    reader.readAsText(file);
-                } else {
-                    reader.readAsArrayBuffer(file);
-                }
-            });
+        function extractStoreAndRegion(storeStr) {
+            if (!storeStr) return { store: 'Bilinmiyor', region: 'Bilinmiyor' };
+            storeStr = String(storeStr).replace('Yemeksepeti Market,', '').trim();
+            const match = storeStr.match(/(.*?)\((.*?)\)/);
+            if (match) return { store: match[1].trim(), region: match[2].trim() };
+            return { store: storeStr, region: 'Belirtilmemiş' };
         }
 
         // ==========================================
-        // KUSURLU SİPARİŞ İŞLEMLERİ (HATASIZ & TAM)
+        // KUSURLU SİPARİŞ İŞLEMLERİ (ORİJİNAL ÇALIŞAN ALTYAPI)
         // ==========================================
-        async function onDetayFileSelected(files) {
+        function onDetayFileSelected(files) {
             if (!files || files.length === 0) return;
             const statusBox = document.getElementById('upload-status-detay');
             if(statusBox) {
                 statusBox.classList.remove('hidden');
-                statusBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-indigo-600"></i> Dosyalar işleniyor...`;
+                statusBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-indigo-600"></i> İşleniyor...`;
             }
 
-            try {
+            setTimeout(async () => {
                 let detailDataList = null;
-
-                for (let file of files) {
-                    const wb = await readAnyExcelFile(file);
-                    const sheet = wb.Sheets[wb.SheetNames[0]];
-                    const dataList = parseExcelJson(XLSX.utils.sheet_to_json(sheet, { header: 1 }));
-                    
-                    if (dataList.length > 0) {
-                        const keys = Object.keys(dataList[0]).map(k => String(k).toLowerCase().trim());
+                try {
+                    for (let file of files) {
+                        let wb;
+                        if (file.name.toLowerCase().endsWith('.csv')) {
+                            const text = await file.text();
+                            wb = XLSX.read(text, { type: 'string' });
+                        } else {
+                            const buf = await file.arrayBuffer();
+                            wb = XLSX.read(buf, { type: 'array' });
+                        }
+                        const sheet = wb.Sheets[wb.SheetNames[0]];
+                        let dataList = parseExcelJson(XLSX.utils.sheet_to_json(sheet, { header: 1 }));
                         
-                        // Personel Listesi Excel'i mi?
-                        if (keys.includes('employee id') && keys.includes('employee name')) {
-                            dataList.forEach(row => {
-                                const iK = Object.keys(row).find(k => String(k).toLowerCase().trim() === 'employee id');
-                                const nK = Object.keys(row).find(k => String(k).toLowerCase().trim() === 'employee name');
-                                if (iK && nK && row[iK] && row[nK]) {
-                                    let pId = String(row[iK]).replace('.0', '').trim();
-                                    pickerMap[pId] = String(row[nK]).trim();
-                                }
-                            });
-                            localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
-                            syncToCloud_Picker();
-                        } 
-                        // Kusurlu Siparişler Dosyası mı?
-                        else if (keys.includes('order id') || keys.some(k => k.includes('sipariş'))) {
-                            detailDataList = dataList;
+                        if (dataList.length > 0) {
+                            const keys = Object.keys(dataList[0]).map(k => String(k).toLowerCase().trim());
+                            if (keys.includes('employee id') && keys.includes('employee name')) {
+                                dataList.forEach(row => {
+                                    const iK = Object.keys(row).find(k => String(k).toLowerCase().trim() === 'employee id');
+                                    const nK = Object.keys(row).find(k => String(k).toLowerCase().trim() === 'employee name');
+                                    if (iK && nK && row[iK] && row[nK]) {
+                                        let pId = String(row[iK]).replace('.0', '').trim();
+                                        pickerMap[pId] = String(row[nK]).trim();
+                                    }
+                                });
+                                localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
+                                syncToCloud_Picker();
+                            } 
+                            else if (keys.includes('order id') || keys.some(k => k.includes('sipariş'))) {
+                                detailDataList = dataList;
+                            }
                         }
                     }
-                }
-
-                if (detailDataList && detailDataList.length > 0) {
-                    detayParsedData = [];
-                    detailDataList.forEach((row, idx) => {
-                        const keys = Object.keys(row);
-                        const idKey = keys.find(k => String(k).toLowerCase().includes('order id') || String(k).toLowerCase().includes('sipariş'));
-                        if(!idKey || !row[idKey]) return;
-
-                        const dateKey = keys.find(k => String(k).toLowerCase().includes('date') || String(k).toLowerCase().includes('tarih'));
-                        const storeKey = keys.find(k => String(k).toLowerCase().includes('store') || String(k).toLowerCase().includes('mağaza'));
-                        const prodKey = keys.find(k => String(k).toLowerCase().includes('product') || String(k).toLowerCase().includes('ürün'));
-                        const reasonKey = keys.find(k => String(k).toLowerCase().includes('ccr3') || String(k).toLowerCase().includes('sebep'));
-                        const pickerKey = keys.find(k => String(k).toLowerCase().includes('picker'));
-
-                        let storeStr = storeKey ? String(row[storeKey]) : 'Bilinmiyor';
-                        if (storeStr.includes('(')) storeStr = storeStr.split('(')[0].trim();
-                        let pickerIdRaw = pickerKey ? String(row[pickerKey]).replace('.0','') : '-';
-
-                        detayParsedData.push({
-                            uid: row[idKey] + '_' + idx,
-                            date: dateKey ? String(row[dateKey]).substring(0, 10) : '',
-                            store: storeStr,
-                            orderId: row[idKey],
-                            product: prodKey ? row[prodKey] : 'Ürün Yok',
-                            reason: reasonKey ? row[reasonKey] : 'Belirtilmemiş',
-                            picker: pickerIdRaw,
-                            pickerName: pickerMap[pickerIdRaw] || `ID: ${pickerIdRaw}`
+                    
+                    if (detailDataList) {
+                        processDetayData(detailDataList);
+                        if(statusBox) statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> Rapor başarıyla işlendi! Dashboard'ı kontrol edebilirsiniz.`;
+                    } else {
+                        detayParsedData.forEach(p => { 
+                            if (p.picker && p.picker !== '-') p.pickerName = pickerMap[p.picker] || 'İsim Bulunamadı'; 
                         });
-                    });
+                        renderDetayTable();
+                        if(statusBox) statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> Personel veritabanı güncellendi!`;
+                    }
+                } catch(err) {
+                    console.error("Detay okuma hatası:", err);
+                    if(statusBox) statusBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Dosya okuma hatası! Dosya formatınız uyumsuz.`;
+                    alert("Dosya okuma hatası! Lütfen dosya formatınızı kontrol edin.");
+                }
+            }, 50);
+        }
 
-                    localStorage.setItem('yS_Detay', JSON.stringify(detayParsedData));
-                    populateDashboardFilter();
-                    renderDetayTable();
-                    updateDashboard();
+        function processDetayData(dataList) {
+            if (dataList.length === 0) return;
+            detayParsedData = [];
 
-                    if(statusBox) statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> Kusurlu sipariş raporu başarıyla işlendi!`;
-                } else {
-                    // Sadece Personel listesi yüklendiyse isimleri güncelle
-                    detayParsedData.forEach(p => {
-                        if (p.picker && p.picker !== '-') p.pickerName = pickerMap[p.picker] || `ID: ${p.picker}`;
-                    });
-                    renderDetayTable();
-                    if(statusBox) statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> Personel veritabanı başarıyla güncellendi!`;
+            dataList.forEach((row, index) => {
+                const keys = Object.keys(row);
+                
+                const countryKey = keys.find(k => String(k).toLowerCase().trim() === 'country' || String(k).toLowerCase().trim() === 'ülke');
+                if (countryKey && row[countryKey]) {
+                    const cVal = String(row[countryKey]).toLowerCase().trim();
+                    if (cVal !== 'turkey' && cVal !== 'türkiye') return;
                 }
 
-            } catch(e) {
-                console.error("Detay okuma hatası:", e);
-                if(statusBox) statusBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Dosya okuma hatası! Dosya biçimini kontrol edin.`;
-                alert("Dosya okunamadı. Lütfen geçerli bir Excel (.xlsx) veya CSV dosyası seçtiğinizden emin olun.");
-            }
+                const storeKey = keys.find(k => String(k).toLowerCase().trim() === 'store' || String(k).toLowerCase().includes('mağaza'));
+                let regionStr = '', storeStr = '';
+                if(storeKey && row[storeKey]) {
+                    const extracted = extractStoreAndRegion(row[storeKey]);
+                    regionStr = extracted.region;
+                    storeStr = extracted.store;
+                }
+                if(currentUserRegion && currentUserRegion !== 'Tüm Türkiye' && regionStr !== currentUserRegion) return;
+
+                const idKey = keys.find(k => String(k).toLowerCase().trim() === 'order id' || String(k).toLowerCase().includes('sipariş'));
+                const skuKey = keys.find(k => String(k).toLowerCase().trim() === 'sku' || String(k).toLowerCase().includes('kodu'));
+                const pickerKey = keys.find(k => String(k).toLowerCase().trim() === 'picker id' || String(k).toLowerCase().includes('picker'));
+                
+                let prodKey = keys.find(k => String(k).toLowerCase().trim() === 'product name' || String(k).toLowerCase().trim() === 'ürün adı');
+                let reasonKey = keys.find(k => String(k).toLowerCase().trim() === 'ccr3' || String(k).toLowerCase().trim() === 'iade sebebi');
+                let dateKey = keys.find(k => String(k).toLowerCase().trim().includes('tarih') || String(k).toLowerCase().trim().includes('date'));
+
+                if (idKey && row[idKey]) {
+                    const orderId = String(row[idKey]).trim();
+                    if (!orderId) return;
+
+                    let product = prodKey ? row[prodKey] : '';
+                    let sku = skuKey ? row[skuKey] : '';
+                    let rawPicker = pickerKey ? row[pickerKey] : '';
+                    let reason = reasonKey ? row[reasonKey] : '';
+                    let dateStr = dateKey ? String(row[dateKey]).substring(0, 10) : '';
+
+                    product = (!product || String(product).toLowerCase() === 'null' || String(product).trim() === '') ? 'Ürün Bilgisi Yok' : product;
+                    sku = (!sku || String(sku).toLowerCase() === 'null' || String(sku).trim() === '') ? '-' : sku;
+                    reason = (!reason || String(reason).toLowerCase() === 'null' || String(reason).trim() === '') ? 'Sebep Belirtilmemiş' : reason;
+                    
+                    let picker = (!rawPicker || String(rawPicker).toLowerCase() === 'null' || String(rawPicker).trim() === '') ? '-' : String(rawPicker).replace('.0', '').trim();
+                    let pickerName = picker !== '-' ? (pickerMap[picker] || 'İsim Bulunamadı') : '-';
+
+                    const uniqueRowId = orderId + "_" + index; 
+
+                    detayParsedData.push({
+                        uid: uniqueRowId, 
+                        orderId: orderId, 
+                        region: regionStr, 
+                        store: storeStr, 
+                        sku: sku,
+                        picker: picker, 
+                        pickerName: pickerName, 
+                        product: product, 
+                        reason: reason, 
+                        date: dateStr,
+                        note: ''
+                    });
+                }
+            });
+
+            try { localStorage.setItem('yS_Detay_Data', JSON.stringify(detayParsedData)); } catch(e){}
+
+            populateDashboardFilter();
+            renderDetayTable();
+            updateDashboard();
         }
 
         let sortColDetay = '', sortAscDetay = true;
@@ -627,17 +636,26 @@
 
         function renderDetayTable() {
             const tbody = document.getElementById('table-body-detay');
-            const search = document.getElementById('search-input-detay').value.toLowerCase();
-            const fDate = document.getElementById('filter-date-detay').value;
+            const searchEl = document.getElementById('search-input-detay');
+            const search = searchEl ? searchEl.value.toLowerCase() : '';
+            const fDateEl = document.getElementById('filter-date-detay');
+            const fDate = fDateEl ? fDateEl.value : '';
 
-            let filtered = detayParsedData.filter(p => 
-                p.orderId.toLowerCase().includes(search) || p.picker.includes(search) || p.pickerName.toLowerCase().includes(search) || p.product.toLowerCase().includes(search) || p.store.toLowerCase().includes(search)
-            );
-            if(fDate) filtered = filtered.filter(p => p.date === fDate);
+            let filtered = detayParsedData.filter(p => {
+                const oid = String(p.orderId || '').toLowerCase();
+                const pkr = String(p.picker || '').toLowerCase();
+                const pName = String(p.pickerName || '').toLowerCase();
+                const prod = String(p.product || '').toLowerCase();
+                const str = String(p.store || '').toLowerCase();
+
+                const matchSearch = oid.includes(search) || pkr.includes(search) || pName.includes(search) || prod.includes(search) || str.includes(search);
+                const matchDate = fDate ? (p.date && p.date.includes(fDate)) : true;
+                return matchSearch && matchDate;
+            });
 
             if(sortColDetay) {
                 filtered.sort((a,b) => {
-                    let valA = a[sortColDetay], valB = b[sortColDetay];
+                    let valA = a[sortColDetay] || '', valB = b[sortColDetay] || '';
                     if(typeof valA === 'string') return sortAscDetay ? valA.localeCompare(valB) : valB.localeCompare(valA);
                     return sortAscDetay ? valA - valB : valB - valA;
                 });
@@ -652,7 +670,7 @@
 
             tbody.innerHTML = filtered.map(p => `
                 <tr class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
-                    <td class="py-3 px-4 font-mono text-xs text-slate-500">${p.date}</td>
+                    <td class="py-3 px-4 font-mono text-xs text-slate-500">${p.date || '-'}</td>
                     <td class="py-3 px-4 font-mono font-bold text-indigo-600">${p.orderId}</td>
                     <td class="py-3 px-4 font-bold text-xs">${p.store}</td>
                     <td class="py-3 px-4 truncate max-w-[150px] text-xs" title="${p.product}">${p.product}</td>
@@ -664,7 +682,7 @@
         }
 
         // ==========================================
-        // ANLIK İŞLEM: SADECE FARK OLANLARI BULMA
+        // ANLIK İŞLEM: SADECE GERÇEK FARKI BULMA
         // ==========================================
         async function onAnlikFilesSelected(files) {
             if (!files || files.length === 0) return;
@@ -681,7 +699,14 @@
 
             try {
                 for (let file of files) {
-                    const wb = await readAnyExcelFile(file);
+                    let wb;
+                    if (file.name.toLowerCase().endsWith('.csv')) {
+                        const text = await file.text();
+                        wb = XLSX.read(text, { type: 'string' });
+                    } else {
+                        const buf = await file.arrayBuffer();
+                        wb = XLSX.read(buf, { type: 'array' });
+                    }
                     const parsedData = parseExcelJson(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }));
                     
                     const fName = file.name.toLowerCase();
@@ -756,7 +781,7 @@
                 let status = (c && c.status) ? c.status : (e ? e.status : 'Tamamlandı');
                 let prods = (e && e.prods) ? e.prods : 'Ürün dökümü yok';
 
-                // İPTAL EDİLENLERİ HARİÇ TUT
+                // İptal edilenleri atla
                 const stUpper = status.toUpperCase();
                 if (stUpper.includes('CANCEL') || stUpper.includes('İPTAL')) {
                     return;
@@ -867,6 +892,7 @@
             if(!id || !name) return alert("Picker ID ve İsim giriniz.");
             pickerMap[id] = name;
             localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
+            syncToCloud_Picker();
             document.getElementById('new-picker-id').value = '';
             document.getElementById('new-picker-name').value = '';
             renderPickerList();
@@ -877,6 +903,7 @@
         function deletePicker(id) {
             delete pickerMap[id];
             localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
+            syncToCloud_Picker();
             renderPickerList();
             detayParsedData.forEach(p => { if(p.picker === id) p.pickerName = `ID: ${id}`; });
             renderDetayTable();
@@ -885,6 +912,7 @@
         function clearAllPickers() {
             pickerMap = {};
             localStorage.removeItem('yS_Picker_Map');
+            syncToCloud_Picker();
             renderPickerList();
             detayParsedData.forEach(p => { p.pickerName = `ID: ${p.picker}`; });
             renderDetayTable();
