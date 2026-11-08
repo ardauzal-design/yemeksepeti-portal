@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- PWA / Mobil Uygulama Etiketleri -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0f172a">
@@ -12,13 +13,13 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- FIREBASE -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <script>
-        tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: { pink: '#ff0050', pinkHover: '#e00045' } } } } }
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { brand: { pink: '#ff0050', pinkHover: '#e00045' } } } }
+        }
     </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
@@ -28,8 +29,11 @@
         .nav-btn.active { background-color: #ff0050; color: white; box-shadow: 0 4px 12px rgba(255, 0, 80, 0.25); }
         .nav-btn { background-color: transparent; color: inherit; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        th { cursor: pointer; user-select: none; }
+        th:hover { color: #ff0050; }
         .league-champ { background: linear-gradient(90deg, rgba(255,215,0,0.1) 0%, transparent 100%); border-left: 4px solid #ffd700; }
         .league-up { color: #10b981; font-weight: bold; }
         .league-down { color: #ef4444; font-weight: bold; }
@@ -37,7 +41,9 @@
 </head>
 <body class="bg-[#eaf8f4] dark:bg-slate-900 text-slate-800 dark:text-slate-200 min-h-screen flex flex-col antialiased relative transition-colors duration-300">
 
-    <!-- GİRİŞ EKRANI -->
+    <!-- ========================================== -->
+    <!-- GİRİŞ (LOGIN) EKRANI -->
+    <!-- ========================================== -->
     <div id="view-login" class="fixed inset-0 z-[200] bg-[#eaf8f4] dark:bg-slate-900 flex items-center justify-center p-4 transition-colors duration-300">
         <div class="bg-white dark:bg-slate-800 p-8 md:p-12 rounded-3xl card-shadow w-full max-w-md flex flex-col items-center text-center animate-[fadeIn_0.5s_ease-in-out]">
             <div class="w-20 h-20 rounded-3xl bg-[#ff0050] text-white flex items-center justify-center shadow-lg shadow-pink-500/30 mb-6">
@@ -48,105 +54,389 @@
             
             <div class="w-full space-y-4">
                 <div class="text-left">
-                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Bölge</label>
+                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Sorumlu Olduğunuz Bölge</label>
                     <select id="login-region" class="w-full mt-1 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-pink-500 outline-none dark:text-white">
                         <option value="İzmir">İzmir</option>
                         <option value="İstanbul">İstanbul</option>
+                        <option value="Ankara">Ankara</option>
                         <option value="Tüm Türkiye">Tüm Türkiye (Genel Müdürlük)</option>
                     </select>
                 </div>
                 <div class="text-left">
-                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Erişim Şifresi (1234)</label>
+                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Erişim Şifresi</label>
+                    <!-- Enter tuşu desteği eklendi -->
                     <input type="password" id="login-password" onkeypress="if(event.key === 'Enter') handleLogin()" placeholder="1234" class="w-full mt-1 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-pink-500 outline-none dark:text-white tracking-widest">
                 </div>
                 <button onclick="handleLogin()" class="w-full bg-[#ff0050] hover:bg-[#e00045] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-pink-500/20 transition active:scale-95 mt-4">
                     Giriş Yap <i class="fa-solid fa-arrow-right ml-2"></i>
                 </button>
-                <p id="login-error" class="text-xs text-red-500 font-bold hidden mt-2">Hatalı şifre. Lütfen 1234 girin.</p>
+                <p id="login-error" class="text-xs text-red-500 font-bold hidden mt-2">Hatalı şifre. Lütfen 1234 yazıp tekrar deneyin.</p>
             </div>
         </div>
     </div>
 
+    <!-- ========================================== -->
     <!-- ANA UYGULAMA -->
+    <!-- ========================================== -->
     <div id="app-container" class="hidden flex-col flex-1 pb-20 lg:pb-0">
+        
         <header class="bg-white dark:bg-slate-800 border-b border-emerald-100/80 dark:border-slate-700 py-4 px-6 sticky top-0 z-50 shadow-sm transition-colors duration-300 hidden lg:block">
             <div class="max-w-[1400px] mx-auto flex flex-col xl:flex-row justify-between items-center gap-4">
                 <div class="flex items-center gap-3.5">
                     <div class="w-11 h-11 rounded-2xl bg-[#ff0050] text-white flex items-center justify-center shadow-lg"><i class="fa-solid fa-chart-pie text-lg"></i></div>
                     <div>
-                        <h1 class="text-lg font-black text-slate-900 dark:text-white">Yemeksepeti Market <span id="active-region-badge" class="text-[10px] bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full uppercase ml-2">Portal</span></h1>
+                        <h1 class="text-lg font-black text-slate-900 dark:text-white">Yemeksepeti Market <span id="active-region-badge" class="text-[10px] bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full uppercase ml-2">İzmir</span></h1>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Analiz & Oyunlaştırma Portalı</p>
                     </div>
                 </div>
 
                 <div class="flex flex-wrap items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-700 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-600">
-                    <button onclick="switchView('dashboard')" id="btn-view-dashboard" class="nav-btn px-3 py-2 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-chart-column"></i> Dashboard</button>
-                    <button onclick="switchView('league')" id="btn-view-league" class="nav-btn px-3 py-2 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-trophy"></i> D-MART Ligi</button>
-                    <button onclick="switchView('detay')" id="btn-view-detay" class="nav-btn px-3 py-2 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-clipboard-list"></i> Kusur Kaydı</button>
+                    <button onclick="switchView('dashboard')" id="btn-view-dashboard" class="nav-btn px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-200"><i class="fa-solid fa-chart-column text-indigo-500"></i> Dashboard</button>
+                    <button onclick="switchView('league')" id="btn-view-league" class="nav-btn px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-200"><i class="fa-solid fa-trophy text-amber-500"></i> D-MART Ligi</button>
+                    <button onclick="switchView('detay')" id="btn-view-detay" class="nav-btn px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-200"><i class="fa-solid fa-clipboard-list text-emerald-500"></i> Kusur Kaydı</button>
+                    <button onclick="switchView('anlik')" id="btn-view-anlik" class="nav-btn px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-200"><i class="fa-solid fa-bolt text-[#ff0050]"></i> Fark</button>
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-amber-400 font-bold flex items-center justify-center"><i id="theme-icon" class="fa-solid fa-moon"></i></button>
-                    <button onclick="logout()" class="text-xs bg-red-50 text-red-600 font-bold px-3.5 py-2.5 rounded-xl"><i class="fa-solid fa-power-off"></i></button>
+                    <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-amber-400 font-bold transition hover:bg-slate-200 flex items-center justify-center"><i id="theme-icon" class="fa-solid fa-moon"></i></button>
+                    <button onclick="exportToExcel()" id="export-btn" class="text-xs bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl shadow-md hover:bg-emerald-600 transition flex items-center gap-2"><i class="fa-solid fa-file-excel"></i> <span id="export-btn-text">İndir</span></button>
+                    <button onclick="logout()" class="text-xs bg-red-50 text-red-600 font-bold px-3.5 py-2.5 rounded-xl transition hover:bg-red-100"><i class="fa-solid fa-right-from-bracket"></i></button>
                 </div>
             </div>
         </header>
 
         <main class="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 flex-1 w-full relative">
             
-            <!-- DASHBOARD (Mevcut) -->
-            <div id="view-dashboard" class="space-y-6 hidden">
-                <div class="bg-indigo-600 rounded-3xl p-6 text-white text-center">
-                    <h2 class="text-2xl font-black mb-1">Performans Dashboard</h2>
-                    <p class="text-indigo-200 text-sm">Veriler Kusur Kaydı sekmesinden beslenmektedir.</p>
+            <!-- ========================================== -->
+            <!-- SAYFA 0: DASHBOARD -->
+            <!-- ========================================== -->
+            <div id="view-dashboard" class="space-y-6 hidden animate-[fadeIn_0.3s_ease-in-out]">
+                <div class="bg-indigo-600 rounded-3xl p-6 lg:p-8 card-shadow text-white relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="z-10 w-full">
+                        <div class="flex justify-between items-start flex-col sm:flex-row gap-4 mb-4">
+                            <div>
+                                <h2 class="text-2xl font-black mb-1">Performans Dashboard</h2>
+                                <p class="text-indigo-200 text-sm">Kusur kayıtlarınız ve yapay zeka analizleri burada toplanır.</p>
+                            </div>
+                            <div class="w-full sm:w-auto relative z-20 flex items-center gap-2">
+                                <label class="text-xs font-bold text-indigo-200 whitespace-nowrap"><i class="fa-solid fa-filter"></i> Analiz Görünümü:</label>
+                                <select id="dashboard-store-filter" onchange="onDashboardStoreChange()" class="bg-indigo-700 border border-indigo-500 text-white text-sm font-bold rounded-xl px-4 py-2 outline-none cursor-pointer">
+                                    <option value="Tümü">Genel Bakış (Tüm Mağazalar)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-xl w-full">
+                            <h3 class="text-xs font-bold text-indigo-100 uppercase tracking-wider mb-2 flex items-center gap-2"><i class="fa-solid fa-robot"></i> Sistem İçgörüleri & Anormallik Tespiti</h3>
+                            <div id="ai-alerts-container" class="space-y-2"><div class="text-xs text-indigo-200 italic">Analiz edilecek veri bekleniyor...</div></div>
+                        </div>
+                    </div>
                 </div>
-                <!-- Diğer dashboard grafikleri buraya gelecek... -->
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl card-shadow border-l-4 border-l-red-500 flex items-center justify-between">
+                        <div>
+                            <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Tahmini Fire Maliyeti</p>
+                            <h3 id="kpi-financial-loss" class="text-2xl font-black text-red-500 mt-1">₺0</h3>
+                            <p class="text-[10px] text-slate-400 mt-1">*Ortalama 150₺ sepet tutarı baz alınmıştır.</p>
+                        </div>
+                        <div class="w-14 h-14 rounded-2xl bg-red-50 dark:bg-red-900/30 flex items-center justify-center text-red-500 text-2xl"><i class="fa-solid fa-money-bill-trend-up"></i></div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-amber-400 to-orange-500 p-6 rounded-3xl card-shadow text-white relative overflow-hidden md:col-span-2 shadow-orange-500/30">
+                        <h3 class="text-sm font-bold mb-3 flex items-center gap-2 relative z-10"><i class="fa-solid fa-trophy"></i> Kusursuz Operasyon Yıldızları</h3>
+                        <p class="text-[10px] font-medium opacity-90 mb-3 relative z-10">Kusur sayısı en düşük mağazalar:</p>
+                        <ul id="best-stores-list" class="grid grid-cols-2 gap-3 relative z-10">
+                            <li class="text-xs italic opacity-80">Veri bekleniyor...</li>
+                        </ul>
+                        <i class="fa-solid fa-medal absolute -right-4 -bottom-6 text-9xl opacity-20"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl card-shadow border border-slate-100 dark:border-slate-700">
+                    <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-line text-blue-500"></i> Günlük Kusur Trendi</h3>
+                    <div class="relative h-64 w-full flex items-center justify-center">
+                        <canvas id="chart-trend"></canvas>
+                        <p id="chart-trend-empty" class="absolute text-xs text-slate-400 italic">Veri Bekleniyor...</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl card-shadow border border-slate-100 dark:border-slate-700">
+                        <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2"><i class="fa-solid fa-circle-exclamation text-amber-500"></i> Kusur Sebepleri</h3>
+                        <div class="relative h-64 w-full flex items-center justify-center"><canvas id="chart-reasons"></canvas><p id="chart-reasons-empty" class="absolute text-xs text-slate-400 italic">Veri Bekleniyor...</p></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl card-shadow border border-slate-100 dark:border-slate-700">
+                        <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2"><i class="fa-solid fa-users text-indigo-500"></i> Personel Hata Dağılımı</h3>
+                        <div class="relative h-64 w-full flex items-center justify-center"><canvas id="chart-pickers"></canvas><p id="chart-pickers-empty" class="absolute text-xs text-slate-400 italic">Veri Bekleniyor...</p></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl card-shadow border border-slate-100 dark:border-slate-700" id="store-chart-wrapper">
+                        <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2"><i class="fa-solid fa-store text-emerald-500"></i> Mağazalara Göre Kusurlar</h3>
+                        <div class="relative h-64 w-full flex items-center justify-center"><canvas id="chart-stores"></canvas><p id="chart-stores-empty" class="absolute text-xs text-slate-400 italic">Veri Bekleniyor...</p></div>
+                    </div>
+                </div>
             </div>
 
-            <!-- D-MART LİGİ (YENİ PERFORMANS CSV ENTEGRASYONU) -->
+            <!-- ========================================== -->
+            <!-- SAYFA: D-MART LİGİ (Puan Tabloları & Yükleme) -->
+            <!-- ========================================== -->
             <div id="view-league" class="space-y-6 hidden animate-[fadeIn_0.3s_ease-in-out]">
                 <div class="bg-gradient-to-r from-pink-600 to-red-600 rounded-3xl p-8 text-white card-shadow relative overflow-hidden">
                     <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
                         <div>
-                            <h2 class="text-3xl font-black mb-2 uppercase italic tracking-wider">D-MART LİGİ <i class="fa-solid fa-bullhorn text-yellow-300"></i></h2>
-                            <p class="text-pink-100 text-sm max-w-2xl">Picker Performans verisini (CSV) yükleyerek mağazaların lig sıralamasını otomatik hesaplayın.</p>
+                            <h2 class="text-3xl font-black mb-2 uppercase italic tracking-wider">D-MART LİGİ BAŞLIYOR! <i class="fa-solid fa-bullhorn text-yellow-300"></i></h2>
+                            <p class="text-pink-100 text-sm max-w-2xl">Haftalık Lig Puanı; Yükleyeceğiniz <b>Picker Performans CSV</b> dosyasındaki PFR ve UTR baz alınarak hesaplanır. Her hafta liglerdeki ilk 2 mağaza bir üst lige yükselir, son 2 mağaza bir alt lige düşer.</p>
+                        </div>
+                        <div class="bg-white/20 backdrop-blur-md p-4 rounded-xl text-center min-w-[200px]">
+                            <p class="text-xs font-bold uppercase text-pink-100 mb-1">Şampiyonlar Ligi 1.'si Ödülü</p>
+                            <p class="text-3xl font-black text-yellow-300">1.250 ₺ <i class="fa-solid fa-gift text-xl"></i></p>
                         </div>
                     </div>
                     <i class="fa-solid fa-trophy absolute -right-10 -bottom-10 text-[200px] opacity-10"></i>
                 </div>
 
-                <!-- LİG VERİ YÜKLEME ALANI -->
                 <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 card-shadow border border-slate-100 dark:border-slate-700">
+                    <!-- CSV YÜKLEME ALANI -->
                     <div id="drop-zone-league" class="border-2 border-dashed border-amber-300 dark:border-amber-700 hover:border-amber-500 rounded-2xl p-6 text-center transition cursor-pointer bg-amber-50/50 dark:bg-slate-800 relative mb-6">
-                        <input type="file" id="file-input-league" accept=".csv, .xlsx, .xls" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="onLeagueFileSelected(this.files)">
+                        <input type="file" id="file-input-league" accept=".csv, .xlsx, .xls" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="onPickerFileSelected(this.files)">
                         <div class="flex flex-col items-center justify-center space-y-2 pointer-events-none">
                             <div class="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-500 flex items-center justify-center text-xl"><i class="fa-solid fa-file-csv"></i></div>
                             <p class="text-sm font-bold text-slate-700 dark:text-white">Picker Performance CSV Dosyasını Yükle</p>
+                            <p class="text-xs text-slate-500">Bu dosya hem lig sırasını hesaplar hem de Picker Karnesini besler.</p>
                         </div>
                     </div>
 
-                    <!-- LİG TABLOLARI -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="league-tables-container">
-                        <div class="text-center py-8 text-slate-400 col-span-2 text-sm italic">Sıralamayı görmek için Picker Performans verisini yükleyin.</div>
+                        <div class="col-span-2 text-center py-10 text-slate-400 italic font-medium">Lig tablolarını görmek için yukarıdaki alandan Picker Performans CSV'sini yükleyin.</div>
                     </div>
                 </div>
             </div>
 
-            <!-- DETAY SEKME (Mevcut Kusur Kaydı) -->
-            <div id="view-detay" class="space-y-6 hidden">
-                <div class="bg-white rounded-3xl p-6 text-center shadow">Kusur Kaydı Modülü... (Önceki kodlarınızın bulunduğu alan)</div>
+            <!-- ========================================== -->
+            <!-- SAYFA: KUSURLU SİPARİŞ KAYDI (DETAY) -->
+            <!-- ========================================== -->
+            <div id="view-detay" class="space-y-6 hidden animate-[fadeIn_0.3s_ease-in-out]">
+                <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-8 card-shadow border border-indigo-100/60 dark:border-indigo-900/30">
+                    <div id="drop-zone-detay" class="border-2 border-dashed border-indigo-200 dark:border-indigo-700 hover:border-indigo-500 rounded-2xl p-8 text-center transition cursor-pointer bg-indigo-50/30 dark:bg-slate-800 relative">
+                        <input type="file" id="file-input-detay" accept=".csv, .xlsx, .xls" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="onDetayFileSelected(this.files)">
+                        <div class="flex flex-col items-center justify-center space-y-3 pointer-events-none">
+                            <div class="w-14 h-14 rounded-2xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-2xl"><i class="fa-solid fa-users-gear"></i></div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-700 dark:text-white">Kusurlu Sipariş Raporunu Seçin</p>
+                                <p class="text-xs text-slate-400 mt-1">İade/Kusur raporunuzu (Excel/CSV) buraya sürükleyin.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden card-shadow">
+                    <div class="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex flex-wrap justify-between items-center gap-4">
+                        <div class="text-sm font-black flex items-center gap-2"><i class="fa-solid fa-list-check text-indigo-600"></i> Kayıtlar (<span id="record-count-detay">0</span>)</div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button onclick="openWhatsAppModal()" class="bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-600 transition flex items-center gap-1.5 shadow-sm"><i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp</button>
+                            <input type="date" id="filter-date-detay" onchange="renderDetayTable()" class="text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 outline-none font-bold">
+                            <input type="text" id="search-input-detay" onkeyup="renderDetayTable()" placeholder="Ara..." class="text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 outline-none">
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto max-h-[600px]">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-300 font-bold uppercase sticky top-0 z-10">
+                                <tr>
+                                    <th class="py-3.5 px-4" onclick="sortDetay('date')">Tarih <i class="fa-solid fa-sort ml-1 opacity-50"></i></th>
+                                    <th class="py-3.5 px-4" onclick="sortDetay('orderId')">Sipariş No</th>
+                                    <th class="py-3.5 px-4" onclick="sortDetay('store')">Mağaza</th>
+                                    <th class="py-3.5 px-4">Ürün Adı</th>
+                                    <th class="py-3.5 px-4" onclick="sortDetay('reason')">Sebep</th>
+                                    <th class="py-3.5 px-4" onclick="sortDetay('pickerName')">Picker (Tıkla)</th>
+                                    <th class="py-3.5 px-4 w-64">Açıklama & Fotoğraf</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body-detay" class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-200 font-medium">
+                                <tr><td colspan="7" class="text-center py-16 text-slate-400">Veri yüklenmedi.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
+
+            <!-- ========================================== -->
+            <!-- SAYFA: ANLIK İŞLEM -->
+            <!-- ========================================== -->
+            <div id="view-anlik" class="space-y-6 hidden animate-[fadeIn_0.3s_ease-in-out]">
+                <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-8 card-shadow border border-emerald-100/60 dark:border-emerald-900/30">
+                    <div id="drop-zone-anlik" class="border-2 border-dashed border-emerald-200 dark:border-emerald-700 hover:border-[#ff0050] rounded-2xl p-8 text-center transition cursor-pointer bg-[#f7fcf9] dark:bg-slate-800 relative">
+                        <input type="file" id="file-input-anlik" multiple accept=".csv, .xlsx, .xls" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="onAnlikFilesSelected(this.files)">
+                        <div class="flex flex-col items-center justify-center space-y-3 pointer-events-none">
+                            <div class="w-14 h-14 rounded-2xl bg-pink-100 text-[#ff0050] flex items-center justify-center text-2xl"><i class="fa-solid fa-bolt"></i></div>
+                            <div><p class="text-sm font-bold text-slate-700 dark:text-white">Anlık Fiyat Farkı Tespiti</p><p class="text-xs text-slate-400 mt-1">Teslimat CSV ve Sipariş Excel'ini aynı anda yükleyin.</p></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Anlık Tablosu (Mevcut mantık korundu) -->
+                <div class="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden card-shadow">
+                    <div class="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50"><div class="text-sm font-black flex items-center gap-2 text-slate-800 dark:text-white"><i class="fa-solid fa-turkish-lira-sign text-[#ff0050]"></i> Farklı Siparişler</div></div>
+                    <div class="overflow-x-auto max-h-[600px]">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="bg-slate-50 dark:bg-slate-700 text-slate-500 font-bold uppercase sticky top-0"><tr><th class="py-3 px-4">Sipariş No</th><th class="py-3 px-4">Müşteri</th><th class="py-3 px-4">Sipariş Tutarı</th><th class="py-3 px-4">Teslimat Tutarı</th><th class="py-3 px-4 text-[#ff0050]">Fark</th></tr></thead>
+                            <tbody id="table-body-anlik" class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-200"><tr><td colspan="5" class="text-center py-16 text-slate-400">Veri yüklenmedi.</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </main>
+        
+        <!-- MOBİL ALT MENÜ -->
+        <div class="fixed bottom-0 w-full bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex justify-around p-2 lg:hidden z-50">
+            <button onclick="switchView('dashboard')" class="flex flex-col items-center p-2 text-indigo-500 w-1/4"><i class="fa-solid fa-chart-column text-lg mb-1"></i> <span class="text-[10px] font-bold">Özet</span></button>
+            <button onclick="switchView('league')" class="flex flex-col items-center p-2 text-amber-500 w-1/4"><i class="fa-solid fa-trophy text-lg mb-1"></i> <span class="text-[10px] font-bold">Lig</span></button>
+            <button onclick="switchView('detay')" class="flex flex-col items-center p-2 text-emerald-500 w-1/4"><i class="fa-solid fa-clipboard-list text-lg mb-1"></i> <span class="text-[10px] font-bold">Kusur</span></button>
+            <button onclick="switchView('anlik')" class="flex flex-col items-center p-2 text-[#ff0050] w-1/4"><i class="fa-solid fa-bolt text-lg mb-1"></i> <span class="text-[10px] font-bold">Fark</span></button>
+        </div>
+    </div> 
+
+    <!-- ========================================== -->
+    <!-- MODALLAR -->
+    <!-- ========================================== -->
+
+    <!-- WHATSAPP MODAL -->
+    <div id="whatsapp-modal" class="fixed inset-0 bg-slate-900/80 z-[80] hidden items-center justify-center p-2 sm:p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-2xl max-h-[95vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="fa-brands fa-whatsapp text-emerald-500 text-2xl"></i> Yönetici Özeti</h2>
+                <button onclick="closeWhatsAppModal()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-times text-2xl"></i></button>
+            </div>
+            <div class="p-0 overflow-y-auto flex-1 flex flex-col items-center" style="background-color: #f1f5f9;">
+                <div class="w-full p-4 sm:p-6 flex flex-col relative" id="whatsapp-render-area"></div>
+            </div>
+            <div class="p-4 border-t bg-slate-50 flex justify-end gap-3">
+                <button onclick="copyWhatsAppTextOnly()" class="bg-slate-800 text-white px-4 py-3 rounded-xl text-sm font-bold shadow-sm">Metin Kopyala</button>
+            </div>
+        </div>
     </div>
 
-    <script>
-        // LİG VERİSİ İŞLEME VE TABLO OLUŞTURMA
-        let leagueStores = [];
+    <!-- PICKER (TOPLAYICI) KARNESİ MODALI -->
+    <div id="picker-stats-modal" class="fixed inset-0 bg-slate-900/80 z-[100] hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-md flex flex-col shadow-2xl overflow-hidden animate-[fadeIn_0.3s_ease-in-out]">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-indigo-600 text-white">
+                <h2 class="text-lg font-black flex items-center gap-2"><i class="fa-solid fa-id-card"></i> Personel Performans Karnesi</h2>
+                <button onclick="closePickerStats()" class="hover:text-red-300 transition"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6 text-center bg-slate-50 dark:bg-slate-900">
+                <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-3 shadow-sm"><i class="fa-solid fa-user-tie"></i></div>
+                <h3 id="ps-name" class="text-xl font-black text-slate-800 dark:text-white">İsim</h3>
+                <p id="ps-id" class="text-xs text-slate-500 font-mono mb-2">ID: 000</p>
+                <p id="ps-store" class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-1 rounded-md inline-block font-bold">Mağaza</p>
+                
+                <div class="grid grid-cols-2 gap-4 mt-6">
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <p class="text-[10px] uppercase font-bold text-slate-400">Çalışma Saati</p>
+                        <p id="ps-hours" class="text-xl font-black text-slate-700 dark:text-slate-200 mt-1">-</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <p class="text-[10px] uppercase font-bold text-slate-400">Toplanan Sipariş</p>
+                        <p id="ps-orders" class="text-xl font-black text-blue-500 mt-1">-</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <p class="text-[10px] uppercase font-bold text-slate-400">Sipariş / Saat Hızı</p>
+                        <p id="ps-oph" class="text-xl font-black text-emerald-500 mt-1">-</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
+                        <p class="text-[10px] uppercase font-bold text-slate-400">Tespit Edilen Kusur</p>
+                        <p id="ps-defects" class="text-xl font-black text-red-500 mt-1">0</p>
+                        <div class="absolute top-0 right-0 w-2 h-full bg-red-500"></div>
+                    </div>
+                </div>
+                <div class="mt-4 text-xs text-slate-400 italic" id="ps-note">Detaylı istatistikler için Picker Performans CSV'sini Lig sekmesine yükleyin.</div>
+            </div>
+        </div>
+    </div>
 
+
+    <script>
+        // ==========================================
+        // GİRİŞ / SETUP
+        // ==========================================
+        let currentUserRegion = localStorage.getItem('yS_User_Region') || null;
+        let isDarkMode = localStorage.getItem('yS_DarkMode') === 'true';
+
+        let detayParsedData = JSON.parse(localStorage.getItem('yS_Detay')) || [];
+        let pickerParsedData = JSON.parse(localStorage.getItem('yS_PickerData')) || [];
+        let leagueStores = [];
+        let anlikMergedData = [];
+        let currentDashboardStore = 'Tümü';
+
+        let chartTrend = null, chartReasons = null, chartPickers = null, chartStores = null;
+
+        window.onload = () => {
+            if(isDarkMode) document.documentElement.classList.add('dark');
+            
+            if(currentUserRegion) {
+                document.getElementById('view-login').style.display = 'none';
+                document.getElementById('app-container').classList.remove('hidden');
+                document.getElementById('app-container').classList.add('flex');
+                
+                if(detayParsedData.length > 0) {
+                    populateDashboardFilter();
+                    renderDetayTable();
+                }
+                if(pickerParsedData.length > 0) {
+                    calculateLeague();
+                }
+                
+                switchView('dashboard');
+            }
+        };
+
+        function handleLogin() {
+            // value.trim() ile kazara konulan boşlukları temizliyoruz.
+            const pass = document.getElementById('login-password').value.trim();
+            const region = document.getElementById('login-region').value;
+            
+            if(pass === '1234') { 
+                localStorage.setItem('yS_User_Region', region);
+                currentUserRegion = region;
+                document.getElementById('view-login').style.display = 'none';
+                document.getElementById('app-container').classList.remove('hidden');
+                document.getElementById('app-container').classList.add('flex');
+                switchView('dashboard');
+            } else { 
+                document.getElementById('login-error').classList.remove('hidden'); 
+            }
+        }
+
+        function logout() { localStorage.removeItem('yS_User_Region'); location.reload(); }
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            localStorage.setItem('yS_DarkMode', isDarkMode);
+            document.documentElement.classList.toggle('dark', isDarkMode);
+            if(currentView === 'dashboard') updateDashboard();
+        }
+
+        function switchView(viewName) {
+            currentView = viewName;
+            ['dashboard', 'league', 'detay', 'anlik'].forEach(v => {
+                const el = document.getElementById(`view-${v}`);
+                if(el) {
+                    el.classList.toggle('hidden', v !== viewName);
+                    el.classList.toggle('block', v === viewName);
+                }
+                const btn = document.getElementById(`btn-view-${v}`);
+                if(btn) {
+                    if(v === viewName) btn.classList.add('active');
+                    else btn.classList.remove('active');
+                }
+            });
+            if(viewName === 'dashboard') updateDashboard();
+        }
+
+        // ==========================================
+        // YARDIMCI EXCEL / CSV FONKSİYONLARI
+        // ==========================================
         function parseExcelJson(rows) {
             if (rows.length < 2) return [];
             let headerIdx = 0;
             for(let i=0; i<Math.min(5, rows.length); i++) {
-                if(rows[i] && rows[i].length > 5) { headerIdx = i; break; }
+                if(rows[i] && rows[i].length > 4) { headerIdx = i; break; }
             }
             let headers = rows[headerIdx];
             const list = [];
@@ -159,158 +449,369 @@
             return list;
         }
 
-        async function onLeagueFileSelected(files) {
+        function parseDateString(val) {
+            if (!val) return '';
+            if (typeof val === 'number') {
+                const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+                return d.toISOString().split('T')[0];
+            }
+            let str = String(val).trim().split(' ')[0];
+            if (str.match(/^\d{1,2}[\.\/]\d{1,2}[\.\/]\d{4}$/)) {
+                let sep = str.includes('.') ? '.' : '/';
+                let p = str.split(sep);
+                return `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
+            }
+            if (str.match(/^\d{4}-\d{2}-\d{2}/)) return str.substring(0, 10);
+            return ''; 
+        }
+
+        // ==========================================
+        // D-MART LİGİ VE PİCKER PERFORMANS CSV İŞLEME
+        // ==========================================
+        async function onPickerFileSelected(files) {
             if (!files || files.length === 0) return;
-            const file = files[0];
-            const text = await file.text();
+            const text = await files[0].text();
             
             try {
-                // CSV'yi ayırma (SheetJS kullanarak güvenli okuma)
                 const wb = XLSX.read(text, { type: 'string' });
                 const data = parseExcelJson(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }));
                 
-                const storeStats = {};
-                
-                // Gelen Picker CSV verisini mağazalara göre grupla
+                pickerParsedData = [];
                 data.forEach(row => {
-                    const store = row['DMart'];
+                    let store = row['DMart'] || row['Store'] || '';
                     if(!store) return;
                     
-                    const orders = parseFloat(row['Picked Orders']) || 0;
-                    const items = parseFloat(row['Picked Items']) || 0;
-                    const pfr = parseFloat(row['PFR %']) || 0;
-                    
-                    if(!storeStats[store]) storeStats[store] = { store: store, orders: 0, items: 0, pfrSum: 0, count: 0 };
-                    storeStats[store].orders += orders;
-                    storeStats[store].items += items;
-                    if(pfr > 0) { storeStats[store].pfrSum += pfr; storeStats[store].count++; }
+                    pickerParsedData.push({
+                        store: store,
+                        pickerId: row['Picker Id'] || row['Rooster Employee ID'] || '-',
+                        workingHours: parseFloat(row['Total Working (h)']) || 0,
+                        pickedOrders: parseFloat(row['Picked Orders']) || 0,
+                        oph: parseFloat(row['Order per Hour']) || 0,
+                        pfr: parseFloat(row['PFR %']) || 0,
+                        utr: parseFloat(row['UTR']) || 0
+                    });
                 });
-
-                // Skor Hesaplama (Örnek: Picked Orders ve Ortalama PFR'ı birleştirerek puan üretelim)
-                leagueStores = Object.values(storeStats).map(s => {
-                    const avgPfr = s.count > 0 ? (s.pfrSum / s.count) : 0;
-                    // Lige özel mock skor formülü (Sipariş hacmi ve PFR bazlı)
-                    const score = (s.orders * 0.4) + (avgPfr * 100 * 0.6);
-                    return { store: s.store, score: score.toFixed(1), orders: s.orders };
-                }).sort((a, b) => b.score - a.score); // Puana göre yüksekten düşüğe sırala
-
-                renderLeagueTables();
-
-            } catch (err) {
-                alert("Dosya okunamadı. Doğru CSV dosyasını seçtiğinize emin olun.");
-                console.error(err);
-            }
-        }
-
-        function renderLeagueTables() {
-            const container = document.getElementById('league-tables-container');
-            if (leagueStores.length === 0) return;
-
-            // İlk 20 Şampiyonlar Ligi, Sonraki 20 Avrupa Ligi, vb.
-            const sampiyonlar = leagueStores.slice(0, 5); // Demo amaçlı 5'erli bölüyoruz
-            const avrupa = leagueStores.slice(5, 10);
-            
-            let html = '';
-
-            // 1. ŞAMPİYONLAR LİGİ
-            if(sampiyonlar.length > 0) {
-                html += `
-                <div class="border border-yellow-200 dark:border-yellow-900/50 rounded-2xl overflow-hidden shadow-sm">
-                    <div class="bg-yellow-100 dark:bg-yellow-900/40 p-3 flex justify-between items-center border-b border-yellow-200 dark:border-yellow-900/50">
-                        <h4 class="font-black text-yellow-700 dark:text-yellow-500 text-sm"><i class="fa-solid fa-trophy"></i> Şampiyonlar Ligi (İlk 5)</h4>
-                        <span class="text-[10px] font-bold bg-white text-yellow-600 px-2 py-1 rounded-lg">Büyük Ödül</span>
-                    </div>
-                    <table class="w-full text-left text-xs">
-                        <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500"><tr><th class="p-2">Sıra</th><th class="p-2">Mağaza</th><th class="p-2 text-right">Puan</th></tr></thead>
-                        <tbody class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-300 font-medium">
-                            ${sampiyonlar.map((s, i) => `
-                                <tr class="${i < 3 ? 'league-champ' : ''}">
-                                    <td class="p-2 font-bold">${i+1} ${i===0?'<i class="fa-solid fa-medal text-yellow-500"></i>':''}</td>
-                                    <td class="p-2 font-bold truncate max-w-[150px]">${s.store}</td>
-                                    <td class="p-2 text-right">${s.score}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>`;
-            }
-
-            // 2. AVRUPA LİGİ
-            if(avrupa.length > 0) {
-                html += `
-                <div class="border border-blue-200 dark:border-blue-900/50 rounded-2xl overflow-hidden shadow-sm">
-                    <div class="bg-blue-100 dark:bg-blue-900/40 p-3 flex justify-between items-center border-b border-blue-200 dark:border-blue-900/50">
-                        <h4 class="font-black text-blue-700 dark:text-blue-400 text-sm"><i class="fa-solid fa-globe"></i> Avrupa Ligi (Sonraki 5)</h4>
-                    </div>
-                    <table class="w-full text-left text-xs">
-                        <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500"><tr><th class="p-2">Sıra</th><th class="p-2">Mağaza</th><th class="p-2 text-right">Durum</th></tr></thead>
-                        <tbody class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-300 font-medium">
-                            ${avrupa.map((s, i) => `
-                                <tr>
-                                    <td class="p-2">${i+6}</td>
-                                    <td class="p-2 font-bold truncate max-w-[150px]">${s.store}</td>
-                                    <td class="p-2 text-right ${i < 2 ? 'league-up' : ''}">${i < 2 ? '<i class="fa-solid fa-angles-up"></i> Yükseldi' : s.score}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>`;
-            }
-
-            container.innerHTML = html;
-        }
-
-
-        // =====================================
-        // GİRİŞ / SİSTEM ALTYAPISI (HATA GİDERİLDİ)
-        // =====================================
-        let currentUserRegion = localStorage.getItem('yS_User_Region') || null;
-
-        window.onload = () => {
-            // Firebase'in çöküp uygulamayı dondurmasını engellemek için Try-Catch yapısı
-            try {
-                if(typeof firebase !== 'undefined') {
-                    firebase.initializeApp({/*... config ...*/});
-                }
-            } catch(e) { console.warn("Firebase bağlantısı kurulamadı (AdBlocker vs olabilir). Sistem çevrimdışı devam edecek."); }
-
-            if(currentUserRegion) {
-                document.getElementById('view-login').classList.add('hidden');
-                document.getElementById('app-container').classList.remove('hidden');
-                document.getElementById('app-container').classList.add('flex');
-                switchView('dashboard');
-            }
-        };
-
-        function handleLogin() {
-            try {
-                const pass = document.getElementById('login-password').value;
-                const region = document.getElementById('login-region').value;
                 
-                // ŞİFRE KONTROLÜ
-                if(pass === '1234') { 
-                    localStorage.setItem('yS_User_Region', region);
-                    currentUserRegion = region;
-                    document.getElementById('view-login').classList.add('hidden');
-                    document.getElementById('app-container').classList.remove('hidden');
-                    document.getElementById('app-container').classList.add('flex');
-                    switchView('dashboard');
-                } else { 
-                    document.getElementById('login-error').classList.remove('hidden'); 
-                }
-            } catch (e) {
-                alert("Giriş yaparken tarayıcı kaynaklı bir sorun oluştu. Lütfen sayfayı yenileyin.");
+                localStorage.setItem('yS_PickerData', JSON.stringify(pickerParsedData));
+                calculateLeague();
+                alert("Picker Performans verisi başarıyla işlendi. Lig tablosu güncellendi.");
+                
+            } catch(e) {
+                alert("Dosya okunamadı. Doğru formatta olduğundan emin olun.");
                 console.error(e);
             }
         }
 
-        function switchView(viewName) {
-            ['dashboard', 'league', 'detay'].forEach(v => {
-                const el = document.getElementById(`view-${v}`);
-                if(el) { el.classList.toggle('hidden', v !== viewName); el.classList.toggle('block', v === viewName); }
+        function calculateLeague() {
+            let storeStats = {};
+            pickerParsedData.forEach(p => {
+                if(!storeStats[p.store]) storeStats[p.store] = { store: p.store, pfrSum: 0, utrSum: 0, count: 0, orders: 0 };
+                if(p.pfr > 0) storeStats[p.store].pfrSum += p.pfr;
+                if(p.utr > 0) storeStats[p.store].utrSum += p.utr;
+                storeStats[p.store].orders += p.pickedOrders;
+                storeStats[p.store].count++;
             });
+
+            leagueStores = Object.values(storeStats).map(s => {
+                let avgPfr = s.count > 0 ? (s.pfrSum / s.count) : 0; 
+                let avgUtr = s.count > 0 ? (s.utrSum / s.count) : 0;
+                
+                // Formül: PFR(%60) + UTR(%40) üzerinden temsili puan
+                let pfrScore = avgPfr > 1 ? avgPfr : avgPfr * 100;
+                let utrScore = avgUtr > 1 ? avgUtr : avgUtr * 100;
+                let finalScore = (pfrScore * 0.6) + (utrScore * 0.4);
+                
+                return { store: s.store, score: finalScore.toFixed(1) };
+            }).sort((a,b) => b.score - a.score);
+
+            renderLeagueTables();
         }
-        function logout() { localStorage.removeItem('yS_User_Region'); location.reload(); }
+
+        function renderLeagueTables() {
+            const container = document.getElementById('league-tables-container');
+            if(leagueStores.length === 0) return;
+
+            // Lig kurallarına göre dilimleme
+            const sl = leagueStores.slice(0, 20);
+            const al = leagueStores.slice(20, 40);
+            const kl = leagueStores.slice(40, 61);
+            const pl = leagueStores.slice(61, 82);
+            const bl = leagueStores.slice(82, 103);
+            
+            let html = '';
+            
+            // Renk ve Sınıf eşleştirmeleri (Tailwind CDN uyumu için tam sınıflar)
+            const getCardHTML = (title, data, icon, border, bg, textCol, up, down, badge) => {
+                if(data.length === 0) return '';
+                let rowsHtml = data.map((s, i) => {
+                    let status = '-';
+                    let statusColor = 'text-slate-500';
+                    let rowClass = (title === 'Şampiyonlar Ligi' && i < 3) ? 'league-champ' : 'border-b border-slate-100 dark:border-slate-700/50';
+                    
+                    if(i < up) { status = '▲ Yükselir'; statusColor = 'text-emerald-500 font-bold'; }
+                    else if(i >= data.length - down) { status = '▼ Düşer'; statusColor = 'text-red-500 font-bold'; }
+                    
+                    return `
+                    <tr class="${rowClass} hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <td class="py-2.5 px-3 w-8">${i+1}</td>
+                        <td class="py-2.5 px-3 font-bold truncate max-w-[150px]">${s.store}</td>
+                        <td class="py-2.5 px-3 text-right font-mono">${s.score}</td>
+                        <td class="py-2.5 px-3 text-right text-[10px] ${statusColor}">${status}</td>
+                    </tr>`;
+                }).join('');
+                
+                return `
+                <div class="rounded-2xl overflow-hidden shadow-sm bg-white dark:bg-slate-800 border ${border}">
+                    <div class="${bg} p-3 flex justify-between items-center border-b ${border}">
+                        <h4 class="font-black ${textCol} text-sm"><i class="${icon} mr-1"></i> ${title}</h4>
+                        ${badge ? `<span class="text-[10px] font-bold bg-white px-2 py-1 rounded-lg shadow-sm ${textCol}">${badge}</span>` : ''}
+                    </div>
+                    <div class="overflow-y-auto max-h-72">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 sticky top-0 shadow-sm">
+                                <tr><th class="py-2 px-3">Sıra</th><th class="py-2 px-3">Mağaza</th><th class="py-2 px-3 text-right">Puan</th><th class="py-2 px-3 text-right">Durum</th></tr>
+                            </thead>
+                            <tbody class="text-slate-700 dark:text-slate-300">
+                                ${rowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+            };
+
+            html += getCardHTML('Şampiyonlar Ligi', sl, 'fa-solid fa-trophy', 'border-yellow-200 dark:border-yellow-900/50', 'bg-yellow-100 dark:bg-yellow-900/40', 'text-yellow-700 dark:text-yellow-400', 0, 2, 'Ödül: 1.250₺');
+            html += getCardHTML('Avrupa Ligi', al, 'fa-solid fa-globe', 'border-blue-200 dark:border-blue-900/50', 'bg-blue-100 dark:bg-blue-900/40', 'text-blue-700 dark:text-blue-400', 2, 2, 'Ödül: 600₺');
+            html += getCardHTML('Konferans Ligi', kl, 'fa-solid fa-medal', 'border-orange-200 dark:border-orange-900/50', 'bg-orange-100 dark:bg-orange-900/40', 'text-orange-700 dark:text-orange-400', 2, 2);
+            html += getCardHTML('Playoff Ligi', pl, 'fa-solid fa-play', 'border-purple-200 dark:border-purple-900/50', 'bg-purple-100 dark:bg-purple-900/40', 'text-purple-700 dark:text-purple-400', 2, 2);
+            html += getCardHTML('Bal Ligi', bl, 'fa-solid fa-seedling', 'border-emerald-200 dark:border-emerald-900/50', 'bg-emerald-100 dark:bg-emerald-900/40', 'text-emerald-700 dark:text-emerald-400', 2, 0);
+
+            container.innerHTML = html;
+        }
+
+        // ==========================================
+        // KUSUR KAYDI İŞLEMLERİ VE PİCKER KARNESİ
+        // ==========================================
+        async function onDetayFileSelected(files) {
+            if (!files || files.length === 0) return;
+            try {
+                const text = await files[0].text();
+                const wb = XLSX.read(text, { type: 'string' });
+                const data = parseExcelJson(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }));
+                
+                detayParsedData = [];
+                data.forEach((row, idx) => {
+                    const keys = Object.keys(row);
+                    const idKey = keys.find(k => String(k).toLowerCase().includes('order id') || String(k).toLowerCase().includes('sipariş'));
+                    if(!idKey || !row[idKey]) return;
+
+                    const dateKey = keys.find(k => String(k).toLowerCase().includes('date') || String(k).toLowerCase().includes('tarih'));
+                    const storeKey = keys.find(k => String(k).toLowerCase().includes('store') || String(k).toLowerCase().includes('mağaza'));
+                    const prodKey = keys.find(k => String(k).toLowerCase().includes('product') || String(k).toLowerCase().includes('ürün'));
+                    const reasonKey = keys.find(k => String(k).toLowerCase().includes('ccr3') || String(k).toLowerCase().includes('sebep'));
+                    const pickerKey = keys.find(k => String(k).toLowerCase().includes('picker'));
+
+                    let storeStr = storeKey ? String(row[storeKey]) : 'Bilinmiyor';
+                    if (storeStr.includes('(')) storeStr = storeStr.split('(')[0].trim();
+
+                    detayParsedData.push({
+                        uid: row[idKey] + '_' + idx,
+                        date: dateKey ? parseDateString(row[dateKey]) : '',
+                        store: storeStr,
+                        orderId: row[idKey],
+                        product: prodKey ? row[prodKey] : 'Ürün Yok',
+                        sku: row['SKU'] || '-',
+                        reason: reasonKey ? row[reasonKey] : 'Belirtilmemiş',
+                        picker: pickerKey ? String(row[pickerKey]).replace('.0','') : '-',
+                    });
+                });
+
+                localStorage.setItem('yS_Detay', JSON.stringify(detayParsedData));
+                populateDashboardFilter();
+                renderDetayTable();
+                updateDashboard();
+                alert("Kusurlu sipariş raporu başarıyla yüklendi!");
+
+            } catch (e) { alert("Dosya okuma hatası!"); console.error(e); }
+        }
+
+        let sortColDetay = '', sortAscDetay = true;
+        function sortDetay(col) {
+            if(sortColDetay === col) sortAscDetay = !sortAscDetay;
+            else { sortColDetay = col; sortAscDetay = true; }
+            renderDetayTable();
+        }
+
+        function renderDetayTable() {
+            const tbody = document.getElementById('table-body-detay');
+            const search = document.getElementById('search-input-detay').value.toLowerCase();
+            const fDate = document.getElementById('filter-date-detay').value;
+
+            let filtered = detayParsedData.filter(p => 
+                p.orderId.toLowerCase().includes(search) || p.picker.includes(search) || p.product.toLowerCase().includes(search)
+            );
+            if(fDate) filtered = filtered.filter(p => p.date === fDate);
+
+            if(sortColDetay) {
+                filtered.sort((a,b) => {
+                    let valA = a[sortColDetay], valB = b[sortColDetay];
+                    if(typeof valA === 'string') return sortAscDetay ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                    return sortAscDetay ? valA - valB : valB - valA;
+                });
+            }
+
+            document.getElementById('record-count-detay').innerText = filtered.length;
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-12 text-slate-400">Kayıt bulunamadı.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(p => `
+                <tr class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                    <td class="py-3 px-4 font-mono text-xs text-slate-500">${p.date}</td>
+                    <td class="py-3 px-4 font-mono font-bold text-indigo-600">${p.orderId}</td>
+                    <td class="py-3 px-4 font-bold text-xs">${p.store}</td>
+                    <td class="py-3 px-4 truncate max-w-[150px] text-xs" title="${p.product}">${p.product}</td>
+                    <td class="py-3 px-4"><span class="bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-[10px] font-bold">${p.reason}</span></td>
+                    <td class="py-3 px-4">
+                        <button onclick="openPickerStats('${p.picker}', '${p.store}')" class="text-indigo-600 dark:text-indigo-400 hover:underline font-bold text-xs flex items-center gap-1"><i class="fa-solid fa-id-badge"></i> ID: ${p.picker}</button>
+                    </td>
+                    <td class="py-3 px-4"><input type="text" class="w-full text-[11px] p-1.5 border rounded outline-none focus:ring-1 focus:ring-indigo-500" placeholder="Not ekle..."></td>
+                </tr>
+            `).join('');
+        }
+
+        function openPickerStats(pickerId, storeName) {
+            document.getElementById('ps-name').innerText = `Picker: ${pickerId}`;
+            document.getElementById('ps-id').innerText = `ID: ${pickerId}`;
+            document.getElementById('ps-store').innerText = storeName;
+            
+            // Picker verisini CSV'den bul
+            let pData = pickerParsedData.filter(p => p.pickerId == pickerId);
+            
+            if(pData.length > 0) {
+                let totalOrders = 0, totalHours = 0;
+                pData.forEach(p => { totalOrders += p.pickedOrders; totalHours += p.workingHours; });
+                
+                document.getElementById('ps-hours').innerText = totalHours.toFixed(1) + ' Sa';
+                document.getElementById('ps-orders').innerText = totalOrders;
+                document.getElementById('ps-oph').innerText = (totalOrders / (totalHours || 1)).toFixed(1);
+                document.getElementById('ps-note').innerText = "Veriler yüklenen Picker Performans dosyasından alınmıştır.";
+            } else {
+                document.getElementById('ps-hours').innerText = '-';
+                document.getElementById('ps-orders').innerText = '-';
+                document.getElementById('ps-oph').innerText = '-';
+                document.getElementById('ps-note').innerText = "Bu personel için Lig sekmesinde henüz performans verisi yüklenmemiş.";
+            }
+            
+            // Kusur sayısı (Detay datadan)
+            const defData = detayParsedData.filter(p => p.picker == pickerId);
+            document.getElementById('ps-defects').innerText = defData.length;
+            
+            document.getElementById('picker-stats-modal').classList.remove('hidden');
+            document.getElementById('picker-stats-modal').classList.add('flex');
+        }
+
+        function closePickerStats() {
+            document.getElementById('picker-stats-modal').classList.add('hidden');
+            document.getElementById('picker-stats-modal').classList.remove('flex');
+        }
+
+        // ==========================================
+        // DASHBOARD GÜNCELLEMESİ
+        // ==========================================
+        function populateDashboardFilter() {
+            const dashFilter = document.getElementById('dashboard-store-filter');
+            dashFilter.innerHTML = '<option value="Tümü">Genel Bakış (Tüm Mağazalar)</option>';
+            const allStores = new Set(detayParsedData.map(p => p.store));
+            Array.from(allStores).sort().forEach(s => { dashFilter.innerHTML += `<option value="${s}">${s}</option>`; });
+        }
+
+        function onDashboardStoreChange() {
+            currentDashboardStore = document.getElementById('dashboard-store-filter').value;
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            if(detayParsedData.length === 0) return;
+            
+            const isGeneral = currentDashboardStore === 'Tümü';
+            document.getElementById('store-chart-wrapper').style.display = isGeneral ? 'block' : 'none';
+            document.getElementById('store-chart-wrapper').parentElement.classList.toggle('lg:grid-cols-3', isGeneral);
+            document.getElementById('store-chart-wrapper').parentElement.classList.toggle('lg:grid-cols-2', !isGeneral);
+
+            const dataToAnalyze = isGeneral ? detayParsedData : detayParsedData.filter(p => p.store === currentDashboardStore);
+            
+            // Finansal KPI
+            document.getElementById('kpi-financial-loss').innerText = `₺${(dataToAnalyze.length * 150).toLocaleString('tr-TR')}`;
+
+            const reasonCounts = {}, pickerCounts = {}, storeCounts = {}, dateCounts = {};
+            dataToAnalyze.forEach(p => {
+                reasonCounts[p.reason] = (reasonCounts[p.reason] || 0) + 1;
+                if(p.picker !== '-') pickerCounts[p.picker] = (pickerCounts[p.picker] || 0) + 1;
+                storeCounts[p.store] = (storeCounts[p.store] || 0) + 1;
+                if(p.date) dateCounts[p.date] = (dateCounts[p.date] || 0) + 1;
+            });
+
+            // Trend
+            const sortedDates = Object.keys(dateCounts).sort();
+            if(chartTrend) chartTrend.destroy();
+            chartTrend = new Chart(document.getElementById('chart-trend'), {
+                type: 'line',
+                data: { labels: sortedDates, datasets: [{ label: 'Kusur', data: sortedDates.map(d => dateCounts[d]), borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            // Sebep
+            if(chartReasons) chartReasons.destroy();
+            chartReasons = new Chart(document.getElementById('chart-reasons'), {
+                type: 'doughnut',
+                data: { labels: Object.keys(reasonCounts), datasets: [{ data: Object.values(reasonCounts), backgroundColor: ['#ff0050', '#f59e0b', '#3b82f6', '#10b981'], borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            });
+
+            // Picker
+            const sortedPickers = Object.entries(pickerCounts).sort((a,b) => b[1] - a[1]).slice(0,5);
+            if(chartPickers) chartPickers.destroy();
+            chartPickers = new Chart(document.getElementById('chart-pickers'), {
+                type: 'bar',
+                data: { labels: sortedPickers.map(i => `ID:${i[0]}`), datasets: [{ label: 'Kusur', data: sortedPickers.map(i => i[1]), backgroundColor: '#6366f1', borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            // Mağaza
+            if(isGeneral) {
+                const sortedStores = Object.entries(storeCounts).sort((a,b) => b[1] - a[1]).slice(0,5);
+                if(chartStores) chartStores.destroy();
+                chartStores = new Chart(document.getElementById('chart-stores'), {
+                    type: 'bar',
+                    data: { labels: sortedStores.map(i => i[0].substring(0, 15)), datasets: [{ label: 'Kusur', data: sortedStores.map(i => i[1]), backgroundColor: '#10b981', borderRadius: 4 }] },
+                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+
+                // Mükemmel Mağazalar Listesi (En az hata)
+                const bestStores = Object.entries(storeCounts).sort((a,b) => a[1] - b[1]).slice(0, 4);
+                document.getElementById('best-stores-list').innerHTML = bestStores.map((bs, i) => `
+                    <li class="flex justify-between items-center bg-white/20 p-2.5 rounded-xl backdrop-blur-sm border border-white/20 shadow-sm">
+                        <span class="font-bold text-[11px] truncate max-w-[130px]"><span class="mr-1">${['🥇','🥈','🥉','🏅'][i]||'🏅'}</span> ${bs[0]}</span>
+                        <span class="bg-white text-orange-500 text-[10px] font-black px-2 py-0.5 rounded-md">${bs[1]} Kusur</span>
+                    </li>
+                `).join('');
+            }
+            
+            // YZ Uyarı Sistemi
+            let alertsHtml = '';
+            const topReason = Object.entries(reasonCounts).sort((a,b) => b[1] - a[1])[0];
+            if (!isGeneral && topReason) {
+                alertsHtml += `<div class="bg-indigo-800/50 border-l-4 border-indigo-400 p-3 rounded-r-xl text-xs text-white font-medium flex gap-2"><i class="fa-solid fa-lightbulb mt-0.5"></i> <span><b>Aksiyon Önerisi:</b> En sık hata sebebi "${topReason[0]}" (${topReason[1]} vaka). İlgili süreçleri gözden geçirin.</span></div>`;
+            }
+            if (sortedPickers.length > 0 && sortedPickers[0][1] >= 3) {
+                alertsHtml += `<div class="bg-amber-500/20 border-l-4 border-amber-400 p-3 rounded-r-xl text-xs text-white font-medium flex gap-2 mt-2"><i class="fa-solid fa-user-shield mt-0.5"></i> <span><b>Personel Alarmı:</b> ID ${sortedPickers[0][0]} personelde yüksek hata yığılması. Birebir koçluk önerilir.</span></div>`;
+            }
+            if(!alertsHtml) alertsHtml = `<div class="text-xs text-indigo-200 italic">Harika! Olağandışı bir anomali tespit edilmedi.</div>`;
+            document.getElementById('ai-alerts-container').innerHTML = alertsHtml;
+        }
+
     </script>
 </body>
 </html>
