@@ -177,7 +177,7 @@
                             <div class="w-14 h-14 rounded-2xl bg-pink-100 text-[#ff0050] flex items-center justify-center text-2xl"><i class="fa-solid fa-bolt"></i></div>
                             <div>
                                 <p class="text-sm font-bold text-slate-700 dark:text-white">Teslimat CSV ve Sipariş Detay Excel'ini Seçin</p>
-                                <p class="text-xs text-slate-400 mt-1">İki dosyayı aynı anda seçin. İptaller hariç tutulur, sadece <b>gerçek tutar farkı</b> olanlar listelenir.</p>
+                                <p class="text-xs text-slate-400 mt-1">İki dosyayı aynı anda seçebilir veya sırayla yükleyebilirsiniz. İptaller hariç tutulur, sadece <b>gerçek tutar farkı</b> olanlar listelenir.</p>
                             </div>
                         </div>
                     </div>
@@ -189,7 +189,7 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl card-shadow border-l-4 border-l-slate-800 flex items-center justify-between">
-                        <div><p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Toplam İncelenen</p><h3 id="kpi-orders" class="text-2xl font-black text-slate-900 dark:text-white mt-1">-</h3></div>
+                        <div><p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Toplam Sipariş</p><h3 id="kpi-orders" class="text-2xl font-black text-slate-900 dark:text-white mt-1">-</h3></div>
                         <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-700"><i class="fa-solid fa-boxes-stacked text-xl"></i></div>
                     </div>
                     <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl card-shadow border-l-4 border-l-amber-500 flex items-center justify-between">
@@ -398,7 +398,7 @@
                     renderAnlikTable();
                 }
                 
-                switchView('detay');
+                switchView('anlik');
             }
         };
 
@@ -413,7 +413,7 @@
                 document.getElementById('app-container').classList.remove('hidden');
                 document.getElementById('app-container').classList.add('flex');
                 document.getElementById('active-region-badge').innerText = region + " Portalı";
-                switchView('detay');
+                switchView('anlik');
             } else { 
                 document.getElementById('login-error').classList.remove('hidden'); 
             }
@@ -446,23 +446,39 @@
         }
 
         // ==========================================
-        // ORİJİNAL, SAĞLAM PARSER (ESKİDEN ÇALIŞAN HALİ)
+        // ESNEK DOSYA OKUMA MOTORU (XLSX & CSV İÇİN)
         // ==========================================
         function parseExcelJson(rows) {
             if (!rows || rows.length < 2) return [];
+            
             let headerIdx = 0;
-            for(let i=0; i<Math.min(5, rows.length); i++) {
-                if(rows[i] && rows[i].some(h => {
-                    const strH = String(h).toLowerCase();
-                    return strH.includes('order') || strH.includes('sipariş') || strH.includes('employee') || strH.includes('customer');
-                })) { headerIdx = i; break; }
+            // Hem sipariş detayları hem de standart raporlar için gerçek başlık satırını bul
+            for(let i=0; i<Math.min(6, rows.length); i++) {
+                if(!rows[i]) continue;
+                let matchCount = 0;
+                rows[i].forEach(cell => {
+                    const str = String(cell).toLowerCase().trim();
+                    if(str.includes('sipariş no') || str.includes('order id') || str.includes('ara toplam') || 
+                       str.includes('original amount') || str.includes('final amount') || str.includes('restoran adı') ||
+                       str.includes('customer') || str.includes('müşteri') || str.includes('ürün') || str.includes('product') ||
+                       str.includes('employee id') || str.includes('employee name') || str.includes('ccr3')) {
+                        matchCount++;
+                    }
+                });
+                if(matchCount >= 2) { 
+                    headerIdx = i; 
+                    break; 
+                }
             }
+
             let headers = rows[headerIdx];
             const list = [];
             for (let i = headerIdx + 1; i < rows.length; i++) {
                 if (!rows[i] || rows[i].length === 0) continue;
                 const obj = {};
-                headers.forEach((h, idx) => { if (h) obj[String(h).trim()] = rows[i][idx] !== undefined ? rows[i][idx] : ''; });
+                headers.forEach((h, idx) => { 
+                    if (h) obj[String(h).trim()] = rows[i][idx] !== undefined ? rows[i][idx] : ''; 
+                });
                 list.push(obj);
             }
             return list;
@@ -682,7 +698,7 @@
         }
 
         // ==========================================
-        // ANLIK İŞLEM: SADECE GERÇEK FARKI BULMA
+        // ANLIK İŞLEM: SADECE GERÇEK FARKI BULMA (AKILLI BİRLEŞTİRME)
         // ==========================================
         async function onAnlikFilesSelected(files) {
             if (!files || files.length === 0) return;
@@ -691,11 +707,7 @@
             const badgesBox = document.getElementById('file-badges-anlik');
             
             statusBox.classList.remove('hidden');
-            badgesBox.innerHTML = '';
             statusText.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-[#ff0050]"></i> Dosyalar analiz ediliyor...`;
-
-            anlikCsvRows = [];
-            anlikExcelRows = [];
 
             try {
                 for (let file of files) {
@@ -703,18 +715,12 @@
                     if (file.name.toLowerCase().endsWith('.csv')) {
                         const text = await file.text();
                         wb = XLSX.read(text, { type: 'string' });
+                        anlikCsvRows = parseExcelJson(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }));
+                        badgesBox.innerHTML += `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-pink-50 text-pink-600 border border-pink-200"><i class="fa-solid fa-file-csv mr-1"></i> ${file.name}</span>`;
                     } else {
                         const buf = await file.arrayBuffer();
                         wb = XLSX.read(buf, { type: 'array' });
-                    }
-                    const parsedData = parseExcelJson(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }));
-                    
-                    const fName = file.name.toLowerCase();
-                    if (fName.endsWith('.csv')) {
-                        anlikCsvRows = parsedData;
-                        badgesBox.innerHTML += `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-pink-50 text-pink-600 border border-pink-200"><i class="fa-solid fa-file-csv mr-1"></i> ${file.name}</span>`;
-                    } else {
-                        anlikExcelRows = parsedData;
+                        anlikExcelRows = parseExcelJson(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }));
                         badgesBox.innerHTML += `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200"><i class="fa-solid fa-file-excel mr-1"></i> ${file.name}</span>`;
                     }
                 }
@@ -781,7 +787,7 @@
                 let status = (c && c.status) ? c.status : (e ? e.status : 'Tamamlandı');
                 let prods = (e && e.prods) ? e.prods : 'Ürün dökümü yok';
 
-                // İptal edilenleri atla
+                // İPTAL OLANLARI LİSTEDEN AT
                 const stUpper = status.toUpperCase();
                 if (stUpper.includes('CANCEL') || stUpper.includes('İPTAL')) {
                     return;
@@ -790,11 +796,13 @@
                 let eAmt = (e && e.araToplam !== null) ? e.araToplam : (c ? c.orig : null);
                 let cAmt = c ? c.final : null;
 
+                // Teslimat tutarı olmayan veya 0 olanları gösterme
                 if (eAmt === null || cAmt === null || cAmt === 0) {
                     return;
                 }
 
                 let diff = eAmt - cAmt;
+                // En az 0.05 ₺ fark olanları ekle
                 if (Math.abs(diff) >= 0.05) {
                     anlikMergedData.push({
                         id: id,
