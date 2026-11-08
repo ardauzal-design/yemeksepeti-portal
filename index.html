@@ -203,20 +203,32 @@
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl card-shadow border border-slate-100 dark:border-slate-700">
-                    <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2"><i class="fa-solid fa-box-open text-[#ff0050]"></i> En Çok İade Alan İlk 10 Ürün</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-300 uppercase">
-                                <tr>
-                                    <th class="py-3 px-4">Ürün Adı</th>
-                                    <th class="py-3 px-4">Kusur Adedi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="top-products-body" class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-200">
-                                <tr><td colspan="2" class="text-center py-8 text-slate-400">Veri Bekleniyor...</td></tr>
-                            </tbody>
-                        </table>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl card-shadow border border-slate-100 dark:border-slate-700 lg:col-span-2">
+                        <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2"><i class="fa-solid fa-box-open text-[#ff0050]"></i> En Çok İade Alan İlk 10 Ürün</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-300 uppercase">
+                                    <tr>
+                                        <th class="py-3 px-4">Ürün Adı</th>
+                                        <th class="py-3 px-4">Kusur Adedi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="top-products-body" class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-200">
+                                    <tr><td colspan="2" class="text-center py-8 text-slate-400">Veri Bekleniyor...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- YENİ: MÜKEMMEL MAĞAZALAR (YILDIZLAR) -->
+                    <div class="bg-gradient-to-br from-amber-400 to-orange-500 p-6 rounded-3xl card-shadow text-white relative overflow-hidden lg:col-span-1 shadow-orange-500/30">
+                        <h3 class="text-sm font-bold mb-4 flex items-center gap-2 relative z-10"><i class="fa-solid fa-trophy text-white"></i> Operasyon Yıldızları</h3>
+                        <p class="text-[10px] font-medium opacity-90 mb-4 relative z-10">Kusur sayısı en düşük (0-2) mağazalar:</p>
+                        <ul id="best-stores-list" class="space-y-3 relative z-10">
+                            <li class="text-xs italic opacity-80">Veri bekleniyor...</li>
+                        </ul>
+                        <i class="fa-solid fa-medal absolute -right-4 -bottom-6 text-9xl opacity-20"></i>
                     </div>
                 </div>
             </div>
@@ -336,6 +348,9 @@
                                 <i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp
                             </button>
 
+                            <!-- YENİ: TARİH FİLTRESİ -->
+                            <input type="date" id="filter-date-detay" onchange="renderDetayTable()" title="Tarihe Göre Filtrele" class="w-full sm:w-auto text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-white rounded-xl px-3 py-2 outline-none font-bold cursor-pointer">
+
                             <!-- BÖLGE FİLTRESİ (Standart Tekli Seçim) -->
                             <select id="filter-region-detay" onchange="updateStoreDropdown()" class="w-full sm:w-auto text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-white rounded-xl px-3 py-2 outline-none font-bold">
                                 <option value="">Tüm Bölgeler</option>
@@ -361,17 +376,19 @@
                         <table class="w-full text-left border-collapse text-xs">
                             <thead class="bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-300 font-bold uppercase sticky top-0 z-10">
                                 <tr>
-                                    <th class="py-3.5 px-5" onclick="sortDetay('orderId')">Sipariş No <i class="fa-solid fa-sort ml-1 opacity-50"></i></th>
-                                    <th class="py-3.5 px-5" onclick="sortDetay('store')">Mağaza <i class="fa-solid fa-sort ml-1 opacity-50"></i></th>
-                                    <th class="py-3.5 px-5" onclick="sortDetay('sku')">SKU <i class="fa-solid fa-sort ml-1 opacity-50"></i></th>
-                                    <th class="py-3.5 px-5 w-48" onclick="sortDetay('product')">Ürün Adı <i class="fa-solid fa-sort ml-1 opacity-50"></i></th>
-                                    <th class="py-3.5 px-5" onclick="sortDetay('reason')">Sebep <i class="fa-solid fa-sort ml-1 opacity-50"></i></th>
-                                    <th class="py-3.5 px-5" onclick="sortDetay('pickerName')">Picker <i class="fa-solid fa-sort ml-1 opacity-50"></i></th>
-                                    <th class="py-3.5 px-5 w-72">Açıklama & Fotoğraf</th>
+                                    <!-- YENİ: TARİH SÜTUNU -->
+                                    <th class="py-3.5 px-4" onclick="sortDetay('date')">Tarih <i class="fa-solid fa-sort ml-1 opacity-50"></i></th>
+                                    <th class="py-3.5 px-4" onclick="sortDetay('orderId')">Sipariş No <i class="fa-solid fa-sort ml-1 opacity-50"></i></th>
+                                    <th class="py-3.5 px-4" onclick="sortDetay('store')">Mağaza <i class="fa-solid fa-sort ml-1 opacity-50"></i></th>
+                                    <th class="py-3.5 px-4" onclick="sortDetay('sku')">SKU <i class="fa-solid fa-sort ml-1 opacity-50"></i></th>
+                                    <th class="py-3.5 px-4 w-40" onclick="sortDetay('product')">Ürün Adı <i class="fa-solid fa-sort ml-1 opacity-50"></i></th>
+                                    <th class="py-3.5 px-4" onclick="sortDetay('reason')">Sebep <i class="fa-solid fa-sort ml-1 opacity-50"></i></th>
+                                    <th class="py-3.5 px-4" onclick="sortDetay('pickerName')">Picker <i class="fa-solid fa-sort ml-1 opacity-50"></i></th>
+                                    <th class="py-3.5 px-4 w-64">Açıklama & Fotoğraf</th>
                                 </tr>
                             </thead>
                             <tbody id="table-body-detay" class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-200 font-medium">
-                                <tr><td colspan="7" class="text-center py-16 text-slate-400">Veri yüklenmedi.</td></tr>
+                                <tr><td colspan="8" class="text-center py-16 text-slate-400">Veri yüklenmedi.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -436,9 +453,9 @@
                 </div>
             </div>
             
-            <div class="p-0 overflow-y-auto wa-bg flex-1 flex flex-col items-center">
-                <div class="w-full p-4 sm:p-6 flex flex-col gap-4 relative" id="whatsapp-render-area">
-                    <!-- Dinamik İçerik -->
+            <div class="p-0 overflow-y-auto flex-1 flex flex-col items-center" style="background-color: #f1f5f9;">
+                <div class="w-full p-4 sm:p-6 flex flex-col relative" id="whatsapp-render-area">
+                    <!-- Dinamik İçerik (Gelişmiş Tasarım) -->
                 </div>
                 
                 <div id="whatsapp-final-image-container" class="w-full p-4 hidden flex-col items-center gap-3">
@@ -573,7 +590,6 @@
                 document.getElementById('app-container').classList.add('flex');
                 document.getElementById('active-region-badge').innerText = currentUserRegion + " Portalı";
                 
-                // KALICI HAFIZA YÜKLEMESİ (SAYFA YENİLENİRSE VERİLER GERİ GELSİN)
                 if (detayParsedData.length > 0) {
                     rebuildDetayUniqueData();
                     populateRegionDropdown();
@@ -674,6 +690,7 @@
             }
         }
 
+        // YARDIMCI FONKSİYONLAR
         function parseCurrency(val) {
             if (!val) return null;
             let str = String(val).replace('TRY', '').replace('₺', '').trim();
@@ -717,6 +734,26 @@
             return { store: storeStr, region: 'Belirtilmemiş' };
         }
 
+        // YENİ: Excel Tarih Ayrıştırıcı (Tarih Filtresi İçin)
+        function parseDateString(val) {
+            if (!val) return '';
+            // Excel serial date format (Örn: 44123)
+            if (typeof val === 'number') {
+                const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+                return d.toISOString().split('T')[0]; // YYYY-MM-DD
+            }
+            let str = String(val).trim().split(' ')[0]; // Saatleri at
+            // DD.MM.YYYY veya DD/MM/YYYY
+            if (str.match(/^\d{1,2}[\.\/]\d{1,2}[\.\/]\d{4}$/)) {
+                let sep = str.includes('.') ? '.' : '/';
+                let p = str.split(sep);
+                return `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`; // YYYY-MM-DD
+            }
+            // Zaten YYYY-MM-DD formatında ise
+            if (str.match(/^\d{4}-\d{2}-\d{2}/)) return str.substring(0, 10);
+            return ''; 
+        }
+
         // ==========================================
         // DASHBOARD & YAPAY ZEKA UYARILARI
         // ==========================================
@@ -758,7 +795,6 @@
             document.getElementById('chart-reasons').style.display = 'block';
             document.getElementById('chart-pickers').style.display = 'block';
             
-            // Eğer belirli bir mağaza seçiliyse, Mağaza grafiğini gizle
             const isGeneral = currentDashboardStore === 'Tümü';
             document.getElementById('chart-stores').parentElement.parentElement.classList.toggle('lg:grid-cols-3', isGeneral);
             document.getElementById('chart-stores').parentElement.parentElement.classList.toggle('lg:grid-cols-2', !isGeneral);
@@ -772,7 +808,6 @@
             const gridColor = isDarkMode ? '#334155' : '#f1f5f9';
             const reasonCounts = {}, pickerCounts = {}, productStats = {}, storeCounts = {};
 
-            // FİLTRELEME
             const dataToAnalyze = isGeneral ? detayParsedData : detayParsedData.filter(p => p.store === currentDashboardStore);
 
             dataToAnalyze.forEach(p => {
@@ -785,7 +820,7 @@
                 if(p.store) { if(!storeCounts[p.store]) storeCounts[p.store] = 0; storeCounts[p.store]++; }
             });
 
-            // Kusur Sebepleri Grafiği
+            // Kusur Sebepleri
             if(chartReasons) chartReasons.destroy();
             chartReasons = new Chart(document.getElementById('chart-reasons'), {
                 type: 'doughnut',
@@ -793,7 +828,7 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: textColor, font: {family: 'Plus Jakarta Sans'} } } } }
             });
 
-            // Picker Hata Grafiği
+            // Picker
             const sortedPickers = Object.entries(pickerCounts).sort((a,b) => b[1] - a[1]).slice(0,5);
             if(chartPickers) chartPickers.destroy();
             chartPickers = new Chart(document.getElementById('chart-pickers'), {
@@ -802,7 +837,7 @@
                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } }, x: { ticks: { color: textColor, font: {size: 10} }, grid: { display: false } } }, plugins: { legend: { display: false } } }
             });
 
-            // YENİ: Mağaza Hata Grafiği (Yatay Bar)
+            // Mağazalar
             if(isGeneral) {
                 const sortedStores = Object.entries(storeCounts).sort((a,b) => b[1] - a[1]).slice(0,5);
                 if(chartStores) chartStores.destroy();
@@ -813,13 +848,26 @@
                 });
             }
 
-            // Ürünler Tablosu
+            // En çok iade alan ürünler
             const sortedProducts = Object.entries(productStats).sort((a,b) => b[1].count - a[1].count).slice(0,10);
             const tbody = document.getElementById('top-products-body');
             tbody.innerHTML = sortedProducts.map(prod => `<tr class="border-b border-slate-100 dark:border-slate-700"><td class="py-3 px-4 font-bold text-xs truncate max-w-[200px]">${prod[0]}</td><td class="py-3 px-4 font-semibold">${prod[1].count} Adet</td></tr>`).join('');
             if(sortedProducts.length === 0) tbody.innerHTML = `<tr><td colspan="2" class="text-center py-4 text-slate-400">Bu görünüm için kusurlu ürün bulunamadı.</td></tr>`;
 
-            // YAPAY ZEKA GELİŞİM FIRSATLARI VE İÇGÖRÜLER
+            // YENİ: MÜKEMMEL MAĞAZALAR LİSTESİ (En az hata yapan 3 mağaza)
+            if (isGeneral && Object.keys(storeCounts).length > 0) {
+                // Hataları en azdan en çoğa doğru sırala
+                const bestStores = Object.entries(storeCounts).sort((a,b) => a[1] - b[1]).slice(0, 4);
+                const bestListHTML = bestStores.map((bs, i) => `
+                    <li class="flex justify-between items-center bg-white/20 p-2.5 rounded-xl border border-white/20 backdrop-blur-sm">
+                        <span class="font-bold text-xs truncate max-w-[150px]"><span class="mr-1">${['🥇','🥈','🥉','🏅'][i] || '🏅'}</span> ${bs[0]}</span>
+                        <span class="bg-white text-orange-500 text-[10px] font-black px-2 py-0.5 rounded-md">${bs[1]} Kusur</span>
+                    </li>
+                `).join('');
+                document.getElementById('best-stores-list').innerHTML = bestListHTML;
+            }
+
+            // YAPAY ZEKA
             let alertsHtml = '';
             const topReason = Object.entries(reasonCounts).sort((a,b) => b[1] - a[1])[0];
             
@@ -1125,12 +1173,15 @@
 
             dataList.forEach((row, index) => {
                 const keys = Object.keys(row);
+                
+                // Ülke Filtresi
                 const countryKey = keys.find(k => String(k).toLowerCase().trim() === 'country' || String(k).toLowerCase().trim() === 'ülke');
                 if (countryKey && row[countryKey]) {
                     const cVal = String(row[countryKey]).toLowerCase().trim();
                     if (cVal !== 'turkey' && cVal !== 'türkiye') return;
                 }
 
+                // Mağaza / Bölge
                 const storeKey = keys.find(k => String(k).toLowerCase().trim() === 'store' || String(k).toLowerCase().includes('mağaza'));
                 let regionStr = '', storeStr = '';
                 if(storeKey && row[storeKey]) {
@@ -1139,6 +1190,13 @@
                     storeStr = extracted.store;
                 }
                 if(currentUserRegion && currentUserRegion !== 'Tüm Türkiye' && regionStr !== currentUserRegion) return;
+
+                // Tarih (YENİ)
+                const dateKey = keys.find(k => {
+                    const tk = String(k).toLowerCase().trim();
+                    return tk === 'date' || tk.includes('tarih') || tk === 'order date' || tk === 'created at';
+                });
+                let dateStrRaw = dateKey ? parseDateString(row[dateKey]) : '';
 
                 const idKey = keys.find(k => String(k).toLowerCase().trim() === 'order id' || String(k).toLowerCase().includes('sipariş'));
                 const skuKey = keys.find(k => String(k).toLowerCase().trim() === 'sku' || String(k).toLowerCase().includes('kodu'));
@@ -1177,6 +1235,7 @@
                     detayParsedData.push({
                         uid: uniqueRowId, orderId: orderId, region: regionStr, store: storeStr, sku: sku,
                         picker: picker, pickerName: pickerName, product: product, reason: reason, 
+                        date: dateStrRaw, // YENİ
                         note: noteText, img: noteImg
                     });
                 }
@@ -1189,7 +1248,7 @@
         }
 
         // ==========================================
-        // FİLTRELEME: BÖLGE (TEKLİ) & MAĞAZA (ÇOKLU)
+        // FİLTRELEME: BÖLGE (TEKLİ) & MAĞAZA (ÇOKLU) & TARİH
         // ==========================================
         function toggleMultiStore() { document.getElementById('multi-store-menu').classList.toggle('hidden'); }
 
@@ -1274,6 +1333,7 @@
         function getDetayFilteredData() {
             const search = document.getElementById('search-input-detay').value.toLowerCase();
             const filterRegion = document.getElementById('filter-region-detay').value;
+            const filterDate = document.getElementById('filter-date-detay').value; // YENİ
             const selectedStores = getSelectedStores();
 
             return detayParsedData.filter(p => {
@@ -1286,8 +1346,9 @@
                 
                 const matchRegion = filterRegion ? p.region === filterRegion : true;
                 const matchStore = selectedStores.length === 0 ? false : selectedStores.includes(p.store);
+                const matchDate = filterDate ? p.date === filterDate : true; // YENİ
                 
-                return matchSearch && matchRegion && matchStore;
+                return matchSearch && matchRegion && matchStore && matchDate;
             });
         }
 
@@ -1311,26 +1372,29 @@
             
             document.getElementById('record-count-detay').innerText = filtered.length;
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-12 text-slate-400">Kayıt bulunamadı.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-12 text-slate-400">Kayıt bulunamadı.</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = filtered.map(p => `
+            tbody.innerHTML = filtered.map(p => {
+                const dateDisplay = p.date ? p.date.split('-').reverse().join('.') : '-';
+                return `
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition border-b border-slate-100 dark:border-slate-700/50">
-                    <td class="py-3.5 px-5 font-mono text-indigo-600 dark:text-indigo-400 font-bold">${p.orderId}</td>
-                    <td class="py-3.5 px-5 text-slate-600 dark:text-slate-300 font-semibold text-[11px] leading-tight">
+                    <td class="py-3.5 px-4 font-mono text-slate-500 dark:text-slate-400 text-xs">${dateDisplay}</td>
+                    <td class="py-3.5 px-4 font-mono text-indigo-600 dark:text-indigo-400 font-bold">${p.orderId}</td>
+                    <td class="py-3.5 px-4 text-slate-600 dark:text-slate-300 font-semibold text-[11px] leading-tight">
                         ${p.region} <br> <span class="font-bold text-slate-800 dark:text-white text-xs">${p.store}</span>
                     </td>
-                    <td class="py-3.5 px-5 text-slate-500 dark:text-slate-400 font-mono text-xs">${p.sku}</td>
-                    <td class="py-3.5 px-5 font-bold text-slate-700 dark:text-slate-200 max-w-[200px] truncate" title="${p.product}">${p.product}</td>
-                    <td class="py-3.5 px-5"><span class="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-1 rounded-md text-[10px] font-extrabold border border-amber-200 dark:border-amber-800">${p.reason}</span></td>
-                    <td class="py-3.5 px-5">
+                    <td class="py-3.5 px-4 text-slate-500 dark:text-slate-400 font-mono text-xs">${p.sku}</td>
+                    <td class="py-3.5 px-4 font-bold text-slate-700 dark:text-slate-200 max-w-[200px] truncate" title="${p.product}">${p.product}</td>
+                    <td class="py-3.5 px-4"><span class="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-1 rounded-md text-[10px] font-extrabold border border-amber-200 dark:border-amber-800">${p.reason}</span></td>
+                    <td class="py-3.5 px-4">
                         <div class="flex flex-col">
                             <span class="font-bold text-slate-800 dark:text-white text-xs">${p.pickerName}</span>
                             <span class="text-[9px] text-slate-400 font-mono">ID: ${p.picker}</span>
                         </div>
                     </td>
-                    <td class="py-3.5 px-5">
+                    <td class="py-3.5 px-4">
                         <div class="flex flex-col gap-1.5">
                             <textarea id="note-${p.uid}" rows="2" class="w-full text-[11px] p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none dark:text-white placeholder-slate-400" placeholder="Açıklama...">${p.note}</textarea>
                             
@@ -1352,7 +1416,8 @@
                         </div>
                     </td>
                 </tr>
-            `).join('');
+                `;
+            }).join('');
         }
 
         // FOTOĞRAF İŞLEMLERİ
@@ -1434,7 +1499,7 @@
         }
 
         // ==========================================
-        // WHATSAPP RAPORU YÖNETİMİ & BYPASS GÖRSEL
+        // WHATSAPP RAPORU YÖNETİMİ & GELİŞMİŞ GÖRSEL
         // ==========================================
         function openWhatsAppModal() {
             if (detayParsedData.length === 0) return alert("Lütfen önce Kusurlu Sipariş Kaydı için veri yükleyin.");
@@ -1477,12 +1542,16 @@
 
             rawWhatsAppText = `📦 *${regionHeader} KUSUR KAYIT RAPORU* 📦\nTarih: ${dateStr}\n\n`;
 
+            // YENİ: TASARIMI GELİŞTİRİLMİŞ ÜST BİLGİ (HEADER)
             htmlText += `
-            <div class="bg-emerald-50 dark:bg-slate-800 p-4 rounded-xl border border-emerald-100 dark:border-slate-700 shadow-sm relative w-full mb-2">
-                <div class="text-sm text-slate-800 dark:text-slate-200 font-sans" style="line-height:1.5;">
-                    📦 <b>${regionHeader} KUSUR KAYIT RAPORU</b> 📦<br>Tarih: ${dateStr}
+            <div style="background: linear-gradient(135deg, #ff0050, #ff4d79); padding: 18px; border-radius: 16px 16px 0 0; color: white; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); width: 100%; position: relative;">
+                <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px auto;">
+                    <i class="fa-solid fa-basket-shopping text-white text-xl"></i>
                 </div>
-            </div>`;
+                <h2 style="margin: 0; font-size: 18px; font-weight: 900; letter-spacing: 0.5px;">${regionHeader} KUSUR RAPORU</h2>
+                <p style="margin: 4px 0 0 0; font-size: 12px; font-weight: 500; opacity: 0.9;"><i class="fa-regular fa-calendar mr-1"></i> ${dateStr} • Toplam Kayıt: ${notedItems.length}</p>
+            </div>
+            <div style="background: #ffffff; padding: 20px; border-radius: 0 0 16px 16px; border: 1px solid #e2e8f0; border-top: none; width: 100%; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; gap: 16px;">`;
 
             notedItems.forEach((p, index) => {
                 rawWhatsAppText += `📌 *Kayıt ${index + 1}*\n🏪 *Mağaza:* ${p.store}\n📄 *Sipariş No:* ${p.orderId}\n🏷️ *Ürün:* ${p.product} (SKU: ${p.sku})\n⚠️ *Sebep:* ${p.reason}\n🛒 *Toplayan:* ${p.pickerName} (ID: ${p.picker})\n`;
@@ -1491,30 +1560,33 @@
                 rawWhatsAppText += `--------------------------------\n\n`;
 
                 let msgHtml = `
-                    📌 <b>Kayıt ${index + 1}</b><br>
-                    🏪 <b>Mağaza:</b> ${p.store}<br>
-                    📄 <b>Sipariş No:</b> ${p.orderId}<br>
-                    🏷️ <b>Ürün:</b> ${p.product} (SKU: ${p.sku})<br>
-                    ⚠️ <b>Sebep:</b> ${p.reason}<br>
-                    🛒 <b>Toplayan:</b> ${p.pickerName} (ID: ${p.picker})<br>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-size: 12px; font-weight: 800; color: #ff0050; text-transform: uppercase;">Kayıt #${index + 1}</span>
+                        <span style="font-size: 10px; background: #f1f5f9; color: #475569; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${p.orderId}</span>
+                    </div>
+                    <div style="font-size: 13px; color: #334155; line-height: 1.6;">
+                        <div><i class="fa-solid fa-store" style="color:#10b981; width:16px;"></i> <b>Mağaza:</b> ${p.store}</div>
+                        <div><i class="fa-solid fa-box-open" style="color:#3b82f6; width:16px;"></i> <b>Ürün:</b> ${p.product} <span style="color:#94a3b8; font-size:11px;">(${p.sku})</span></div>
+                        <div><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b; width:16px;"></i> <b>Sebep:</b> <span style="background:#fef3c7; color:#b45309; padding:2px 4px; border-radius:4px; font-weight:bold; font-size:11px;">${p.reason}</span></div>
+                        <div><i class="fa-solid fa-user-tie" style="color:#6366f1; width:16px;"></i> <b>Toplayan:</b> ${p.pickerName} <span style="color:#94a3b8; font-size:11px;">(ID: ${p.picker})</span></div>
+                    </div>
                 `;
                 
-                if(p.note) msgHtml += `📝 <b>Açıklama:</b> ${p.note}<br>`;
+                if(p.note) msgHtml += `<div style="margin-top: 8px; padding: 8px; background: #f8fafc; border-left: 3px solid #64748b; border-radius: 4px; font-size: 12px; color: #475569;"><b><i class="fa-solid fa-comment-dots"></i> Yöneticinin Notu:</b><br>${p.note}</div>`;
                 
                 let imgHtml = '';
                 if(p.img) {
-                    imgHtml = `<br><img src="${p.img}" style="max-width:100%; width:350px; border-radius:12px; border:1px solid #e2e8f0; margin-top:5px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">`;
+                    imgHtml = `<div style="margin-top: 10px; text-align: center;"><img src="${p.img}" style="max-width:100%; width:320px; border-radius:8px; border:1px solid #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"></div>`;
                 }
 
                 htmlText += `
-                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative w-full">
-                    <div class="text-sm text-slate-800 dark:text-slate-200 font-sans" style="line-height:1.5;">
-                        ${msgHtml}
-                        ${imgHtml}
-                    </div>
+                <div style="border: 1px solid #f1f5f9; padding: 12px; border-radius: 12px; background: #ffffff;">
+                    ${msgHtml}
+                    ${imgHtml}
                 </div>`;
             });
 
+            htmlText += `</div>`; // Wrapper div sonu
             container.innerHTML = htmlText;
         }
 
@@ -1545,11 +1617,10 @@
             btn.classList.replace('bg-emerald-500', 'bg-amber-500');
             
             const renderArea = document.getElementById('whatsapp-render-area');
-            const bgColor = document.documentElement.classList.contains('dark') ? '#0b141a' : '#e5ddd5';
             
             html2canvas(renderArea, { 
                 scale: 2, 
-                backgroundColor: bgColor,
+                backgroundColor: '#f1f5f9', // Zemin rengi
                 useCORS: true,
                 logging: false
             }).then(canvas => {
@@ -1605,10 +1676,10 @@
                 const filteredDetay = getDetayFilteredData();
                 if (filteredDetay.length === 0) return;
                 const exportData = filteredDetay.map(p => ({
-                    'Bölge': p.region, 'Mağaza': p.store, 'Sipariş No': p.orderId, 'Ürün Kodu (SKU)': p.sku, 'İade Edilen Ürün': p.product, 'Kusur Sebebi': p.reason, 'Toplayan İsim': p.pickerName, 'Toplayan (Picker ID)': p.picker, 'Yönetici Açıklaması': p.note, 'Ekli Fotoğraf': p.img ? 'Var (Portalda)' : 'Yok'
+                    'Tarih': p.date, 'Bölge': p.region, 'Mağaza': p.store, 'Sipariş No': p.orderId, 'Ürün Kodu (SKU)': p.sku, 'İade Edilen Ürün': p.product, 'Kusur Sebebi': p.reason, 'Toplayan İsim': p.pickerName, 'Toplayan (Picker ID)': p.picker, 'Yönetici Açıklaması': p.note, 'Ekli Fotoğraf': p.img ? 'Var (Portalda)' : 'Yok'
                 }));
                 const ws = XLSX.utils.json_to_sheet(exportData);
-                ws['!cols'] = [{wch: 15}, {wch: 25}, {wch: 25}, {wch: 20}, {wch: 40}, {wch: 30}, {wch: 25}, {wch: 20}, {wch: 50}, {wch: 20}];
+                ws['!cols'] = [{wch: 12}, {wch: 15}, {wch: 25}, {wch: 25}, {wch: 20}, {wch: 40}, {wch: 30}, {wch: 25}, {wch: 20}, {wch: 50}, {wch: 20}];
                 XLSX.utils.book_append_sheet(wb, ws, "Kusurlu Sipariş Raporu");
                 XLSX.writeFile(wb, "Kusurlu_Siparis_Raporu.xlsx");
             }
