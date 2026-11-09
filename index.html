@@ -53,7 +53,7 @@
     <header class="glass-panel sticky top-0 z-50 shadow-sm border-b border-slate-200 dark:border-slate-800">
         <div class="max-w-[1600px] mx-auto px-6 py-4 flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-brand-pink text-white flex items-center justify-center shadow-lg shadow-pink-500/30">
+                <div class="w-12 h-12 rounded-2xl bg-[#ea004b] text-white flex items-center justify-center shadow-lg shadow-pink-500/30">
                     <i class="fa-solid fa-code-compare text-xl"></i>
                 </div>
                 <div>
@@ -62,6 +62,9 @@
                 </div>
             </div>
             <div class="flex items-center gap-3">
+                <div id="status-badge" class="hidden items-center gap-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-3 py-2 rounded-xl text-xs font-bold border border-emerald-200 dark:border-emerald-800/50">
+                    <i class="fa-solid fa-check-circle"></i> Senkronize
+                </div>
                 <button onclick="toggleTheme()" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center text-slate-600 dark:text-amber-400">
                     <i id="theme-icon" class="fa-solid fa-moon"></i>
                 </button>
@@ -80,9 +83,11 @@
         <!-- YÜKLEME VE ÖZET ALANI -->
         <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
             
-            <!-- DOSYA YÜKLEME (Gelişmiş JS Sürükle-Bırak Motoru) -->
+            <!-- DOSYA YÜKLEME -->
             <div class="xl:col-span-1 bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-soft border border-slate-100 dark:border-slate-800 flex flex-col justify-center relative">
-                <label id="drop-zone" for="file-upload" class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 flex flex-col items-center gap-4 bg-slate-50 dark:bg-slate-900/50 group">
+                <label id="drop-zone" for="file-upload" class="border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-[#ea004b] dark:hover:border-[#ea004b] rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 flex flex-col items-center gap-4 bg-slate-50 dark:bg-slate-900/50 group"
+                       ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+                    
                     <div class="w-16 h-16 rounded-full bg-pink-50 dark:bg-pink-900/20 flex items-center justify-center group-hover:scale-110 transition-transform pointer-events-none">
                         <i class="fa-solid fa-file-import text-3xl text-brand-pink"></i>
                     </div>
@@ -92,7 +97,7 @@
                     </div>
                     <input id="file-upload" type="file" multiple accept=".csv, .xlsx, .xls" class="hidden" onchange="handleFileSelect(event)">
                 </label>
-                <div id="upload-status" class="mt-4 text-xs font-bold text-center text-slate-500 hidden pb-2"></div>
+                <div id="upload-status" class="absolute bottom-1 left-0 w-full text-xs font-bold text-center text-slate-500 hidden pb-2"></div>
             </div>
 
             <!-- KPI KARTLARI -->
@@ -140,7 +145,6 @@
 
         <!-- DETAYLI ANALİZ TABLOSU -->
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-800 flex flex-col">
-            <!-- Araç Çubuğu -->
             <div class="p-5 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/50 flex flex-wrap justify-between items-center gap-4 rounded-t-3xl">
                 <div class="flex items-center gap-3">
                     <h2 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wide flex items-center gap-2">
@@ -162,7 +166,6 @@
                 </div>
             </div>
             
-            <!-- Tablo Gövdesi -->
             <div class="overflow-x-auto max-h-[650px] relative rounded-b-3xl">
                 <table class="w-full text-left text-xs whitespace-nowrap">
                     <thead class="bg-slate-50/90 dark:bg-slate-900/90 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider sticky top-0 z-10 backdrop-blur-md shadow-sm">
@@ -214,6 +217,7 @@
             bindDragAndDrop();
             
             if (mergedData.length > 0) {
+                document.getElementById('status-badge').style.display = 'flex';
                 updateKPIs();
                 renderTable();
             }
@@ -228,8 +232,8 @@
 
         function updateThemeIcon() {
             const icon = document.getElementById('theme-icon');
-            if(isDarkMode) { icon.classList.remove('fa-moon'); icon.classList.add('fa-sun'); } 
-            else { icon.classList.remove('fa-sun'); icon.classList.add('fa-moon'); }
+            if(isDarkMode) { icon.classList.replace('fa-moon', 'fa-sun'); } 
+            else { icon.classList.replace('fa-sun', 'fa-moon'); }
         }
 
         function clearData() {
@@ -240,6 +244,7 @@
                 csvRawData = [];
                 xlsxRawData = [];
                 totalAnalyzedCount = 0;
+                document.getElementById('status-badge').style.display = 'none';
                 updateKPIs();
                 renderTable();
             }
@@ -266,6 +271,7 @@
                 e.preventDefault();
                 dropZone.classList.remove('drag-over');
                 if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    document.getElementById('file-upload').files = e.dataTransfer.files;
                     processUploadedFiles(e.dataTransfer.files);
                 }
             });
@@ -318,7 +324,7 @@
             }
 
             const headers = rows[headerIndex];
-            if(!headers) return []; // Geçersiz dosya ise boş döner
+            if(!headers) return []; 
 
             const result = [];
             for(let i = headerIndex + 1; i < rows.length; i++) {
@@ -334,14 +340,41 @@
             return result;
         }
 
-        // KESİN ÇÖZÜM: Bütün dosyaları doğrudan ArrayBuffer (Raw Bytes) olarak okuyup parse eder.
-        // Bu sayede FileReader senkronizasyon hataları ve CSV/UTF8 bozulmaları tarihe karışır.
+        // TÜRKÇE KARAKTER SORUNUNU (Encoding) ÇÖZEN YENİ OKUMA FONKSİYONU
         async function readSafeFile(file) {
-            const arrayBuffer = await file.arrayBuffer();
-            const data = new Uint8Array(arrayBuffer);
-            const wb = XLSX.read(data, { type: 'array' });
-            const sheetData = extractExcelData(wb.Sheets[wb.SheetNames[0]]);
-            return { type: file.name.toLowerCase().endsWith('.csv') ? 'csv' : 'xlsx', data: sheetData };
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = (e) => {
+                    try {
+                        let wb;
+                        const isCSV = file.name.toLowerCase().endsWith('.csv');
+                        
+                        if (isCSV) {
+                            // CSV dosyalarını bozulmaması için metin olarak (UTF-8) alıyoruz.
+                            wb = XLSX.read(e.target.result, { type: 'string' });
+                        } else {
+                            // Excel (XLSX) dosyalarını çökmemesi için ArrayBuffer (Binary) alıyoruz.
+                            const data = new Uint8Array(e.target.result);
+                            wb = XLSX.read(data, { type: 'array' });
+                        }
+                        
+                        const sheetData = extractExcelData(wb.Sheets[wb.SheetNames[0]]);
+                        resolve({ type: isCSV ? 'csv' : 'xlsx', data: sheetData });
+                    } catch(err) {
+                        reject(err);
+                    }
+                };
+                
+                reader.onerror = reject;
+                
+                if (file.name.toLowerCase().endsWith('.csv')) {
+                    // Türkçe CSV'ler için UTF-8 okumayı zorunlu kılıyoruz
+                    reader.readAsText(file, 'UTF-8');
+                } else {
+                    reader.readAsArrayBuffer(file);
+                }
+            });
         }
 
         // =========================================
@@ -367,6 +400,7 @@
 
                 runMatchingLogic();
                 
+                document.getElementById('status-badge').style.display = 'flex';
                 statusBox.innerHTML = `<span class="text-emerald-500"><i class="fa-solid fa-check mr-1"></i> Analiz başarıyla tamamlandı.</span>`;
                 setTimeout(() => statusBox.classList.add('hidden'), 4000);
 
@@ -393,7 +427,6 @@
                 const paymentKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'payment method' || s.includes('ödeme'); });
                 const pickerKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'picker' || s.includes('toplayıcı'); });
 
-                // Original Amount veya Sipariş Tutarı eşleştirmesi
                 let origKey = keys.find(k => k.toLowerCase().trim() === 'original amount' || k.toLowerCase().trim() === 'sipariş tutarı');
                 let finalKey = keys.find(k => k.toLowerCase().trim() === 'final amount' || k.toLowerCase().trim() === 'teslimat tutarı');
 
@@ -451,25 +484,19 @@
                 let picker = (c && c.picker) ? c.picker : '-';
 
                 const stUpper = status.toUpperCase();
-                // Kesinlikle iptal olanları listeye dahil etmiyoruz
                 if (stUpper.includes('CANCEL') || stUpper.includes('İPTAL')) {
                     return; 
                 }
 
-                // Beklenen sipariş tutarı
                 let expectedAmt = (e && e.araToplam !== null) ? e.araToplam : (c ? c.orig : null);
-                // Gerçekleşen (teslim edilen) tutar
                 let actualAmt = c ? c.final : null;
 
-                // Veri yoksa veya teslimat tutarı 0 ise (Sipariş henüz kuryede olabilir)
                 if (expectedAmt === null || actualAmt === null || actualAmt === 0) return;
 
                 let diff = expectedAmt - actualAmt;
                 
-                // Sadece kuruş farkından büyük olan "gerçek" farkları tespit et
                 if (Math.abs(diff) >= 0.05) {
                     
-                    // YAPAY ZEKA TESPİTİ
                     let aiNote = "";
                     if(diff > 0) {
                         aiNote = `<span class="text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded text-[10px]"><i class="fa-solid fa-triangle-exclamation"></i> Muhtemel eksik ürün veya stok yokluğu</span>`;
@@ -486,14 +513,13 @@
                         picker: picker,
                         originalAmt: expectedAmt,
                         finalAmt: actualAmt,
-                        diffAmt: diff, // Eksi veya Artı değerli tutar
+                        diffAmt: diff, 
                         products: prods,
                         aiNote: aiNote
                     });
                 }
             });
 
-            // Verileri kalıcı hafızaya yaz
             localStorage.setItem('ys_merged_data', JSON.stringify(mergedData));
             localStorage.setItem('ys_total_count', totalAnalyzedCount);
 
@@ -506,7 +532,6 @@
         // =========================================
         function updateKPIs() {
             let totalActivity = 0;
-            // Tüm mutlak hareket (Artı veya eksi farketmez) toplam hacmi yansıtsın
             mergedData.forEach(m => {
                 totalActivity += Math.abs(m.diffAmt); 
             });
@@ -570,8 +595,7 @@
                     statusBadge = `<span class="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider"><i class="fa-solid fa-check"></i> Teslim Edildi</span>`;
                 }
 
-                // Eksi bakiye mi artı bakiye mi? (diff > 0 şirketin zararı, diff < 0 müşterinin fazla ödediği)
-                let diffColorClass = m.diffAmt > 0 ? "text-[#ff0050]" : "text-emerald-500";
+                let diffColorClass = m.diffAmt > 0 ? "text-brand-pink" : "text-emerald-500";
                 let diffSign = m.diffAmt > 0 ? "-" : "+";
 
                 return `
@@ -607,7 +631,7 @@
         // =========================================
         // EXCEL İHRAC (EXPORT)
         // =========================================
-        function exportToExcel() {
+        function exportData() {
             if(mergedData.length === 0) return alert("İndirilecek veri bulunamadı.");
             const exportArr = mergedData.map(m => ({
                 'Sipariş No': m.id,
@@ -618,7 +642,7 @@
                 'Durum': m.status,
                 'Beklenen Tutar': m.originalAmt,
                 'Gerçekleşen Teslimat Tutarı': m.finalAmt,
-                'Fark Tutarı': m.diffAmt,
+                'Fark (Kayıp) Tutarı': m.diffAmt,
                 'Siparişteki Ürünler': m.products
             }));
             const wb = XLSX.utils.book_new();
