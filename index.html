@@ -2,1105 +2,354 @@
 <html lang="tr" class="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#0f172a">
-    <title>Yemeksepeti Market - Yönetici Analiz Portalı</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yemeksepeti - Sipariş Karşılaştırma Portalı</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
-    <!-- FIREBASE BULUT VERİTABANI KÜTÜPHANELERİ -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
-    
     <script>
         tailwind.config = {
             darkMode: 'class',
-            theme: { extend: { colors: { brand: { pink: '#ff0050', pinkHover: '#e00045' } } } }
+            theme: { extend: { colors: { brand: { pink: '#ea004b', dark: '#111827' } } } }
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .card-shadow { box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 12px -2px rgba(0, 0, 0, 0.03); }
-        .dark .card-shadow { box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5); }
-        .nav-btn.active { background-color: #ff0050; color: white; box-shadow: 0 4px 12px rgba(255, 0, 80, 0.25); }
-        .nav-btn { background-color: transparent; color: inherit; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        .dark body { background-color: #0f172a; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .dark .glass-panel { background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px); }
+        .shadow-custom { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
-        th { cursor: pointer; user-select: none; }
-        th:hover { color: #ff0050; }
-        .league-champ { background: linear-gradient(90deg, rgba(255,215,0,0.1) 0%, transparent 100%); border-left: 4px solid #ffd700; }
-        .league-up { color: #10b981; font-weight: bold; }
-        .league-down { color: #ef4444; font-weight: bold; }
+        th { cursor: pointer; user-select: none; transition: color 0.2s; }
+        th:hover { color: #ea004b; }
+        .table-row-enter { animation: fadeIn 0.3s ease-out forwards; opacity: 0; transform: translateY(5px); }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="bg-[#eaf8f4] dark:bg-slate-900 text-slate-800 dark:text-slate-200 min-h-screen flex flex-col antialiased relative transition-colors duration-300">
+<body class="text-slate-800 dark:text-slate-200 transition-colors duration-300">
 
-    <!-- ========================================== -->
-    <!-- GİRİŞ (LOGIN) EKRANI -->
-    <!-- ========================================== -->
-    <div id="view-login" class="fixed inset-0 z-[200] bg-[#eaf8f4] dark:bg-slate-900 flex items-center justify-center p-4 transition-colors duration-300">
-        <div class="bg-white dark:bg-slate-800 p-8 md:p-12 rounded-3xl card-shadow w-full max-w-md flex flex-col items-center text-center animate-[fadeIn_0.5s_ease-in-out]">
-            <div class="w-20 h-20 rounded-3xl bg-[#ff0050] text-white flex items-center justify-center shadow-lg shadow-pink-500/30 mb-6">
-                <i class="fa-solid fa-basket-shopping text-4xl"></i>
+    <!-- HEADER -->
+    <header class="glass-panel border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-[1600px] mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-brand-pink text-white flex items-center justify-center shadow-lg shadow-pink-500/20">
+                    <i class="fa-solid fa-code-compare text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">Sipariş Karşılaştırma Merkezi</h1>
+                    <p class="text-xs text-slate-500 font-medium">Orders (CSV) & Order Details (XLSX) Senkronizasyonu</p>
+                </div>
             </div>
-            <h1 class="text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-2">Yönetici Portalı</h1>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mb-8">Devam etmek için bölgenizi seçin ve şifrenizi girin.</p>
-            
-            <div class="w-full space-y-4">
-                <div class="text-left">
-                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Sorumlu Olduğunuz Bölge</label>
-                    <select id="login-region" class="w-full mt-1 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-pink-500 outline-none dark:text-white">
-                        <option value="İzmir">İzmir</option>
-                        <option value="İstanbul">İstanbul</option>
-                        <option value="Ankara">Ankara</option>
-                        <option value="Tüm Türkiye">Tüm Türkiye (Genel Müdürlük)</option>
-                    </select>
-                </div>
-                <div class="text-left">
-                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Erişim Şifresi</label>
-                    <input type="password" id="login-password" onkeypress="if(event.key === 'Enter') handleLogin()" placeholder="1234" class="w-full mt-1 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-pink-500 outline-none dark:text-white tracking-widest">
-                </div>
-                <button onclick="handleLogin()" class="w-full bg-[#ff0050] hover:bg-[#e00045] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-pink-500/20 transition active:scale-95 mt-4">
-                    Giriş Yap <i class="fa-solid fa-arrow-right ml-2"></i>
+            <div class="flex items-center gap-3">
+                <button onclick="toggleTheme()" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center text-slate-600 dark:text-amber-400">
+                    <i id="theme-icon" class="fa-solid fa-moon"></i>
                 </button>
-                <p id="login-error" class="text-xs text-red-500 font-bold hidden mt-2">Hatalı şifre. Lütfen 1234 yazıp tekrar deneyin.</p>
+                <button onclick="exportToExcel()" class="bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-2">
+                    <i class="fa-solid fa-download"></i> Raporu İndir
+                </button>
+                <button onclick="clearData()" class="bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-600 text-sm font-bold px-4 py-2.5 rounded-xl transition">
+                    Sıfırla
+                </button>
             </div>
         </div>
-    </div>
+    </header>
 
-    <!-- ========================================== -->
-    <!-- ANA UYGULAMA -->
-    <!-- ========================================== -->
-    <div id="app-container" class="hidden flex-col flex-1 pb-20 lg:pb-0">
+    <main class="max-w-[1600px] mx-auto px-6 py-8 space-y-8">
         
-        <header class="bg-white dark:bg-slate-800 border-b border-emerald-100/80 dark:border-slate-700 py-4 px-6 sticky top-0 z-50 shadow-sm transition-colors duration-300 hidden lg:block">
-            <div class="max-w-[1400px] mx-auto flex flex-col xl:flex-row justify-between items-center gap-4">
-                <div class="flex items-center gap-3.5">
-                    <div class="w-11 h-11 rounded-2xl bg-[#ff0050] text-white flex items-center justify-center shadow-lg"><i class="fa-solid fa-chart-pie text-lg"></i></div>
-                    <div>
-                        <h1 class="text-lg font-black text-slate-900 dark:text-white">Yemeksepeti Market <span id="active-region-badge" class="text-[10px] bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full uppercase ml-2">Portal</span></h1>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Bütünleşik Analiz & Raporlama Portalı</p>
-                    </div>
-                </div>
-
-                <div class="flex flex-wrap items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-700 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-600">
-                    <button onclick="switchView('dashboard')" id="btn-view-dashboard" class="nav-btn px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-200"><i class="fa-solid fa-chart-column text-indigo-500"></i> Dashboard</button>
-                    <button onclick="switchView('league')" id="btn-view-league" class="nav-btn px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-200"><i class="fa-solid fa-trophy text-amber-500"></i> D-MART Ligi</button>
-                    <button onclick="switchView('detay')" id="btn-view-detay" class="nav-btn px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-200"><i class="fa-solid fa-clipboard-list text-emerald-500"></i> Kusur Kaydı</button>
-                    <button onclick="switchView('anlik')" id="btn-view-anlik" class="nav-btn px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-200"><i class="fa-solid fa-bolt text-[#ff0050]"></i> Anlık Fark</button>
-                </div>
-
-                <div class="flex items-center gap-3">
-                    <div id="cloud-status" class="flex items-center gap-1.5 text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-3 py-2.5 rounded-xl border border-amber-200 transition-colors duration-500"><i class="fa-solid fa-cloud"></i> <span id="cloud-status-text">Bağlantı Yok</span></div>
-                    <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-amber-400 font-bold flex items-center justify-center transition hover:bg-slate-200"><i id="theme-icon" class="fa-solid fa-moon"></i></button>
-                    <button onclick="exportToExcel()" id="export-btn" class="text-xs bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl shadow-md hover:bg-emerald-600 transition flex items-center gap-2"><i class="fa-solid fa-file-excel"></i> <span id="export-btn-text">İndir</span></button>
-                    <button onclick="logout()" class="text-xs bg-red-50 text-red-600 font-bold px-3.5 py-2.5 rounded-xl transition hover:bg-red-100"><i class="fa-solid fa-right-from-bracket"></i></button>
-                </div>
-            </div>
-        </header>
-
-        <main class="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 flex-1 w-full relative">
+        <!-- YÜKLEME ALANI & ÖZET KARTLARI -->
+        <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
             
-            <!-- ========================================== -->
-            <!-- DASHBOARD -->
-            <!-- ========================================== -->
-            <div id="view-dashboard" class="space-y-6 hidden animate-[fadeIn_0.3s_ease-in-out]">
-                <div class="bg-indigo-600 rounded-3xl p-6 lg:p-8 card-shadow text-white relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div class="z-10 w-full">
-                        <div class="flex justify-between items-start flex-col sm:flex-row gap-4 mb-4">
-                            <div>
-                                <h2 class="text-2xl font-black mb-1">Performans Dashboard</h2>
-                                <p class="text-indigo-200 text-sm">Kusur kayıtlarınız ve yapay zeka analizleri burada toplanır.</p>
-                            </div>
-                            <div class="w-full sm:w-auto relative z-20 flex items-center gap-2">
-                                <label class="text-xs font-bold text-indigo-200 whitespace-nowrap"><i class="fa-solid fa-filter"></i> Mağaza:</label>
-                                <select id="dashboard-store-filter" onchange="onDashboardStoreChange()" class="bg-indigo-700 border border-indigo-500 text-white text-sm font-bold rounded-xl px-4 py-2 outline-none cursor-pointer pr-8">
-                                    <option value="Tümü">Genel Bakış (Tüm Mağazalar)</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-xl w-full">
-                            <h3 class="text-xs font-bold text-indigo-100 uppercase tracking-wider mb-2 flex items-center gap-2"><i class="fa-solid fa-robot"></i> Sistem İçgörüleri & Anormallik Tespiti</h3>
-                            <div id="ai-alerts-container" class="space-y-2"><div class="text-xs text-indigo-200 italic">Analiz edilecek veri bekleniyor...</div></div>
-                        </div>
+            <!-- UPLOAD ZONE -->
+            <div class="xl:col-span-1 bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-custom border border-slate-100 dark:border-slate-700 flex flex-col justify-center">
+                <label for="file-upload" class="border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-brand-pink dark:hover:border-brand-pink rounded-2xl p-8 text-center cursor-pointer transition flex flex-col items-center gap-4 bg-slate-50 dark:bg-slate-900/50 group">
+                    <div class="w-16 h-16 rounded-full bg-pink-50 dark:bg-pink-900/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-brand-pink"></i>
                     </div>
-                </div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200">Dosyaları Seçin veya Sürükleyin</p>
+                        <p class="text-xs text-slate-500 mt-1">orders.csv & orderDetails.xlsx</p>
+                    </div>
+                    <input id="file-upload" type="file" multiple accept=".csv, .xlsx, .xls" class="hidden" onchange="handleFileUpload(event)">
+                </label>
+                <div id="upload-status" class="mt-4 text-xs font-bold text-center text-slate-500 hidden">Bekleniyor...</div>
+            </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl card-shadow border-l-4 border-l-red-500 flex items-center justify-between">
+            <!-- KPI KARTLARI -->
+            <div class="xl:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- KPI 1 -->
+                <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-custom border border-slate-100 dark:border-slate-700 relative overflow-hidden flex flex-col justify-between">
+                    <div class="flex justify-between items-start relative z-10">
                         <div>
-                            <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Tahmini Fire Maliyeti</p>
-                            <h3 id="kpi-financial-loss" class="text-2xl font-black text-red-500 mt-1">₺0</h3>
-                            <p class="text-[10px] text-slate-400 mt-1">*Kusurlu sipariş adetleri üzerinden (150₺ baz)</p>
+                            <p class="text-[11px] font-extrabold uppercase tracking-widest text-slate-400">İncelenen Toplam Sipariş</p>
+                            <h3 id="kpi-total" class="text-4xl font-black text-slate-800 dark:text-white mt-2">0</h3>
                         </div>
-                        <div class="w-14 h-14 rounded-2xl bg-red-50 dark:bg-red-900/30 flex items-center justify-center text-red-500 text-2xl"><i class="fa-solid fa-money-bill-trend-up"></i></div>
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-500 text-xl"><i class="fa-solid fa-file-invoice"></i></div>
                     </div>
-                    
-                    <div class="bg-gradient-to-br from-amber-400 to-orange-500 p-6 rounded-3xl card-shadow text-white relative overflow-hidden md:col-span-2 shadow-orange-500/30">
-                        <h3 class="text-sm font-bold mb-3 flex items-center gap-2 relative z-10"><i class="fa-solid fa-trophy"></i> Kusursuz Operasyon Yıldızları</h3>
-                        <p class="text-[10px] font-medium opacity-90 mb-3 relative z-10">Kusur sayısı en düşük mağazalar:</p>
-                        <ul id="best-stores-list" class="grid grid-cols-2 gap-3 relative z-10">
-                            <li class="text-xs italic opacity-80">Veri bekleniyor...</li>
-                        </ul>
-                        <i class="fa-solid fa-medal absolute -right-4 -bottom-6 text-9xl opacity-20"></i>
-                    </div>
+                    <div class="w-32 h-32 bg-blue-500 rounded-full blur-3xl opacity-5 absolute -bottom-10 -right-10"></div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl card-shadow border border-slate-100 dark:border-slate-700">
-                        <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2"><i class="fa-solid fa-circle-exclamation text-amber-500"></i> Kusur Sebepleri</h3>
-                        <div class="relative h-64 w-full flex items-center justify-center"><canvas id="chart-reasons"></canvas><p id="chart-reasons-empty" class="absolute text-xs text-slate-400 italic">Veri Bekleniyor...</p></div>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl card-shadow border border-slate-100 dark:border-slate-700">
-                        <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2"><i class="fa-solid fa-users text-indigo-500"></i> Personel Hata Dağılımı</h3>
-                        <div class="relative h-64 w-full flex items-center justify-center"><canvas id="chart-pickers"></canvas><p id="chart-pickers-empty" class="absolute text-xs text-slate-400 italic">Veri Bekleniyor...</p></div>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl card-shadow border border-slate-100 dark:border-slate-700" id="store-chart-wrapper">
-                        <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2"><i class="fa-solid fa-store text-emerald-500"></i> Mağazalara Göre Kusurlar</h3>
-                        <div class="relative h-64 w-full flex items-center justify-center"><canvas id="chart-stores"></canvas><p id="chart-stores-empty" class="absolute text-xs text-slate-400 italic">Veri Bekleniyor...</p></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ========================================== -->
-            <!-- SAYFA: D-MART LİGİ (Puan Tabloları & Yükleme) -->
-            <!-- ========================================== -->
-            <div id="view-league" class="space-y-6 hidden animate-[fadeIn_0.3s_ease-in-out]">
-                <div class="bg-gradient-to-r from-pink-600 to-red-600 rounded-3xl p-8 text-white card-shadow relative overflow-hidden">
-                    <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
+                <!-- KPI 2 -->
+                <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-custom border border-slate-100 dark:border-slate-700 relative overflow-hidden flex flex-col justify-between border-b-4 border-b-amber-400">
+                    <div class="flex justify-between items-start relative z-10">
                         <div>
-                            <h2 class="text-3xl font-black mb-2 uppercase italic tracking-wider">D-MART LİGİ BAŞLIYOR! <i class="fa-solid fa-bullhorn text-yellow-300"></i></h2>
-                            <p class="text-pink-100 text-sm max-w-2xl">
-                                Haftalık Lig Puanı; Yükleyeceğiniz <b>Picker Performans Raporu (CSV)</b> (Hız ve Verimlilik) ve <b>Kusur Kaydı</b> raporlarındaki (Hata Oranı) verilerin harmanlanmasıyla otomatik hesaplanır. Yalnızca <b>Türkiye</b> mağazaları lige dahil edilir.
-                            </p>
+                            <p class="text-[11px] font-extrabold uppercase tracking-widest text-amber-500">Tutar Farkı Bulunanlar</p>
+                            <h3 id="kpi-diff-count" class="text-4xl font-black text-slate-800 dark:text-white mt-2">0</h3>
                         </div>
-                        <div class="bg-white/20 backdrop-blur-md p-4 rounded-xl text-center min-w-[200px]">
-                            <p class="text-xs font-bold uppercase text-pink-100 mb-1">Şampiyonlar Ligi 1.'si Ödülü</p>
-                            <p class="text-3xl font-black text-yellow-300">1.250 ₺ <i class="fa-solid fa-gift text-xl"></i></p>
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-500 text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    </div>
+                    <p class="text-[10px] font-bold text-slate-400 mt-2 relative z-10">*İptaller hariç, gerçek farklar</p>
+                    <div class="w-32 h-32 bg-amber-500 rounded-full blur-3xl opacity-5 absolute -bottom-10 -right-10"></div>
+                </div>
+
+                <!-- KPI 3 -->
+                <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-custom border border-slate-100 dark:border-slate-700 relative overflow-hidden flex flex-col justify-between border-b-4 border-b-brand-pink">
+                    <div class="flex justify-between items-start relative z-10">
+                        <div>
+                            <p class="text-[11px] font-extrabold uppercase tracking-widest text-brand-pink">Toplam Tutar Kaybı / Farkı</p>
+                            <h3 id="kpi-diff-sum" class="text-4xl font-black text-brand-pink mt-2">₺0,00</h3>
                         </div>
+                        <div class="w-12 h-12 rounded-xl bg-pink-50 dark:bg-pink-900/20 flex items-center justify-center text-brand-pink text-xl"><i class="fa-solid fa-money-bill-transfer"></i></div>
                     </div>
-                    <i class="fa-solid fa-trophy absolute -right-10 -bottom-10 text-[200px] opacity-10"></i>
+                    <p class="text-[10px] font-bold text-slate-400 mt-2 relative z-10">Eksik tahsil edilen tutarların toplamı</p>
+                    <div class="w-32 h-32 bg-brand-pink rounded-full blur-3xl opacity-5 absolute -bottom-10 -right-10"></div>
                 </div>
-
-                <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 card-shadow border border-slate-100 dark:border-slate-700">
-                    <div id="drop-zone-league" class="border-2 border-dashed border-amber-300 dark:border-amber-700 hover:border-amber-500 rounded-2xl p-6 text-center transition cursor-pointer bg-amber-50/50 dark:bg-slate-800 relative mb-6">
-                        <input type="file" id="file-input-league" accept=".csv, .xlsx, .xls" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="onPickerFileSelected(this.files)">
-                        <div class="flex flex-col items-center justify-center space-y-2 pointer-events-none">
-                            <div class="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-500 flex items-center justify-center text-xl"><i class="fa-solid fa-file-csv"></i></div>
-                            <p class="text-sm font-bold text-slate-700 dark:text-white">Picker Performance Raporunu Yükle</p>
-                            <p class="text-xs text-slate-500">Bu dosya hem lig hız/puan sırasını hesaplar hem de Picker Karnesini besler.</p>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="league-tables-container">
-                        <div class="col-span-2 text-center py-10 text-slate-400 italic font-medium">Lig tablolarını görmek için yukarıdaki alandan Picker Performans Raporu yükleyin.</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ========================================== -->
-            <!-- SAYFA: KUSURLU SİPARİŞ KAYDI (DETAY) -->
-            <!-- ========================================== -->
-            <div id="view-detay" class="space-y-6 hidden animate-[fadeIn_0.3s_ease-in-out]">
-                <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-8 card-shadow border border-indigo-100/60 dark:border-indigo-900/30">
-                    <div id="drop-zone-detay" class="border-2 border-dashed border-indigo-200 dark:border-indigo-700 hover:border-indigo-500 rounded-2xl p-8 text-center transition cursor-pointer bg-indigo-50/30 dark:bg-slate-800 relative">
-                        <input type="file" id="file-input-detay" multiple accept=".csv, .xlsx, .xls" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="onDetayFileSelected(this.files)">
-                        <div class="flex flex-col items-center justify-center space-y-3 pointer-events-none">
-                            <div class="w-14 h-14 rounded-2xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-2xl"><i class="fa-solid fa-users-gear"></i></div>
-                            <div>
-                                <p class="text-sm font-bold text-slate-700 dark:text-white">Kusurlu Sipariş Raporunu Seçin</p>
-                                <p class="text-xs text-slate-400 mt-1">İade/Kusur dökümünüzü veya Personel Listenizi buraya bırakın.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="upload-status-detay" class="mt-4 hidden p-3 rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs font-bold text-emerald-600"></div>
-                </div>
-
-                <div class="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden card-shadow">
-                    <div class="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex flex-wrap justify-between items-center gap-4">
-                        <div class="text-sm font-black flex items-center gap-2"><i class="fa-solid fa-list-check text-indigo-600"></i> Kayıtlar (<span id="record-count-detay">0</span>)</div>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <!-- MODÜLLER: PERSONEL DB, WHATSAPP, TARİH, BÖLGE/MAĞAZA, ARAMA -->
-                            <button onclick="openPickerModal()" class="bg-slate-800 dark:bg-slate-600 text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-slate-700 transition flex items-center gap-1.5 shadow-sm"><i class="fa-solid fa-user-tie"></i> Personel DB</button>
-                            <button onclick="openWhatsAppModal()" class="bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-600 transition flex items-center gap-1.5 shadow-sm"><i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp</button>
-                            
-                            <input type="date" id="filter-date-detay" onchange="renderDetayTable()" class="text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 outline-none font-bold">
-                            
-                            <!-- BÖLGE FİLTRESİ -->
-                            <select id="filter-region-detay" onchange="updateStoreDropdown()" class="text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-white rounded-xl px-3 py-2 outline-none font-bold">
-                                <option value="">Tüm Bölgeler</option>
-                            </select>
-                            
-                            <!-- MAĞAZA FİLTRESİ (Çoklu Seçim) -->
-                            <div class="relative w-full sm:w-40" id="multi-store-container">
-                                <div id="multi-store-btn" onclick="toggleMultiStore()" class="cursor-pointer text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-white rounded-xl px-3 py-2 outline-none font-bold flex justify-between items-center gap-2">
-                                    <span id="multi-store-text" class="truncate max-w-[100px]">Tüm Mağazalar</span>
-                                    <i class="fa-solid fa-chevron-down text-[10px]"></i>
-                                </div>
-                                <div id="multi-store-menu" class="hidden absolute z-[60] mt-1 w-full right-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-60 overflow-y-auto"></div>
-                            </div>
-
-                            <input type="text" id="search-input-detay" onkeyup="renderDetayTable()" placeholder="Ara..." class="text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 outline-none">
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto max-h-[600px]">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead class="bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-300 font-bold uppercase sticky top-0 z-10">
-                                <tr>
-                                    <th class="py-3.5 px-4" onclick="sortDetay('date')">Tarih <i class="fa-solid fa-sort ml-1 opacity-50"></i></th>
-                                    <th class="py-3.5 px-4" onclick="sortDetay('orderId')">Sipariş No</th>
-                                    <th class="py-3.5 px-4" onclick="sortDetay('store')">Mağaza</th>
-                                    <th class="py-3.5 px-4 w-40">Ürün Adı</th>
-                                    <th class="py-3.5 px-4" onclick="sortDetay('reason')">Sebep</th>
-                                    <th class="py-3.5 px-4" onclick="sortDetay('pickerName')">Picker (Tıkla)</th>
-                                    <th class="py-3.5 px-4 w-72">Açıklama & Fotoğraf</th>
-                                </tr>
-                            </thead>
-                            <tbody id="table-body-detay" class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-200 font-medium">
-                                <tr><td colspan="7" class="text-center py-16 text-slate-400">Veri yüklenmedi.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ========================================== -->
-            <!-- SAYFA: ANLIK İŞLEM (TUTAR FARKI TESPİTİ) -->
-            <!-- ========================================== -->
-            <div id="view-anlik" class="space-y-6 hidden animate-[fadeIn_0.3s_ease-in-out]">
-                <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-8 card-shadow border border-emerald-100/60 dark:border-emerald-900/30">
-                    <div id="drop-zone-anlik" class="border-2 border-dashed border-emerald-200 dark:border-emerald-700 hover:border-[#ff0050] rounded-2xl p-8 text-center transition cursor-pointer bg-[#f7fcf9] dark:bg-slate-800 relative">
-                        <input type="file" id="file-input-anlik" multiple accept=".csv, .xlsx, .xls" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="onAnlikFilesSelected(this.files)">
-                        <div class="flex flex-col items-center justify-center space-y-3 pointer-events-none">
-                            <div class="w-14 h-14 rounded-2xl bg-pink-100 text-[#ff0050] flex items-center justify-center text-2xl"><i class="fa-solid fa-bolt"></i></div>
-                            <div>
-                                <p class="text-sm font-bold text-slate-700 dark:text-white">Teslimat CSV ve Sipariş Detay Excel'ini Seçin</p>
-                                <p class="text-xs text-slate-400 mt-1">İki dosyayı aynı anda seçebilir veya sırayla yükleyebilirsiniz. İptaller hariç tutulur, sadece <b>gerçek tutar farkı</b> olanlar listelenir.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="upload-status-anlik" class="mt-4 hidden p-3 rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs flex flex-col gap-2">
-                        <div class="flex items-center gap-2.5 text-slate-700 dark:text-white font-bold" id="status-text-anlik"></div>
-                        <div id="file-badges-anlik" class="flex flex-wrap gap-2"></div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl card-shadow border-l-4 border-l-slate-800 flex items-center justify-between">
-                        <div><p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Toplam İncelenen</p><h3 id="kpi-orders" class="text-2xl font-black text-slate-900 dark:text-white mt-1">-</h3></div>
-                        <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-700"><i class="fa-solid fa-boxes-stacked text-xl"></i></div>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl card-shadow border-l-4 border-l-amber-500 flex items-center justify-between">
-                        <div><p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Tutar Farkı Olan</p><h3 id="kpi-diffs" class="text-2xl font-black text-amber-600 mt-1">0</h3></div>
-                        <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500"><i class="fa-solid fa-triangle-exclamation text-xl"></i></div>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl card-shadow border-l-4 border-l-[#ff0050] flex items-center justify-between">
-                        <div><p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Toplam Fark Tutarı</p><h3 id="kpi-sum" class="text-2xl font-black text-[#ff0050] mt-1">₺0,00</h3></div>
-                        <div class="w-12 h-12 rounded-2xl bg-pink-50 flex items-center justify-center text-[#ff0050]"><i class="fa-solid fa-turkish-lira-sign text-xl"></i></div>
-                    </div>
-                </div>
-
-                <div class="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden card-shadow border border-emerald-100/60 dark:border-slate-700">
-                    <div class="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center gap-4">
-                        <div class="text-sm font-black text-slate-800 dark:text-white flex items-center gap-2">
-                            <i class="fa-solid fa-circle-exclamation text-[#ff0050]"></i> Gerçek Tutar Farkı Olan Siparişler
-                        </div>
-                        <div class="relative w-full md:w-72">
-                            <input type="text" id="search-input-anlik" onkeyup="renderAnlikTable()" placeholder="Ara..." class="w-full text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-white rounded-xl pl-9 pr-4 py-2 focus:ring-2 focus:ring-pink-500/30 outline-none">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400"></i>
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto max-h-[600px]">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead class="bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-300 font-bold uppercase sticky top-0 z-10">
-                                <tr>
-                                    <th class="py-3.5 px-4" onclick="sortAnlik('id')">Sipariş No <i class="fa-solid fa-sort ml-1 opacity-50"></i></th>
-                                    <th class="py-3.5 px-4" onclick="sortAnlik('cust')">Müşteri <i class="fa-solid fa-sort ml-1 opacity-50"></i></th>
-                                    <th class="py-3.5 px-4" onclick="sortAnlik('status')">Durum</th>
-                                    <th class="py-3.5 px-4" onclick="sortAnlik('eAmt')">Sipariş Tutarı</th>
-                                    <th class="py-3.5 px-4" onclick="sortAnlik('cAmt')">Teslimat Tutarı</th>
-                                    <th class="py-3.5 px-4 text-[#ff0050]" onclick="sortAnlik('diffAmt')">Fark</th>
-                                    <th class="py-3.5 px-4">Ürün Detayı</th>
-                                </tr>
-                            </thead>
-                            <tbody id="table-body-anlik" class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-200 font-medium">
-                                <tr><td colspan="7" class="text-center py-16 text-slate-400">Veri yüklenmedi.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-        </main>
-    </div> 
-
-    <!-- ========================================== -->
-    <!-- MODALLAR -->
-    <!-- ========================================== -->
-
-    <!-- FOTOĞRAF BÜYÜTME MODALI -->
-    <div id="image-modal" class="fixed inset-0 bg-slate-900/95 z-[300] hidden items-center justify-center p-4">
-        <button onclick="closeImageModal()" class="absolute top-6 right-6 text-white bg-slate-800 hover:bg-red-500 rounded-full w-10 h-10 flex items-center justify-center transition shadow-xl">
-            <i class="fa-solid fa-times text-xl"></i>
-        </button>
-        <img id="modal-image" src="" class="max-w-full max-h-[90vh] rounded-lg shadow-2xl border-4 border-white/10">
-    </div>
-
-    <!-- PERSONEL DB MODALI -->
-    <div id="picker-modal" class="fixed inset-0 bg-slate-900/80 z-[80] hidden items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-lg flex flex-col shadow-2xl overflow-hidden animate-[fadeIn_0.3s_ease-in-out]">
-            <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
-                <h2 class="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
-                    <i class="fa-solid fa-user-tie text-indigo-500"></i> Personel Veritabanı
-                </h2>
-                <button onclick="closePickerModal()" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-times text-xl"></i></button>
-            </div>
-            <div class="p-5 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
-                <div class="flex gap-2">
-                    <input type="text" id="new-picker-id" placeholder="Picker ID" class="w-1/3 text-xs bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-indigo-500 dark:text-white">
-                    <input type="text" id="new-picker-name" placeholder="İsim Soyisim" class="w-2/3 text-xs bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-indigo-500 dark:text-white">
-                    <button onclick="addManualPicker()" class="bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg px-4 py-2 text-xs font-bold transition"><i class="fa-solid fa-plus"></i></button>
-                </div>
-            </div>
-            <div class="p-5 flex-1 max-h-[40vh] overflow-y-auto bg-slate-50 dark:bg-slate-900">
-                <div class="flex justify-between items-center mb-3">
-                    <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300">Kayıtlı Personeller</h3>
-                    <button onclick="clearAllPickers()" class="text-[10px] text-red-500 hover:text-red-700 font-bold underline"><i class="fa-solid fa-trash-can"></i> Tümünü Sil</button>
-                </div>
-                <div id="picker-list" class="space-y-2"></div>
             </div>
         </div>
-    </div>
 
-    <!-- PICKER (TOPLAYICI) KARNESİ MODALI -->
-    <div id="picker-stats-modal" class="fixed inset-0 bg-slate-900/80 z-[100] hidden items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-md flex flex-col shadow-2xl overflow-hidden animate-[fadeIn_0.3s_ease-in-out]">
-            <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-indigo-600 text-white">
-                <h2 class="text-lg font-black flex items-center gap-2"><i class="fa-solid fa-id-card"></i> Personel Performans Karnesi</h2>
-                <button onclick="closePickerStats()" class="hover:text-red-300 transition"><i class="fa-solid fa-times text-xl"></i></button>
-            </div>
-            <div class="p-6 text-center bg-slate-50 dark:bg-slate-900">
-                <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-3 shadow-sm"><i class="fa-solid fa-user-tie"></i></div>
-                <h3 id="ps-name" class="text-xl font-black text-slate-800 dark:text-white">İsim</h3>
-                <p id="ps-id" class="text-xs text-slate-500 font-mono mb-2">ID: 000</p>
-                <p id="ps-store" class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-1 rounded-md inline-block font-bold">Mağaza</p>
+        <!-- DETAYLI TABLO ALANI -->
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-custom border border-slate-100 dark:border-slate-700 flex flex-col">
+            <!-- Tablo Araç Çubuğu -->
+            <div class="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex flex-wrap justify-between items-center gap-4 rounded-t-3xl">
+                <div class="flex items-center gap-3">
+                    <h2 class="text-base font-black text-slate-800 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-brand-pink"></i> Analiz Sonuçları
+                    </h2>
+                    <span id="badge-count" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold px-2.5 py-1 rounded-lg">0 Kayıt</span>
+                </div>
                 
-                <div class="grid grid-cols-2 gap-4 mt-6">
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                        <p class="text-[10px] uppercase font-bold text-slate-400">Çalışma Saati</p>
-                        <p id="ps-hours" class="text-xl font-black text-slate-700 dark:text-slate-200 mt-1">-</p>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                        <p class="text-[10px] uppercase font-bold text-slate-400">Toplanan Sipariş</p>
-                        <p id="ps-orders" class="text-xl font-black text-blue-500 mt-1">-</p>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                        <p class="text-[10px] uppercase font-bold text-slate-400">Sipariş / Saat Hızı</p>
-                        <p id="ps-oph" class="text-xl font-black text-emerald-500 mt-1">-</p>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
-                        <p class="text-[10px] uppercase font-bold text-slate-400">Tespit Edilen Kusur</p>
-                        <p id="ps-defects" class="text-xl font-black text-red-500 mt-1">0</p>
-                        <div class="absolute top-0 right-0 w-2 h-full bg-red-500"></div>
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <!-- Durum Filtresi -->
+                    <select id="filter-status" onchange="renderTable()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-brand-pink/50 cursor-pointer">
+                        <option value="all">Tüm Farklar</option>
+                        <option value="picked_up">Sadece Teslim Edilenler</option>
+                    </select>
+
+                    <!-- Arama Çubuğu -->
+                    <div class="relative w-full sm:w-64">
+                        <input type="text" id="search-input" onkeyup="renderTable()" placeholder="Müşteri, Sipariş No veya Ürün Ara..." class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white text-xs rounded-xl pl-9 pr-4 py-2 outline-none focus:ring-2 focus:ring-brand-pink/50 transition">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400"></i>
                     </div>
                 </div>
-                <div class="mt-4 text-xs text-slate-400 italic" id="ps-note">Detaylı istatistikler için Picker Performans CSV'sini Lig sekmesine yükleyin.</div>
+            </div>
+            
+            <!-- Tablo -->
+            <div class="overflow-x-auto max-h-[600px] relative rounded-b-3xl">
+                <table class="w-full text-left text-xs whitespace-nowrap">
+                    <thead class="bg-slate-100/80 dark:bg-slate-900/80 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider sticky top-0 z-10 backdrop-blur-md">
+                        <tr>
+                            <th class="py-4 px-6" onclick="sortTable('id')">Sipariş No <i class="fa-solid fa-sort ml-1 opacity-40"></i></th>
+                            <th class="py-4 px-6" onclick="sortTable('customer')">Müşteri Bilgisi <i class="fa-solid fa-sort ml-1 opacity-40"></i></th>
+                            <th class="py-4 px-6" onclick="sortTable('status')">Durum <i class="fa-solid fa-sort ml-1 opacity-40"></i></th>
+                            <th class="py-4 px-6" onclick="sortTable('originalAmt')">Sipariş Tutarı <i class="fa-solid fa-sort ml-1 opacity-40"></i></th>
+                            <th class="py-4 px-6" onclick="sortTable('finalAmt')">Teslimat Tutarı <i class="fa-solid fa-sort ml-1 opacity-40"></i></th>
+                            <th class="py-4 px-6 text-brand-pink" onclick="sortTable('diffAmt')">Fark <i class="fa-solid fa-sort ml-1 opacity-40"></i></th>
+                            <th class="py-4 px-6 w-full">Ürün Dökümü / Sepet Detayı</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="divide-y divide-slate-100 dark:divide-slate-700/50 font-medium text-slate-700 dark:text-slate-300">
+                        <tr>
+                            <td colspan="7" class="text-center py-24">
+                                <div class="flex flex-col items-center justify-center text-slate-400">
+                                    <i class="fa-solid fa-file-circle-xmark text-4xl mb-3 opacity-50"></i>
+                                    <p class="font-bold">Henüz veri yüklenmedi</p>
+                                    <p class="text-[10px] mt-1">Lütfen CSV ve Excel dosyalarınızı yukarıdaki alana sürükleyin.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
-    </div>
 
-    <!-- WHATSAPP MODAL -->
-    <div id="whatsapp-modal" class="fixed inset-0 bg-slate-900/80 z-[80] hidden items-center justify-center p-2 sm:p-4">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-2xl max-h-[95vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="fa-brands fa-whatsapp text-emerald-500 text-2xl"></i> Yönetici Özeti</h2>
-                <button onclick="closeWhatsAppModal()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-times text-2xl"></i></button>
-            </div>
-            <div class="p-0 overflow-y-auto flex-1 flex flex-col items-center" style="background-color: #f1f5f9;">
-                <div class="w-full p-4 sm:p-6 flex flex-col relative" id="whatsapp-render-area"></div>
-            </div>
-            <div class="p-4 border-t bg-slate-50 flex justify-end gap-3">
-                <button onclick="copyWhatsAppTextOnly()" class="bg-slate-800 text-white px-4 py-3 rounded-xl text-sm font-bold shadow-sm">Metin Kopyala</button>
-            </div>
-        </div>
-    </div>
+    </main>
 
     <script>
-        // ==========================================
-        // GİRİŞ & SETUP
-        // ==========================================
-        let currentUserRegion = localStorage.getItem('yS_User_Region') || null;
-        let isDarkMode = localStorage.getItem('yS_DarkMode') === 'true';
-
-        let detayParsedData = JSON.parse(localStorage.getItem('yS_Detay_Data')) || [];
-        let pickerMap = JSON.parse(localStorage.getItem('yS_Picker_Map')) || {};
-        let savedNotes = JSON.parse(localStorage.getItem('yS_NextDay_Notes')) || {};
+        // =========================================
+        // SİSTEM DEĞİŞKENLERİ VE SETUP
+        // =========================================
+        let isDarkMode = localStorage.getItem('ys_theme') === 'dark';
+        let mergedData = JSON.parse(localStorage.getItem('ys_merged_data')) || [];
+        let totalAnalyzedCount = localStorage.getItem('ys_total_count') || 0;
         
-        let anlikCsvRows = [];
-        let anlikExcelRows = [];
-        let anlikMergedData = JSON.parse(localStorage.getItem('yS_Anlik_Data')) || [];
-        
-        let currentDashboardStore = 'Tümü';
-        let chartReasons = null, chartPickers = null, chartStores = null;
-        let detayUniqueData = { regions: new Set(), storeMap: new Map() };
-
-        // Firebase Entegrasyonu
-        let db = null;
-        try {
-            const firebaseConfig = {
-                apiKey: "AIzaSyDfcJu8IcoJqaE6_R9Icy9wt3Wby9Kb_kc",
-                authDomain: "balcova-pano.firebaseapp.com",
-                projectId: "balcova-pano",
-                storageBucket: "balcova-pano.firebasestorage.app",
-                messagingSenderId: "337497814939",
-                appId: "1:337497814939:web:34f2b9b89a1a94d6ac933e"
-            };
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-            const cs = document.getElementById('cloud-status');
-            const ct = document.getElementById('cloud-status-text');
-            if (cs && ct) {
-                cs.className = "flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800 transition-colors duration-500";
-                ct.innerText = "Buluta Bağlı";
-            }
-            syncFromCloud();
-        } catch (e) {
-            console.warn("Firebase başlatılamadı, yerel çalışıyor:", e);
-        }
-
-        async function syncFromCloud() {
-            if(!db) return;
-            try {
-                const pickerDoc = await db.collection('settings').doc('pickerMap').get();
-                if (pickerDoc.exists) { pickerMap = pickerDoc.data(); localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap)); }
-                
-                const notesSnap = await db.collection('notes').get();
-                notesSnap.forEach(doc => { savedNotes[doc.id] = doc.data(); });
-                localStorage.setItem('yS_NextDay_Notes', JSON.stringify(savedNotes));
-            } catch(e) {}
-        }
-        async function syncToCloud_Picker() { if(db) await db.collection('settings').doc('pickerMap').set(pickerMap); }
-        async function syncToCloud_Note(uid) { if(db) await db.collection('notes').doc(uid).set(savedNotes[uid]); }
+        let sortCol = 'diffAmt';
+        let sortAsc = false;
 
         window.onload = () => {
-            if(isDarkMode) document.documentElement.classList.add('dark');
-            
-            if(currentUserRegion) {
-                document.getElementById('view-login').style.display = 'none';
-                document.getElementById('app-container').classList.remove('hidden');
-                document.getElementById('app-container').classList.add('flex');
-                document.getElementById('active-region-badge').innerText = currentUserRegion + " Portalı";
-                
-                if(detayParsedData.length > 0) {
-                    rebuildDetayUniqueData();
-                    populateRegionDropdown();
-                    populateDashboardFilter();
-                    renderDetayTable();
-                }
-                if(anlikMergedData.length > 0) {
-                    updateAnlikKPIs();
-                    renderAnlikTable();
-                }
-                
-                switchView('detay');
+            if (isDarkMode) document.documentElement.classList.add('dark');
+            updateThemeIcon();
+            if (mergedData.length > 0) {
+                updateKPIs();
+                renderTable();
             }
         };
 
-        function handleLogin() {
-            const pass = document.getElementById('login-password').value.trim();
-            const region = document.getElementById('login-region').value;
-            
-            if(pass === '1234') { 
-                localStorage.setItem('yS_User_Region', region);
-                currentUserRegion = region;
-                document.getElementById('view-login').style.display = 'none';
-                document.getElementById('app-container').classList.remove('hidden');
-                document.getElementById('app-container').classList.add('flex');
-                document.getElementById('active-region-badge').innerText = region + " Portalı";
-                switchView('detay');
-            } else { 
-                document.getElementById('login-error').classList.remove('hidden'); 
-            }
-        }
-
-        function logout() { localStorage.removeItem('yS_User_Region'); location.reload(); }
-        
-        function toggleDarkMode() {
+        function toggleTheme() {
             isDarkMode = !isDarkMode;
-            localStorage.setItem('yS_DarkMode', isDarkMode);
+            localStorage.setItem('ys_theme', isDarkMode ? 'dark' : 'light');
             document.documentElement.classList.toggle('dark', isDarkMode);
-            if(currentView === 'dashboard') updateDashboard();
+            updateThemeIcon();
         }
 
-        function switchView(viewName) {
-            currentView = viewName;
-            ['dashboard', 'league', 'detay', 'anlik'].forEach(v => {
-                const el = document.getElementById(`view-${v}`);
-                if(el) {
-                    el.classList.toggle('hidden', v !== viewName);
-                    el.classList.toggle('block', v === viewName);
-                }
-                const btn = document.getElementById(`btn-view-${v}`);
-                if(btn) {
-                    if(v === viewName) btn.classList.add('active');
-                    else btn.classList.remove('active');
-                }
-            });
-            if(viewName === 'dashboard') updateDashboard();
+        function updateThemeIcon() {
+            const icon = document.getElementById('theme-icon');
+            if(isDarkMode) { icon.classList.remove('fa-moon'); icon.classList.add('fa-sun'); } 
+            else { icon.classList.remove('fa-sun'); icon.classList.add('fa-moon'); }
         }
 
-        document.addEventListener('click', function(event) {
-            const btnS = document.getElementById('multi-store-btn');
-            const menuS = document.getElementById('multi-store-menu');
-            if(btnS && menuS && !btnS.contains(event.target) && !menuS.contains(event.target)) menuS.classList.add('hidden');
-        });
-
-        // ==========================================
-        // ESNEK DOSYA OKUMA MOTORU VE YARDIMCILAR
-        // ==========================================
-        function parseExcelJson(rows) {
-            if (!rows || rows.length < 2) return [];
-            
-            let headerIdx = 0;
-            for(let i=0; i<Math.min(15, rows.length); i++) {
-                if(!rows[i]) continue;
-                let matchCount = 0;
-                rows[i].forEach(cell => {
-                    const str = String(cell).toLowerCase().trim();
-                    if(str === 'sipariş no' || str === 'order id' || str === 'ara toplam' || 
-                       str === 'original amount' || str === 'final amount' || str === 'restoran adı' ||
-                       str === 'customer' || str === 'müşteri' || str === 'product name' || str === 'ürün adı' ||
-                       str === 'employee id' || str === 'employee name' || str === 'ccr3' || str === 'date' || str === 'tarih' || str === 'store' || str === 'order date' || str === 'picker id' || str === 'şikâyet nedeni' || str === 'sipariş ürünleri') {
-                        matchCount++;
-                    }
-                });
-                if(matchCount >= 2) { 
-                    headerIdx = i; 
-                    break; 
-                }
+        function clearData() {
+            if(confirm("Tüm karşılaştırma verileri silinecek. Emin misiniz?")) {
+                localStorage.removeItem('ys_merged_data');
+                localStorage.removeItem('ys_total_count');
+                mergedData = [];
+                totalAnalyzedCount = 0;
+                updateKPIs();
+                renderTable();
             }
-
-            let headers = rows[headerIdx];
-            const list = [];
-            for (let i = headerIdx + 1; i < rows.length; i++) {
-                if (!rows[i] || rows[i].length === 0) continue;
-                const obj = {};
-                headers.forEach((h, idx) => { 
-                    if (h) obj[String(h).trim()] = rows[i][idx] !== undefined ? rows[i][idx] : ''; 
-                });
-                list.push(obj);
-            }
-            return list;
         }
 
-        function parseCurrency(val) {
-            if (val === null || val === undefined) return null;
+        // =========================================
+        // AKILLI DOSYA OKUMA VE AYRIŞTIRMA (PARSER)
+        // =========================================
+        function formatMoney(val) {
+            if (val === null || val === undefined || val === '') return null;
             let str = String(val).replace(/TRY/g, '').replace(/₺/g, '').trim();
-            if (!str || str.toLowerCase() === 'nan' || str.toLowerCase() === 'null') return null;
-            if (str.includes(',') && str.includes('.')) str = str.replace(/\./g, '').replace(',', '.');
-            else if (str.includes(',')) str = str.replace(',', '.');
+            if (!str || str.toLowerCase() === 'nan') return null;
+            str = str.replace(',', '.');
             const num = parseFloat(str);
             return isNaN(num) ? null : num;
         }
 
-        function formatCurrency(n) {
+        function displayMoney(n) {
             if (n === null || n === undefined || isNaN(n)) return '-';
             return '₺' + n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
-        
-        function extractStoreAndRegion(storeStr) {
-            if (!storeStr) return { store: 'Bilinmiyor', region: 'Bilinmiyor' };
-            let s = String(storeStr).replace('Yemeksepeti Market,', '').trim();
-            const match = s.match(/(.*?)\((.*?)\)(.*)/);
-            if (match) {
-                let st = match[1].trim();
-                if (match[3]) st += ' ' + match[3].trim();
-                return { store: st, region: match[2].trim() };
-            }
-            return { store: s, region: 'Belirtilmemiş' };
-        }
 
-        function parseDateString(val) {
-            if (!val) return '';
-            const asNum = Number(val);
-            if (!isNaN(asNum) && asNum > 40000 && asNum < 60000) {
-                const d = new Date(Math.round((asNum - 25569) * 86400 * 1000));
-                return d.toISOString().split('T')[0];
-            }
-            let str = String(val).trim().split(' ')[0];
-            if (str.match(/^\d{1,2}[\.\/]\d{1,2}[\.\/]\d{4}$/)) {
-                let sep = str.includes('.') ? '.' : '/';
-                let p = str.split(sep);
-                return `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
-            }
-            if (str.match(/^\d{4}-\d{2}-\d{2}/)) return str.substring(0, 10);
-            return str; 
-        }
-
-        async function readAnyExcelFile(file) {
+        // Excel'in bozuk stylesheet sorununu aşmak için ArrayBuffer okuyucu
+        async function readWorkbook(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = (e) => {
                     try {
-                        if (file.name.toLowerCase().endsWith('.csv')) {
-                            resolve(XLSX.read(e.target.result, { type: 'string' }));
-                        } else {
-                            resolve(XLSX.read(new Uint8Array(e.target.result), { type: 'array' }));
-                        }
-                    } catch(err) {
-                        reject(err);
-                    }
+                        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                        resolve(wb);
+                    } catch(err) { reject(err); }
                 };
                 reader.onerror = reject;
-                
-                if (file.name.toLowerCase().endsWith('.csv')) {
-                    reader.readAsText(file); // CSV için Metin
-                } else {
-                    reader.readAsArrayBuffer(file); // Excel için Binary
-                }
+                reader.readAsArrayBuffer(file);
             });
         }
 
-        function rebuildDetayUniqueData() {
-            detayUniqueData.regions.clear();
-            detayUniqueData.storeMap.clear();
-            detayParsedData.forEach(p => {
-                detayUniqueData.regions.add(p.region);
-                if (!detayUniqueData.storeMap.has(p.region)) detayUniqueData.storeMap.set(p.region, new Set());
-                detayUniqueData.storeMap.get(p.region).add(p.store);
+        // CSV dosyaları için text okuyucu
+        async function readCSV(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const wb = XLSX.read(e.target.result, { type: 'string' });
+                        resolve(wb);
+                    } catch(err) { reject(err); }
+                };
+                reader.onerror = reject;
+                reader.readAsText(file);
             });
         }
 
-        // ==========================================
-        // KUSURLU SİPARİŞ İŞLEMLERİ VE FOTOĞRAF YÜKLEME
-        // ==========================================
-        async function onDetayFileSelected(files) {
-            if (!files || files.length === 0) return;
-            const statusBox = document.getElementById('upload-status-detay');
-            if(statusBox) {
-                statusBox.classList.remove('hidden');
-                statusBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-indigo-600"></i> Dosyalar işleniyor...`;
-            }
+        function extractDataFromSheet(sheet) {
+            // Raw array formatında oku (Header satırını otomatik tespit etmek için)
+            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+            if (!rows || rows.length < 2) return [];
 
-            try {
-                let detailDataList = null;
-
-                for (let file of files) {
-                    const wb = await readAnyExcelFile(file);
-                    const sheet = wb.Sheets[wb.SheetNames[0]];
-                    const dataList = parseExcelJson(XLSX.utils.sheet_to_json(sheet, { header: 1 }));
-                    
-                    if (dataList.length > 0) {
-                        const keys = Object.keys(dataList[0]).map(k => String(k).toLowerCase().trim());
-                        
-                        if (keys.includes('employee id') && keys.includes('employee name')) {
-                            dataList.forEach(row => {
-                                const iK = Object.keys(row).find(k => String(k).toLowerCase().trim() === 'employee id');
-                                const nK = Object.keys(row).find(k => String(k).toLowerCase().trim() === 'employee name');
-                                if (iK && nK && row[iK] && row[nK]) {
-                                    let pId = String(row[iK]).replace('.0', '').trim();
-                                    pickerMap[pId] = String(row[nK]).trim();
-                                }
-                            });
-                            localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
-                            syncToCloud_Picker();
-                        } 
-                        else if (keys.includes('order id') || keys.some(k => k.includes('sipariş'))) {
-                            detailDataList = dataList;
-                        }
-                    }
-                }
-
-                if (detailDataList && detailDataList.length > 0) {
-                    detayParsedData = [];
-                    detayUniqueData.regions.clear();
-                    detayUniqueData.storeMap.clear();
-
-                    detailDataList.forEach((row, idx) => {
-                        const keys = Object.keys(row);
-                        const idKey = keys.find(k => {
-                            const s = String(k).toLowerCase().trim();
-                            return s === 'order id' || s.includes('sipariş');
-                        });
-                        if(!idKey || !row[idKey]) return;
-
-                        const dateKey = keys.find(k => {
-                            const s = String(k).toLowerCase().trim();
-                            return s === 'order date' || s.includes('date') || s.includes('tarih');
-                        });
-                        const storeKey = keys.find(k => {
-                            const s = String(k).toLowerCase().trim();
-                            return s === 'store' || s.includes('mağaza') || s === 'restoran adı';
-                        });
-                        const prodKey = keys.find(k => {
-                            const s = String(k).toLowerCase().trim();
-                            return s === 'product name' || s.includes('ürün') || s === 'sipariş ürünleri';
-                        });
-                        const reasonKey = keys.find(k => {
-                            const s = String(k).toLowerCase().trim();
-                            return s === 'ccr3' || s.includes('sebep') || s === 'şikâyet nedeni' || s === 'iptal nedeni';
-                        });
-                        const pickerKey = keys.find(k => {
-                            const s = String(k).toLowerCase().trim();
-                            return s === 'picker id' || s.includes('picker');
-                        });
-
-                        let storeStrRaw = storeKey ? String(row[storeKey]) : 'Bilinmiyor';
-                        let regionStr = 'Belirtilmemiş';
-                        let storeStr = storeStrRaw;
-
-                        if (storeStrRaw.includes('(')) {
-                            const extracted = extractStoreAndRegion(storeStrRaw);
-                            regionStr = extracted.region;
-                            storeStr = extracted.store;
-                        }
-
-                        let pickerIdRaw = pickerKey ? String(row[pickerKey]).replace('.0','') : '-';
-                        const orderId = String(row[idKey]).trim();
-                        const uniqueRowId = orderId + "_" + idx; 
-
-                        let noteText = '', noteImg = null;
-                        if(savedNotes[uniqueRowId]) { 
-                            noteText = savedNotes[uniqueRowId].text || ''; 
-                            noteImg = savedNotes[uniqueRowId].img || null; 
-                        }
-
-                        detayUniqueData.regions.add(regionStr);
-                        if (!detayUniqueData.storeMap.has(regionStr)) detayUniqueData.storeMap.set(regionStr, new Set());
-                        detayUniqueData.storeMap.get(regionStr).add(storeStr);
-
-                        detayParsedData.push({
-                            uid: uniqueRowId,
-                            date: dateKey ? parseDateString(row[dateKey]) : '-',
-                            store: storeStr,
-                            region: regionStr,
-                            orderId: orderId,
-                            product: prodKey ? row[prodKey] : 'Ürün Yok',
-                            reason: reasonKey ? row[reasonKey] : 'Belirtilmemiş',
-                            picker: pickerIdRaw,
-                            pickerName: pickerMap[pickerIdRaw] || `ID: ${pickerIdRaw}`,
-                            note: noteText,
-                            img: noteImg
-                        });
-                    });
-
-                    localStorage.setItem('yS_Detay_Data', JSON.stringify(detayParsedData));
-                    populateRegionDropdown();
-                    populateDashboardFilter();
-                    renderDetayTable();
-                    updateDashboard();
-
-                    if(statusBox) statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> Kusurlu sipariş raporu başarıyla işlendi!`;
-                } else {
-                    detayParsedData.forEach(p => {
-                        if (p.picker && p.picker !== '-') p.pickerName = pickerMap[p.picker] || `ID: ${p.picker}`;
-                    });
-                    renderDetayTable();
-                    if(statusBox) statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> Personel veritabanı başarıyla güncellendi!`;
-                }
-
-            } catch(e) {
-                console.error("Detay okuma hatası:", e);
-                if(statusBox) statusBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Dosya okuma hatası! Lütfen geçerli bir Excel (.xlsx) veya CSV dosyası seçin.`;
-            }
-        }
-
-        function toggleMultiStore() { document.getElementById('multi-store-menu').classList.toggle('hidden'); }
-
-        function populateRegionDropdown() {
-            const regionSelect = document.getElementById('filter-region-detay');
-            if (!regionSelect) return;
-            if(currentUserRegion && currentUserRegion !== 'Tüm Türkiye') {
-                regionSelect.innerHTML = `<option value="${currentUserRegion}">${currentUserRegion}</option>`;
-            } else {
-                regionSelect.innerHTML = '<option value="">Tüm Bölgeler</option>';
-                Array.from(detayUniqueData.regions).sort().forEach(r => {
-                    regionSelect.innerHTML += `<option value="${r}">${r}</option>`;
+            let headerIndex = 0;
+            // İlk 15 satırı tara, "Order ID", "Sipariş No" gibi kilit kelimelerin en yoğun olduğu satırı başlık yap
+            for(let i=0; i<Math.min(15, rows.length); i++) {
+                if(!rows[i]) continue;
+                let matches = 0;
+                rows[i].forEach(cell => {
+                    const c = String(cell).toLowerCase().trim();
+                    if(c === 'order id' || c === 'sipariş no' || c === 'customer' || c === 'müşteri' || c === 'ara toplam' || c === 'original amount' || c === 'final amount' || c === 'sipariş ürünleri') matches++;
                 });
-            }
-            updateStoreDropdown();
-        }
-
-        function updateStoreDropdown() {
-            const regionSelect = document.getElementById('filter-region-detay');
-            const selectedRegion = regionSelect ? regionSelect.value : '';
-            const menu = document.getElementById('multi-store-menu');
-            if(!menu) return;
-            
-            let stores = [];
-            if (selectedRegion && detayUniqueData.storeMap.has(selectedRegion)) {
-                stores = Array.from(detayUniqueData.storeMap.get(selectedRegion)).sort();
-            } else if (!selectedRegion) {
-                const allStores = new Set();
-                detayUniqueData.storeMap.forEach(sSet => sSet.forEach(s => allStores.add(s)));
-                stores = Array.from(allStores).sort();
+                if(matches >= 2) { headerIndex = i; break; }
             }
 
-            let html = `
-                <label class="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer text-xs font-bold text-slate-800 dark:text-white border-b border-slate-100 dark:border-slate-700">
-                    <input type="checkbox" id="check-all-stores" onchange="toggleAllStores(this.checked)" class="accent-indigo-500 w-3.5 h-3.5" checked>
-                    Tüm Mağazalar
-                </label>
-            `;
+            const headers = rows[headerIndex];
+            const result = [];
             
-            stores.forEach(s => {
-                html += `
-                <label class="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer text-xs font-medium text-slate-700 dark:text-slate-300">
-                    <input type="checkbox" value="${s}" onchange="handleStoreSelection()" class="store-checkbox accent-indigo-500 w-3.5 h-3.5" checked>
-                    <span class="truncate">${s}</span>
-                </label>`;
-            });
-            menu.innerHTML = html;
-            updateMultiStoreBtnText();
-            renderDetayTable();
-        }
-
-        function toggleAllStores(isChecked) {
-            document.querySelectorAll('.store-checkbox').forEach(cb => cb.checked = isChecked);
-            updateMultiStoreBtnText();
-            renderDetayTable();
-        }
-
-        function handleStoreSelection() {
-            const total = document.querySelectorAll('.store-checkbox').length;
-            const checked = document.querySelectorAll('.store-checkbox:checked').length;
-            document.getElementById('check-all-stores').checked = (total === checked && total > 0);
-            updateMultiStoreBtnText();
-            renderDetayTable();
-        }
-
-        function updateMultiStoreBtnText() {
-            const total = document.querySelectorAll('.store-checkbox').length;
-            const checked = document.querySelectorAll('.store-checkbox:checked').length;
-            const textEl = document.getElementById('multi-store-text');
-            if(!textEl) return;
-            if(total === 0) textEl.innerText = "Mağaza Yok";
-            else if(checked === 0) textEl.innerText = "Mağaza Seçilmedi";
-            else if(checked === total) textEl.innerText = "Tüm Mağazalar";
-            else if(checked === 1) textEl.innerText = document.querySelector('.store-checkbox:checked').value;
-            else textEl.innerText = `${checked} Seçildi`;
-        }
-
-        function getSelectedStores() {
-            const selected = [];
-            document.querySelectorAll('.store-checkbox:checked').forEach(cb => selected.push(cb.value));
-            return selected;
-        }
-
-        let sortColDetay = '', sortAscDetay = true;
-        function sortDetay(col) {
-            if(sortColDetay === col) sortAscDetay = !sortAscDetay;
-            else { sortColDetay = col; sortAscDetay = true; }
-            renderDetayTable();
-        }
-
-        function renderDetayTable() {
-            const tbody = document.getElementById('table-body-detay');
-            const searchEl = document.getElementById('search-input-detay');
-            const search = searchEl ? searchEl.value.toLowerCase() : '';
-            const fDateEl = document.getElementById('filter-date-detay');
-            const fDate = fDateEl ? fDateEl.value : '';
-
-            let filtered = detayParsedData.filter(p => {
-                const oid = String(p.orderId || '').toLowerCase();
-                const pkr = String(p.picker || '').toLowerCase();
-                const pName = String(p.pickerName || '').toLowerCase();
-                const prod = String(p.product || '').toLowerCase();
-                const str = String(p.store || '').toLowerCase();
-
-                const matchSearch = oid.includes(search) || pkr.includes(search) || pName.includes(search) || prod.includes(search) || str.includes(search);
-                const matchDate = fDate ? (p.date && p.date.includes(fDate)) : true;
-                
-                const selectedStores = getSelectedStores();
-                const matchStore = selectedStores.length === 0 ? false : selectedStores.includes(p.store);
-
-                return matchSearch && matchDate && matchStore;
-            });
-
-            if(sortColDetay) {
-                filtered.sort((a,b) => {
-                    let valA = a[sortColDetay] || '', valB = b[sortColDetay] || '';
-                    if(typeof valA === 'string') return sortAscDetay ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                    return sortAscDetay ? valA - valB : valB - valA;
+            for(let i = headerIndex + 1; i < rows.length; i++) {
+                if(!rows[i] || rows[i].length === 0) continue;
+                const obj = {};
+                headers.forEach((h, idx) => {
+                    if(h) obj[String(h).trim()] = rows[i][idx] !== undefined ? rows[i][idx] : '';
                 });
+                result.push(obj);
             }
-
-            document.getElementById('record-count-detay').innerText = filtered.length;
-
-            if(filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-12 text-slate-400">Kayıt bulunamadı.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = filtered.map(p => {
-                let displayName = p.pickerName !== `ID: ${p.picker}` ? p.pickerName : `ID: ${p.picker}`;
-                return `
-                <tr class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
-                    <td class="py-3 px-4 font-mono text-xs text-slate-500">${p.date || '-'}</td>
-                    <td class="py-3 px-4 font-mono font-bold text-indigo-600">${p.orderId}</td>
-                    <td class="py-3 px-4 font-bold text-xs">${p.store}</td>
-                    <td class="py-3 px-4 truncate max-w-[150px] text-xs" title="${p.product}">${p.product}</td>
-                    <td class="py-3 px-4"><span class="bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-[10px] font-bold">${p.reason}</span></td>
-                    <td class="py-3 px-4">
-                        <button onclick="openPickerStats('${p.picker}', '${p.store}')" class="text-indigo-600 dark:text-indigo-400 hover:underline font-bold text-xs flex items-center gap-1"><i class="fa-solid fa-id-badge"></i> ${displayName}</button>
-                    </td>
-                    <td class="py-3 px-4 w-72">
-                        <div class="flex flex-col gap-1.5">
-                            <textarea id="note-${p.uid}" rows="2" class="w-full text-[11px] p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none dark:text-white placeholder-slate-400" placeholder="Açıklama...">${p.note || ''}</textarea>
-                            
-                            <div class="flex justify-between items-center mt-1">
-                                <div class="flex items-center gap-2">
-                                    <label class="cursor-pointer bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 text-[10px] font-bold py-1 px-2 rounded-lg transition border border-slate-200 dark:border-slate-600 flex items-center gap-1">
-                                        <i class="fa-solid fa-camera"></i> Foto
-                                        <input type="file" class="hidden" accept="image/*" onchange="handleImageUpload(event, '${p.uid}')">
-                                    </label>
-                                    <div id="img-preview-container-${p.uid}" class="flex items-center">
-                                        ${p.img ? `<img src="${p.img}" class="h-8 w-8 object-cover rounded border border-slate-300 dark:border-slate-600 cursor-pointer" onclick="viewImage('${p.uid}')" title="Büyüt">
-                                                   <button onclick="removeImage('${p.uid}')" class="text-red-500 hover:text-red-700 ml-1"><i class="fa-solid fa-trash"></i></button>` : ''}
-                                    </div>
-                                </div>
-                                <button id="btn-${p.uid}" onclick="saveNote('${p.uid}')" class="bg-emerald-500 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg hover:bg-emerald-600 transition">
-                                    Kaydet
-                                </button>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-                `;
-            }).join('');
+            return result;
         }
 
-        function handleImageUpload(event, uid) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 600, MAX_HEIGHT = 600;
-                    let width = img.width, height = img.height;
-                    if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
-                    else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
-                    
-                    canvas.width = width; canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.6); 
-
-                    if(!savedNotes[uid]) savedNotes[uid] = { text: '', img: null };
-                    savedNotes[uid].img = dataUrl;
-                    
-                    localStorage.setItem('yS_NextDay_Notes', JSON.stringify(savedNotes));
-                    syncToCloud_Note(uid); 
-                    
-                    const row = detayParsedData.find(p => p.uid === uid);
-                    if (row) row.img = dataUrl;
-
-                    document.getElementById(`img-preview-container-${uid}`).innerHTML = `
-                        <img src="${dataUrl}" class="h-8 w-8 object-cover rounded border border-slate-300 dark:border-slate-600 cursor-pointer" onclick="viewImage('${uid}')">
-                        <button onclick="removeImage('${uid}')" class="text-red-500 ml-1"><i class="fa-solid fa-trash"></i></button>`;
-                }
-                img.src = e.target.result;
-            }
-            reader.readAsDataURL(file);
-        }
-
-        function removeImage(uid) {
-            if(savedNotes[uid]) savedNotes[uid].img = null;
-            localStorage.setItem('yS_NextDay_Notes', JSON.stringify(savedNotes));
-            syncToCloud_Note(uid); 
-            const row = detayParsedData.find(p => p.uid === uid);
-            if (row) row.img = null;
-            document.getElementById(`img-preview-container-${uid}`).innerHTML = '';
-        }
-
-        function viewImage(uid) {
-            const note = savedNotes[uid];
-            if(note && note.img) {
-                document.getElementById('modal-image').src = note.img;
-                document.getElementById('image-modal').classList.remove('hidden');
-                document.getElementById('image-modal').classList.add('flex');
-            }
-        }
-
-        function closeImageModal() {
-            document.getElementById('image-modal').classList.add('hidden');
-            document.getElementById('image-modal').classList.remove('flex');
-            document.getElementById('modal-image').src = '';
-        }
-
-        function saveNote(uid) {
-            const textarea = document.getElementById(`note-${uid}`);
-            const btn = document.getElementById(`btn-${uid}`);
-            if(!savedNotes[uid]) savedNotes[uid] = { text: '', img: null };
-            savedNotes[uid].text = textarea.value;
-            localStorage.setItem('yS_NextDay_Notes', JSON.stringify(savedNotes));
-            
-            syncToCloud_Note(uid); 
-            
-            const originalText = btn.innerHTML;
-            btn.innerHTML = `<i class="fa-solid fa-check"></i>`;
-            btn.classList.replace('bg-emerald-500', 'bg-slate-800');
-            const row = detayParsedData.find(p => p.uid === uid);
-            if(row) row.note = textarea.value;
-
-            setTimeout(() => { btn.innerHTML = originalText; btn.classList.replace('bg-slate-800', 'bg-emerald-500'); }, 1500);
-        }
-
-        // ==========================================
-        // ANLIK İŞLEM: SADECE GERÇEK FARKI BULMA
-        // ==========================================
-        async function onAnlikFilesSelected(files) {
+        // =========================================
+        // ANA İŞLEM BİLOĞU (KARŞILAŞTIRMA)
+        // =========================================
+        async function handleFileUpload(event) {
+            const files = event.target.files;
             if (!files || files.length === 0) return;
-            const statusBox = document.getElementById('upload-status-anlik');
-            const statusText = document.getElementById('status-text-anlik');
-            const badgesBox = document.getElementById('file-badges-anlik');
             
+            const statusBox = document.getElementById('upload-status');
             statusBox.classList.remove('hidden');
-            badgesBox.innerHTML = '';
-            statusText.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-[#ff0050]"></i> Dosyalar analiz ediliyor...`;
+            statusBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-brand-pink mr-2"></i> Veriler analiz ediliyor...`;
 
-            anlikCsvRows = [];
-            anlikExcelRows = [];
+            let csvData = [];
+            let xlsxData = [];
 
             try {
-                for (let file of files) {
-                    const wb = await readAnyExcelFile(file);
-                    const parsedData = parseExcelJson(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }));
-                    
-                    const fName = file.name.toLowerCase();
-                    if (fName.endsWith('.csv')) {
-                        anlikCsvRows = parsedData;
-                        badgesBox.innerHTML += `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-pink-50 text-pink-600 border border-pink-200"><i class="fa-solid fa-file-csv mr-1"></i> ${file.name}</span>`;
-                    } else {
-                        anlikExcelRows = parsedData;
-                        badgesBox.innerHTML += `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200"><i class="fa-solid fa-file-excel mr-1"></i> ${file.name}</span>`;
+                for(let file of files) {
+                    const fname = file.name.toLowerCase();
+                    let wb;
+                    if (fname.endsWith('.csv')) {
+                        wb = await readCSV(file);
+                        csvData = extractDataFromSheet(wb.Sheets[wb.SheetNames[0]]);
+                    } else if (fname.endsWith('.xlsx') || fname.endsWith('.xls')) {
+                        wb = await readWorkbook(file);
+                        xlsxData = extractDataFromSheet(wb.Sheets[wb.SheetNames[0]]);
                     }
                 }
-                
-                processAnlikMatching();
-                statusText.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500"></i> Analiz Tamamlandı! Tutar farkı olan siparişler listelendi.`;
-            } catch(e) {
-                console.error(e);
-                statusText.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Hata: Dosyalar okunamadı.`;
+
+                // Sadece CSV varsa veya sadece XLSX varsa da hata vermez, ama karşılaştırma için ideali ikisidir.
+                if(csvData.length === 0 && xlsxData.length === 0) {
+                    statusBox.innerHTML = `<span class="text-red-500">Dosyalar boş veya okunamadı!</span>`;
+                    return;
+                }
+
+                processMatchLogic(csvData, xlsxData);
+                statusBox.innerHTML = `<span class="text-emerald-500"><i class="fa-solid fa-check mr-1"></i> Analiz başarıyla tamamlandı.</span>`;
+                setTimeout(() => statusBox.classList.add('hidden'), 3000);
+
+            } catch (err) {
+                console.error(err);
+                statusBox.innerHTML = `<span class="text-red-500"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Dosya formatı desteklenmiyor veya bozuk.</span>`;
             }
+            // Inputu sıfırla ki aynı dosyayı tekrar seçebilsin
+            event.target.value = '';
         }
 
-        function processAnlikMatching() {
-            anlikMergedData = [];
+        function processMatchLogic(csvArray, xlsxArray) {
             const csvMap = new Map();
             const excelMap = new Map();
 
-            anlikCsvRows.forEach(r => {
+            // CSV'den verileri topla
+            csvArray.forEach(r => {
                 const keys = Object.keys(r);
                 const idKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'order id' || s.includes('sipariş no'); });
                 if (!idKey || !r[idKey]) return;
@@ -1109,434 +358,178 @@
                 const custKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'customer' || s.includes('müşteri'); });
                 const statusKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'status' || s.includes('durum'); });
 
-                let origAmt = parseCurrency(r['Original Amount'] || r['Sipariş Tutarı']);
-                let finalAmt = parseCurrency(r['Final Amount'] || r['Teslimat Tutarı']);
+                let origAmt = formatMoney(r['Original Amount'] || r['Sipariş Tutarı']);
+                let finalAmt = formatMoney(r['Final Amount'] || r['Teslimat Tutarı']);
                 let statusVal = statusKey ? String(r[statusKey]).trim() : '';
 
-                csvMap.set(oid, {
-                    orig: origAmt,
-                    final: finalAmt,
-                    cust: custKey ? r[custKey] : 'Müşteri',
-                    status: statusVal
-                });
+                csvMap.set(oid, { orig: origAmt, final: finalAmt, cust: custKey ? r[custKey] : 'Bilinmeyen Müşteri', status: statusVal });
             });
 
-            anlikExcelRows.forEach(r => {
+            // Excel'den verileri topla
+            xlsxArray.forEach(r => {
                 const keys = Object.keys(r);
                 const idKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'sipariş no' || s === 'order id'; });
                 if (!idKey || !r[idKey]) return;
                 const oid = String(r[idKey]).trim();
 
-                let araToplam = parseCurrency(r['Ara Toplam'] || r['Total'] || r['Sipariş Tutarı']);
+                let araToplam = formatMoney(r['Ara Toplam'] || r['Total'] || r['Sipariş Tutarı']);
                 let prodKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'sipariş ürünleri' || s === 'product name' || s.includes('ürün'); });
                 let statusKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'sipariş durumu' || s === 'status'; });
 
-                excelMap.set(oid, {
-                    araToplam: araToplam,
-                    prods: prodKey ? r[prodKey] : '',
-                    status: statusKey ? String(r[statusKey]).trim() : ''
-                });
+                excelMap.set(oid, { araToplam: araToplam, prods: prodKey ? r[prodKey] : '', status: statusKey ? String(r[statusKey]).trim() : '' });
             });
 
             const allIds = new Set([...csvMap.keys(), ...excelMap.keys()]);
-            let totalOrderCount = allIds.size;
+            totalAnalyzedCount = allIds.size;
+            mergedData = [];
 
             allIds.forEach(id => {
                 const c = csvMap.get(id);
                 const e = excelMap.get(id);
 
-                let cust = (c && c.cust !== 'Müşteri') ? c.cust : 'Müşteri';
-                let status = (c && c.status) ? c.status : (e ? e.status : 'Tamamlandı');
-                let prods = (e && e.prods) ? e.prods : 'Ürün dökümü yok';
+                let cust = (c && c.cust !== 'Bilinmeyen Müşteri') ? c.cust : (e && e.cust ? e.cust : 'Bilinmeyen Müşteri');
+                let status = (c && c.status) ? c.status : (e && e.status ? e.status : '-');
+                let prods = (e && e.prods) ? e.prods : 'Ürün verisi bulunamadı';
 
-                // İPTAL OLANLARI LİSTEDEN AT
                 const stUpper = status.toUpperCase();
+                // Kesinlikle iptal olanları listeye dahil etmiyoruz
                 if (stUpper.includes('CANCEL') || stUpper.includes('İPTAL')) {
                     return;
                 }
 
-                let eAmt = (e && e.araToplam !== null) ? e.araToplam : (c ? c.orig : null);
-                let cAmt = c ? c.final : null;
+                // Beklenen sipariş tutarı
+                let expectedAmt = (e && e.araToplam !== null) ? e.araToplam : (c ? c.orig : null);
+                // Gerçekleşen (teslim edilen) tutar
+                let actualAmt = c ? c.final : null;
 
-                if (eAmt === null || cAmt === null || cAmt === 0) {
-                    return;
-                }
+                // Veri yoksa pas geç
+                if (expectedAmt === null || actualAmt === null || actualAmt === 0) return;
 
-                let diff = eAmt - cAmt;
+                let diff = expectedAmt - actualAmt;
+                
+                // Sadece kuruş farkından büyük olan "gerçek" farkları tespit et (örn: 0.05 TL'den büyük farklar)
                 if (Math.abs(diff) >= 0.05) {
-                    anlikMergedData.push({
+                    mergedData.push({
                         id: id,
-                        cust: cust,
+                        customer: cust,
                         status: status,
-                        eAmt: eAmt,
-                        cAmt: cAmt,
+                        originalAmt: expectedAmt,
+                        finalAmt: actualAmt,
                         diffAmt: Math.abs(diff),
-                        prods: prods
+                        products: prods
                     });
                 }
             });
 
-            localStorage.setItem('yS_Anlik_Data', JSON.stringify(anlikMergedData));
-            updateAnlikKPIs(totalOrderCount);
-            renderAnlikTable();
+            // Verileri kalıcı hafızaya yaz
+            localStorage.setItem('ys_merged_data', JSON.stringify(mergedData));
+            localStorage.setItem('ys_total_count', totalAnalyzedCount);
+
+            updateKPIs();
+            renderTable();
         }
 
-        function updateAnlikKPIs(totalCount) {
-            let totalDiffSum = 0;
-            anlikMergedData.forEach(m => totalDiffSum += m.diffAmt);
+        // =========================================
+        // UI GÜNCELLEME VE LİSTELEME
+        // =========================================
+        function updateKPIs() {
+            let totalLoss = 0;
+            mergedData.forEach(m => totalLoss += m.diffAmt);
             
-            if(totalCount) document.getElementById('kpi-orders').innerText = totalCount;
-            document.getElementById('kpi-diffs').innerText = anlikMergedData.length;
-            document.getElementById('kpi-sum').innerText = formatCurrency(totalDiffSum);
+            document.getElementById('kpi-total').innerText = totalAnalyzedCount || 0;
+            document.getElementById('kpi-diff-count').innerText = mergedData.length;
+            document.getElementById('kpi-diff-sum').innerText = displayMoney(totalLoss);
+            document.getElementById('badge-count').innerText = `${mergedData.length} Kayıt`;
         }
 
-        let sortColAnlik = 'diffAmt', sortAscAnlik = false;
-        function sortAnlik(col) {
-            if(sortColAnlik === col) sortAscAnlik = !sortAscAnlik;
-            else { sortColAnlik = col; sortAscAnlik = false; }
-            renderAnlikTable();
+        function sortTable(col) {
+            if(sortCol === col) sortAsc = !sortAsc;
+            else { sortCol = col; sortAsc = false; }
+            renderTable();
         }
 
-        function renderAnlikTable() {
-            const tbody = document.getElementById('table-body-anlik');
-            const searchEl = document.getElementById('search-input-anlik');
-            const search = searchEl ? searchEl.value.toLowerCase() : '';
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            const searchStr = document.getElementById('search-input').value.toLowerCase();
+            const filterStatus = document.getElementById('filter-status').value;
             
-            let filtered = anlikMergedData.filter(m => 
-                m.id.toLowerCase().includes(search) || 
-                (m.cust && m.cust.toLowerCase().includes(search)) || 
-                (m.prods && m.prods.toLowerCase().includes(search))
+            let filtered = mergedData.filter(m => 
+                m.id.toLowerCase().includes(searchStr) || 
+                m.customer.toLowerCase().includes(searchStr) || 
+                m.products.toLowerCase().includes(searchStr)
             );
-            
-            if(sortColAnlik) {
+
+            if(filterStatus === 'picked_up') {
+                filtered = filtered.filter(m => m.status.toUpperCase().includes('PICKED') || m.status.toUpperCase().includes('DELIVERED') || m.status.toUpperCase().includes('TESLİM'));
+            }
+
+            if(sortCol) {
                 filtered.sort((a,b) => {
-                    let valA = a[sortColAnlik], valB = b[sortColAnlik];
-                    if(typeof valA === 'string') return sortAscAnlik ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                    return sortAscAnlik ? valA - valB : valB - valA;
+                    let valA = a[sortCol], valB = b[sortCol];
+                    if(typeof valA === 'string') return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                    return sortAsc ? valA - valB : valB - valA;
                 });
             }
-            
+
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-16 text-slate-400">Tutar farkı olan sipariş bulunamadı.</td></tr>`;
+                tbody.innerHTML = `
+                    <tr><td colspan="7" class="text-center py-20 text-slate-400">
+                        <i class="fa-solid fa-face-smile text-4xl mb-3 opacity-30 text-emerald-500"></i>
+                        <p class="font-bold text-sm">Harika! Filtreye uyan tutar farkı bulunamadı.</p>
+                    </td></tr>`;
                 return;
             }
-            
-            tbody.innerHTML = filtered.map(m => `
-                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700 transition border-b border-slate-100 dark:border-slate-700">
-                    <td class="py-3.5 px-4 font-mono text-pink-600 dark:text-pink-400 font-bold">${m.id}</td>
-                    <td class="py-3.5 px-4 font-bold truncate max-w-[140px]" title="${m.cust}">${m.cust}</td>
-                    <td class="py-3.5 px-4"><span class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 px-2 py-0.5 rounded text-[10px] font-bold">${m.status}</span></td>
-                    <td class="py-3.5 px-4 font-semibold text-slate-600 dark:text-slate-300">${formatCurrency(m.eAmt)}</td>
-                    <td class="py-3.5 px-4 font-semibold text-slate-600 dark:text-slate-300">${formatCurrency(m.cAmt)}</td>
-                    <td class="py-3.5 px-4 font-black text-[#ff0050] text-sm">${formatCurrency(m.diffAmt)}</td>
-                    <td class="py-3.5 px-4 text-slate-500 dark:text-slate-400 text-[11px] truncate max-w-[220px]" title="${m.prods}">${m.prods}</td>
-                </tr>
-            `).join('');
-        }
 
-        // ==========================================
-        // PERSONEL DB
-        // ==========================================
-        function openPickerModal() { document.getElementById('picker-modal').classList.remove('hidden'); document.getElementById('picker-modal').classList.add('flex'); renderPickerList(); }
-        function closePickerModal() { document.getElementById('picker-modal').classList.add('hidden'); document.getElementById('picker-modal').classList.remove('flex'); }
-
-        function renderPickerList() {
-            const listEl = document.getElementById('picker-list');
-            listEl.innerHTML = '';
-            const keys = Object.keys(pickerMap);
-            if(keys.length === 0) { listEl.innerHTML = '<div class="text-xs text-slate-400 text-center py-4">Kayıtlı personel yok.</div>'; return; }
-            keys.forEach(k => {
-                listEl.innerHTML += `
-                    <div class="flex justify-between items-center bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
-                        <span class="font-bold text-xs">${pickerMap[k]} <span class="text-[9px] text-slate-400 font-mono">(ID: ${k})</span></span>
-                        <button onclick="deletePicker('${k}')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
-                    </div>`;
-            });
-        }
-
-        function addManualPicker() {
-            const id = document.getElementById('new-picker-id').value.trim();
-            const name = document.getElementById('new-picker-name').value.trim();
-            if(!id || !name) return alert("Picker ID ve İsim giriniz.");
-            pickerMap[id] = name;
-            localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
-            syncToCloud_Picker();
-            document.getElementById('new-picker-id').value = '';
-            document.getElementById('new-picker-name').value = '';
-            renderPickerList();
-            detayParsedData.forEach(p => { if(p.picker === id) p.pickerName = name; });
-            renderDetayTable();
-        }
-
-        function deletePicker(id) {
-            delete pickerMap[id];
-            localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap));
-            syncToCloud_Picker();
-            renderPickerList();
-            detayParsedData.forEach(p => { if(p.picker === id) p.pickerName = `ID: ${id}`; });
-            renderDetayTable();
-        }
-
-        function clearAllPickers() {
-            pickerMap = {};
-            localStorage.removeItem('yS_Picker_Map');
-            syncToCloud_Picker();
-            renderPickerList();
-            detayParsedData.forEach(p => { p.pickerName = `ID: ${p.picker}`; });
-            renderDetayTable();
-        }
-
-        // ==========================================
-        // LİG & DASHBOARD (ÇALIŞAN SÜRÜMLER KORUNDU)
-        // ==========================================
-        function populateDashboardFilter() {
-            const dashFilter = document.getElementById('dashboard-store-filter');
-            if(!dashFilter) return;
-            dashFilter.innerHTML = '<option value="Tümü">Genel Bakış (Tüm Mağazalar)</option>';
-            const allStores = new Set(detayParsedData.map(p => p.store));
-            Array.from(allStores).sort().forEach(s => { dashFilter.innerHTML += `<option value="${s}">${s}</option>`; });
-        }
-
-        function onDashboardStoreChange() {
-            currentDashboardStore = document.getElementById('dashboard-store-filter').value;
-            updateDashboard();
-        }
-
-        function updateDashboard() {
-            if(detayParsedData.length === 0) return;
-            const isGeneral = currentDashboardStore === 'Tümü';
-            const dataToAnalyze = isGeneral ? detayParsedData : detayParsedData.filter(p => p.store === currentDashboardStore);
-            
-            document.getElementById('kpi-financial-loss').innerText = `₺${(dataToAnalyze.length * 150).toLocaleString('tr-TR')}`;
-
-            const reasonCounts = {}, pickerCounts = {}, storeCounts = {};
-            dataToAnalyze.forEach(p => {
-                reasonCounts[p.reason] = (reasonCounts[p.reason] || 0) + 1;
-                if(p.picker !== '-') pickerCounts[p.pickerName] = (pickerCounts[p.pickerName] || 0) + 1;
-                storeCounts[p.store] = (storeCounts[p.store] || 0) + 1;
-            });
-
-            if(chartReasons) chartReasons.destroy();
-            chartReasons = new Chart(document.getElementById('chart-reasons'), {
-                type: 'doughnut',
-                data: { labels: Object.keys(reasonCounts), datasets: [{ data: Object.values(reasonCounts), backgroundColor: ['#ff0050', '#f59e0b', '#3b82f6', '#10b981'], borderWidth: 0 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
-            });
-
-            const sortedPickers = Object.entries(pickerCounts).sort((a,b) => b[1] - a[1]).slice(0,5);
-            if(chartPickers) chartPickers.destroy();
-            chartPickers = new Chart(document.getElementById('chart-pickers'), {
-                type: 'bar',
-                data: { labels: sortedPickers.map(i => i[0].substring(0, 12)), datasets: [{ label: 'Kusur', data: sortedPickers.map(i => i[1]), backgroundColor: '#6366f1', borderRadius: 4 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-
-            if(isGeneral) {
-                const sortedStores = Object.entries(storeCounts).sort((a,b) => b[1] - a[1]).slice(0,5);
-                if(chartStores) chartStores.destroy();
-                chartStores = new Chart(document.getElementById('chart-stores'), {
-                    type: 'bar',
-                    data: { labels: sortedStores.map(i => i[0].substring(0, 14)), datasets: [{ label: 'Kusur', data: sortedStores.map(i => i[1]), backgroundColor: '#10b981', borderRadius: 4 }] },
-                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-                });
-
-                const bestStores = Object.entries(storeCounts).sort((a,b) => a[1] - b[1]).slice(0, 4);
-                document.getElementById('best-stores-list').innerHTML = bestStores.map((bs, i) => `
-                    <li class="flex justify-between items-center bg-white/20 p-2.5 rounded-xl backdrop-blur-sm border border-white/20">
-                        <span class="font-bold text-[11px] truncate max-w-[130px]">${bs[0]}</span>
-                        <span class="bg-white text-orange-500 text-[10px] font-black px-2 py-0.5 rounded-md">${bs[1]} Kusur</span>
-                    </li>
-                `).join('');
-            }
-        }
-
-        // ==========================================
-        // D-MART LİGİ VE PİCKER PERFORMANS CSV İŞLEME
-        // ==========================================
-        async function onPickerFileSelected(files) {
-            if (!files || files.length === 0) return;
-            try {
-                const wb = await readAnyExcelFile(files[0]);
-                const data = parseExcelJson(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }));
+            let delay = 0;
+            tbody.innerHTML = filtered.map((m, index) => {
+                delay = index * 0.03; // Satırların sırayla gelme animasyonu
                 
-                pickerParsedData = [];
-                data.forEach(row => {
-                    // Sadece Türkiye Mağazaları Filtresi
-                    const country = String(row['Country'] || row['Ülke'] || '').toLowerCase().trim();
-                    if(country && country !== 'turkey' && country !== 'türkiye') return;
-
-                    let store = row['DMart'] || row['Store'] || '';
-                    if(!store) return;
-                    
-                    pickerParsedData.push({
-                        store: store,
-                        pickerId: row['Picker Id'] || row['Rooster Employee ID'] || '-',
-                        workingHours: parseFloat(row['Total Working (h)']) || 0,
-                        pickedOrders: parseFloat(row['Picked Orders']) || 0,
-                        oph: parseFloat(row['Order per Hour']) || 0,
-                        pfr: parseFloat(row['PFR %']) || 0,
-                        utr: parseFloat(row['UTR']) || 0
-                    });
-                });
-                
-                localStorage.setItem('yS_PickerData', JSON.stringify(pickerParsedData));
-                calculateLeague();
-                alert("Picker Performans verisi başarıyla işlendi ve Lig tablosu güncellendi.");
-                
-            } catch(e) {
-                alert("Dosya okuma hatası! Dosya formatının doğru olduğundan emin olun.");
-                console.error(e);
-            }
-        }
-
-        function calculateLeague() {
-            if(pickerParsedData.length === 0) return;
-
-            let storeStats = {};
-            
-            // 1. Adım: Picker verisinden Hız ve Verimlilik Puanlarını topla
-            pickerParsedData.forEach(p => {
-                if(!storeStats[p.store]) storeStats[p.store] = { store: p.store, pfrSum: 0, utrSum: 0, count: 0, orders: 0, defects: 0 };
-                if(p.pfr > 0) storeStats[p.store].pfrSum += p.pfr;
-                if(p.utr > 0) storeStats[p.store].utrSum += p.utr;
-                storeStats[p.store].orders += p.pickedOrders;
-                storeStats[p.store].count++;
-            });
-
-            // 2. Adım: Detay (Kusur Kaydı) sekmesindeki kusur sayılarını mağazalara göre ekle
-            detayParsedData.forEach(p => {
-                if(storeStats[p.store]) {
-                    storeStats[p.store].defects++;
+                let statusBadge = `<span class="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider">${m.status}</span>`;
+                if(m.status.toUpperCase().includes('PICKED') || m.status.toUpperCase().includes('DELIVERED')) {
+                    statusBadge = `<span class="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider">Teslim Edildi</span>`;
                 }
-            });
 
-            // 3. Adım: Karma Formül ile Skoru Hesapla
-            leagueStores = Object.values(storeStats).map(s => {
-                let avgPfr = s.count > 0 ? (s.pfrSum / s.count) : 0; 
-                let avgUtr = s.count > 0 ? (s.utrSum / s.count) : 0;
-                
-                let pfrScore = avgPfr > 1 ? avgPfr : avgPfr * 100;
-                let utrScore = avgUtr > 1 ? avgUtr : avgUtr * 100;
-                
-                // Formül: (PFR %60) + (UTR %40) - Kusur Başına 2 Puan Ceza
-                let defectPenalty = s.defects * 2; 
-                let finalScore = (pfrScore * 0.6) + (utrScore * 0.4) - defectPenalty;
-                if(finalScore < 0) finalScore = 0; // Puan eksiye düşmesin
-                
-                return { store: s.store, score: finalScore.toFixed(1), defects: s.defects };
-            }).sort((a,b) => b.score - a.score);
-
-            renderLeagueTables();
-        }
-
-        function renderLeagueTables() {
-            const container = document.getElementById('league-tables-container');
-            if(leagueStores.length === 0) return;
-
-            const sl = leagueStores.slice(0, 20); // Şampiyonlar Ligi 20
-            const al = leagueStores.slice(20, 40); // Avrupa 20
-            const kl = leagueStores.slice(40, 61); // Konferans 21
-            const pl = leagueStores.slice(61, 82); // Playoff 21
-            const bl = leagueStores.slice(82, 103); // Bal 21
-            
-            let html = '';
-            
-            const getCardHTML = (title, data, icon, border, bg, textCol, up, down, badge) => {
-                if(data.length === 0) return '';
-                let rowsHtml = data.map((s, i) => {
-                    let status = '-';
-                    let statusColor = 'text-slate-500';
-                    let rowClass = (title === 'Şampiyonlar Ligi' && i < 3) ? 'league-champ' : 'border-b border-slate-100 dark:border-slate-700/50';
-                    
-                    if(i < up) { status = '▲ Yükselir'; statusColor = 'text-emerald-500 font-bold'; }
-                    else if(i >= data.length - down) { status = '▼ Düşer'; statusColor = 'text-red-500 font-bold'; }
-                    
-                    return `
-                    <tr class="${rowClass} hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
-                        <td class="py-2.5 px-3 w-8">${i+1}</td>
-                        <td class="py-2.5 px-3 font-bold truncate max-w-[150px]">${s.store}</td>
-                        <td class="py-2.5 px-3 text-center text-[10px] text-red-500 font-bold">${s.defects > 0 ? s.defects : '-'}</td>
-                        <td class="py-2.5 px-3 text-right font-mono">${s.score}</td>
-                        <td class="py-2.5 px-3 text-right text-[10px] ${statusColor}">${status}</td>
-                    </tr>`;
-                }).join('');
-                
                 return `
-                <div class="rounded-2xl overflow-hidden shadow-sm bg-white dark:bg-slate-800 border ${border}">
-                    <div class="${bg} p-3 flex justify-between items-center border-b ${border}">
-                        <h4 class="font-black ${textCol} text-sm"><i class="${icon} mr-1"></i> ${title}</h4>
-                        ${badge ? `<span class="text-[10px] font-bold bg-white px-2 py-1 rounded-lg shadow-sm ${textCol}">${badge}</span>` : ''}
-                    </div>
-                    <div class="overflow-y-auto max-h-72">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 sticky top-0 shadow-sm">
-                                <tr><th class="py-2 px-3">Sıra</th><th class="py-2 px-3">Mağaza</th><th class="py-2 px-3 text-center">Kusur</th><th class="py-2 px-3 text-right">Puan</th><th class="py-2 px-3 text-right">Durum</th></tr>
-                            </thead>
-                            <tbody class="text-slate-700 dark:text-slate-300">
-                                ${rowsHtml}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>`;
-            };
-
-            html += getCardHTML('Şampiyonlar Ligi', sl, 'fa-solid fa-trophy', 'border-yellow-200 dark:border-yellow-900/50', 'bg-yellow-100 dark:bg-yellow-900/40', 'text-yellow-700 dark:text-yellow-400', 0, 2, '1. Ödül: 1.250₺');
-            html += getCardHTML('Avrupa Ligi', al, 'fa-solid fa-globe', 'border-blue-200 dark:border-blue-900/50', 'bg-blue-100 dark:bg-blue-900/40', 'text-blue-700 dark:text-blue-400', 2, 2, '1. Ödül: 600₺');
-            html += getCardHTML('Konferans Ligi', kl, 'fa-solid fa-medal', 'border-orange-200 dark:border-orange-900/50', 'bg-orange-100 dark:bg-orange-900/40', 'text-orange-700 dark:text-orange-400', 2, 2);
-            html += getCardHTML('Playoff Ligi', pl, 'fa-solid fa-play', 'border-purple-200 dark:border-purple-900/50', 'bg-purple-100 dark:bg-purple-900/40', 'text-purple-700 dark:text-purple-400', 2, 2);
-            html += getCardHTML('Bal Ligi', bl, 'fa-solid fa-seedling', 'border-emerald-200 dark:border-emerald-900/50', 'bg-emerald-100 dark:bg-emerald-900/40', 'text-emerald-700 dark:text-emerald-400', 2, 0);
-
-            container.innerHTML = html;
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition border-b border-slate-100 dark:border-slate-700/50 table-row-enter" style="animation-delay: ${delay}s">
+                    <td class="py-4 px-6 font-mono text-brand-pink font-black text-sm">${m.id}</td>
+                    <td class="py-4 px-6 font-bold truncate max-w-[150px]" title="${m.customer}">${m.customer}</td>
+                    <td class="py-4 px-6">${statusBadge}</td>
+                    <td class="py-4 px-6 font-semibold text-slate-600 dark:text-slate-400">${displayMoney(m.originalAmt)}</td>
+                    <td class="py-4 px-6 font-semibold text-slate-600 dark:text-slate-400">${displayMoney(m.finalAmt)}</td>
+                    <td class="py-4 px-6 font-black text-brand-pink text-base">${displayMoney(m.diffAmt)}</td>
+                    <td class="py-4 px-6">
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight whitespace-normal break-words max-w-sm line-clamp-2" title="${m.products}">
+                            ${m.products}
+                        </p>
+                    </td>
+                </tr>
+                `;
+            }).join('');
         }
 
-        // ==========================================
-        // İHRAC (EXPORT)
-        // ==========================================
+        // =========================================
+        // EXCEL EXPORT
+        // =========================================
         function exportToExcel() {
-            const data = currentView === 'anlik' ? anlikMergedData : detayParsedData;
-            if(data.length === 0) return alert("İndirilecek veri yok.");
+            if(mergedData.length === 0) return alert("İndirilecek veri yok.");
+            const exportData = mergedData.map(m => ({
+                'Sipariş No': m.id,
+                'Müşteri Adı': m.customer,
+                'Durum': m.status,
+                'Beklenen Tutar': m.originalAmt,
+                'Gerçekleşen Teslimat Tutarı': m.finalAmt,
+                'Fark (Kayıp) Tutarı': m.diffAmt,
+                'Siparişteki Ürünler': m.products
+            }));
             const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.json_to_sheet(data);
-            XLSX.utils.book_append_sheet(wb, ws, "Rapor");
-            XLSX.writeFile(wb, "Yemeksepeti_Raporu.xlsx");
-        }
-
-        // ==========================================
-        // WHATSAPP
-        // ==========================================
-        function openWhatsAppModal() {
-            if (detayParsedData.length === 0) return alert("Lütfen önce veri yükleyin.");
-            const notedItems = detayParsedData.filter(p => (p.note && p.note.trim() !== '') || p.img);
-            if (notedItems.length === 0) return alert("Raporlanacak kayıt yok. Lütfen listedeki siparişlere açıklama/fotoğraf ekleyin.");
-
-            document.getElementById('whatsapp-modal').classList.remove('hidden');
-            document.getElementById('whatsapp-modal').classList.add('flex');
+            const ws = XLSX.utils.json_to_sheet(exportData);
             
-            let htmlText = `<div style="background: linear-gradient(135deg, #ff0050, #ff4d79); padding: 18px; border-radius: 16px 16px 0 0; color: white; text-align: center;">
-                <h2 style="margin: 0; font-size: 18px; font-weight: 900;">YEMEKSEPETİ KUSUR RAPORU</h2>
-                <p style="margin: 4px 0 0 0; font-size: 12px;">Tarih: ${new Date().toLocaleDateString('tr-TR')} • Toplam: ${notedItems.length}</p>
-            </div><div style="background: #ffffff; padding: 20px; border-radius: 0 0 16px 16px; display: flex; flex-direction: column; gap: 16px;">`;
-
-            notedItems.forEach((p, i) => {
-                htmlText += `<div style="border: 1px solid #f1f5f9; padding: 12px; border-radius: 12px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span style="font-size: 12px; font-weight: 800; color: #ff0050;">Kayıt #${i + 1}</span>
-                        <span style="font-size: 10px; background: #f1f5f9; color: #475569; padding: 2px 6px; border-radius: 4px;">${p.orderId}</span>
-                    </div>
-                    <div style="font-size: 13px; color: #334155; line-height: 1.6;">
-                        <div><b>Mağaza:</b> ${p.store}</div>
-                        <div><b>Ürün:</b> ${p.product}</div>
-                        <div><b>Sebep:</b> <span style="background:#fef3c7; color:#b45309; padding:2px 4px; border-radius:4px; font-weight:bold; font-size:11px;">${p.reason}</span></div>
-                    </div>`;
-                if(p.note) htmlText += `<div style="margin-top: 8px; padding: 8px; background: #f8fafc; border-left: 3px solid #64748b; font-size: 12px;"><b>Not:</b> ${p.note}</div>`;
-                if(p.img) htmlText += `<div style="margin-top: 10px; text-align: center;"><img src="${p.img}" style="max-width:100%; width:320px; border-radius:8px; border:1px solid #cbd5e1;"></div>`;
-                htmlText += `</div>`;
-            });
-            document.getElementById('whatsapp-render-area').innerHTML = htmlText + `</div>`;
+            // Sütun genişliklerini ayarla
+            ws['!cols'] = [{wch: 20}, {wch: 25}, {wch: 15}, {wch: 18}, {wch: 25}, {wch: 20}, {wch: 60}];
+            
+            XLSX.utils.book_append_sheet(wb, ws, "Fark Analizi");
+            XLSX.writeFile(wb, "Yemeksepeti_Tutar_Fark_Raporu.xlsx");
         }
-
-        function closeWhatsAppModal() { document.getElementById('whatsapp-modal').classList.add('hidden'); }
-        function copyWhatsAppTextOnly() { alert("Kopyalama tamamlandı (Demo)."); }
     </script>
 </body>
 </html>
