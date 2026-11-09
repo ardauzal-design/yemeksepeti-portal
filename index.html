@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- PWA / Mobil Uygulama Etiketleri -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0f172a">
@@ -12,8 +13,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
+    <!-- FIREBASE BULUT VERİTABANI KÜTÜPHANELERİ -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
     
@@ -31,11 +32,14 @@
         .nav-btn.active { background-color: #ff0050; color: white; box-shadow: 0 4px 12px rgba(255, 0, 80, 0.25); }
         .nav-btn { background-color: transparent; color: inherit; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
         th { cursor: pointer; user-select: none; }
         th:hover { color: #ff0050; }
         .league-champ { background: linear-gradient(90deg, rgba(255,215,0,0.1) 0%, transparent 100%); border-left: 4px solid #ffd700; }
+        .league-up { color: #10b981; font-weight: bold; }
+        .league-down { color: #ef4444; font-weight: bold; }
     </style>
 </head>
 <body class="bg-[#eaf8f4] dark:bg-slate-900 text-slate-800 dark:text-slate-200 min-h-screen flex flex-col antialiased relative transition-colors duration-300">
@@ -84,15 +88,14 @@
                     <div class="w-11 h-11 rounded-2xl bg-[#ff0050] text-white flex items-center justify-center shadow-lg"><i class="fa-solid fa-chart-pie text-lg"></i></div>
                     <div>
                         <h1 class="text-lg font-black text-slate-900 dark:text-white">Yemeksepeti Market <span id="active-region-badge" class="text-[10px] bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full uppercase ml-2">Portal</span></h1>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Analiz & Oyunlaştırma Portalı</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Bütünleşik Analiz & Raporlama Portalı</p>
                     </div>
                 </div>
 
                 <div class="flex flex-wrap items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-700 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-600">
                     <button onclick="switchView('dashboard')" id="btn-view-dashboard" class="nav-btn px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-200"><i class="fa-solid fa-chart-column text-indigo-500"></i> Dashboard</button>
-                    <button onclick="switchView('league')" id="btn-view-league" class="nav-btn px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-200"><i class="fa-solid fa-trophy text-amber-500"></i> D-MART Ligi</button>
+                    <button onclick="switchView('anlik')" id="btn-view-anlik" class="nav-btn px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-200"><i class="fa-solid fa-bolt text-[#ff0050]"></i> Anlık Fark</button>
                     <button onclick="switchView('detay')" id="btn-view-detay" class="nav-btn px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-200"><i class="fa-solid fa-clipboard-list text-emerald-500"></i> Kusur Kaydı</button>
-                    <button onclick="switchView('anlik')" id="btn-view-anlik" class="nav-btn px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-200"><i class="fa-solid fa-bolt text-[#ff0050]"></i> Fark</button>
                 </div>
 
                 <div class="flex items-center gap-3">
@@ -168,42 +171,74 @@
             </div>
 
             <!-- ========================================== -->
-            <!-- SAYFA: D-MART LİGİ (Puan Tabloları & Yükleme) -->
+            <!-- SAYFA 1: ANLIK İŞLEM (TUTAR FARKI TESPİTİ) -->
             <!-- ========================================== -->
-            <div id="view-league" class="space-y-6 hidden animate-[fadeIn_0.3s_ease-in-out]">
-                <div class="bg-gradient-to-r from-pink-600 to-red-600 rounded-3xl p-8 text-white card-shadow relative overflow-hidden">
-                    <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div>
-                            <h2 class="text-3xl font-black mb-2 uppercase italic tracking-wider">D-MART LİGİ BAŞLIYOR! <i class="fa-solid fa-bullhorn text-yellow-300"></i></h2>
-                            <p class="text-pink-100 text-sm max-w-2xl">
-                                Haftalık Lig Puanı; Yükleyeceğiniz <b>Picker Performans Raporu (CSV)</b> (Hız ve Verimlilik) ve <b>Kusur Kaydı</b> raporlarındaki (Hata Oranı) verilerin harmanlanmasıyla hesaplanır.
-                            </p>
-                        </div>
-                        <div class="bg-white/20 backdrop-blur-md p-4 rounded-xl text-center min-w-[200px]">
-                            <p class="text-xs font-bold uppercase text-pink-100 mb-1">Şampiyonlar Ligi 1.'si Ödülü</p>
-                            <p class="text-3xl font-black text-yellow-300">1.250 ₺ <i class="fa-solid fa-gift text-xl"></i></p>
+            <div id="view-anlik" class="space-y-6 hidden animate-[fadeIn_0.3s_ease-in-out]">
+                <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-8 card-shadow border border-emerald-100/60 dark:border-emerald-900/30">
+                    <div id="drop-zone-anlik" class="border-2 border-dashed border-emerald-200 dark:border-emerald-700 hover:border-[#ff0050] rounded-2xl p-8 text-center transition cursor-pointer bg-[#f7fcf9] dark:bg-slate-800 relative">
+                        <input type="file" id="file-input-anlik" multiple accept=".csv, .xlsx, .xls" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="onAnlikFilesSelected(this.files)">
+                        <div class="flex flex-col items-center justify-center space-y-3 pointer-events-none">
+                            <div class="w-14 h-14 rounded-2xl bg-pink-100 text-[#ff0050] flex items-center justify-center text-2xl"><i class="fa-solid fa-bolt"></i></div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-700 dark:text-white">Teslimat CSV ve Sipariş Detay Excel'ini Seçin</p>
+                                <p class="text-xs text-slate-400 mt-1">İki dosyayı aynı anda seçebilir veya sırayla yükleyebilirsiniz. İptaller hariç tutulur, sadece <b>gerçek tutar farkı</b> olanlar listelenir.</p>
+                            </div>
                         </div>
                     </div>
-                    <i class="fa-solid fa-trophy absolute -right-10 -bottom-10 text-[200px] opacity-10"></i>
+                    <div id="upload-status-anlik" class="mt-4 hidden p-3 rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs flex flex-col gap-2">
+                        <div class="flex items-center gap-2.5 text-slate-700 dark:text-white font-bold" id="status-text-anlik"></div>
+                        <div id="file-badges-anlik" class="flex flex-wrap gap-2"></div>
+                    </div>
                 </div>
 
-                <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 card-shadow border border-slate-100 dark:border-slate-700">
-                    <div id="drop-zone-league" class="border-2 border-dashed border-amber-300 dark:border-amber-700 hover:border-amber-500 rounded-2xl p-6 text-center transition cursor-pointer bg-amber-50/50 dark:bg-slate-800 relative mb-6">
-                        <input type="file" id="file-input-league" accept=".csv, .xlsx, .xls" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="onPickerFileSelected(this.files)">
-                        <div class="flex flex-col items-center justify-center space-y-2 pointer-events-none">
-                            <div class="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-500 flex items-center justify-center text-xl"><i class="fa-solid fa-file-csv"></i></div>
-                            <p class="text-sm font-bold text-slate-700 dark:text-white">Picker Performance Raporunu Yükle</p>
-                            <p class="text-xs text-slate-500">Bu dosya hem lig hız/puan sırasını hesaplar hem de Picker Karnesini besler.</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl card-shadow border-l-4 border-l-slate-800 flex items-center justify-between">
+                        <div><p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Toplam İncelenen</p><h3 id="kpi-orders" class="text-2xl font-black text-slate-900 dark:text-white mt-1">-</h3></div>
+                        <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-700"><i class="fa-solid fa-boxes-stacked text-xl"></i></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl card-shadow border-l-4 border-l-amber-500 flex items-center justify-between">
+                        <div><p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Tutar Farkı Olan</p><h3 id="kpi-diffs" class="text-2xl font-black text-amber-600 mt-1">0</h3></div>
+                        <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500"><i class="fa-solid fa-triangle-exclamation text-xl"></i></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl card-shadow border-l-4 border-l-[#ff0050] flex items-center justify-between">
+                        <div><p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Toplam Fark Tutarı</p><h3 id="kpi-sum" class="text-2xl font-black text-[#ff0050] mt-1">₺0,00</h3></div>
+                        <div class="w-12 h-12 rounded-2xl bg-pink-50 flex items-center justify-center text-[#ff0050]"><i class="fa-solid fa-turkish-lira-sign text-xl"></i></div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden card-shadow border border-emerald-100/60 dark:border-slate-700">
+                    <div class="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center gap-4">
+                        <div class="text-sm font-black text-slate-800 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-circle-exclamation text-[#ff0050]"></i> Gerçek Tutar Farkı Olan Siparişler
+                        </div>
+                        <div class="relative w-full md:w-72">
+                            <input type="text" id="search-input-anlik" onkeyup="renderAnlikTable()" placeholder="Ara..." class="w-full text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-white rounded-xl pl-9 pr-4 py-2 focus:ring-2 focus:ring-pink-500/30 outline-none">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400"></i>
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="league-tables-container">
-                        <div class="col-span-2 text-center py-10 text-slate-400 italic font-medium">Lig tablolarını görmek için yukarıdaki alandan Picker Performans Raporu yükleyin.</div>
+                    <div class="overflow-x-auto max-h-[600px]">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-300 font-bold uppercase sticky top-0 z-10">
+                                <tr>
+                                    <th class="py-3.5 px-4" onclick="sortAnlik('id')">Sipariş No <i class="fa-solid fa-sort ml-1 opacity-50"></i></th>
+                                    <th class="py-3.5 px-4" onclick="sortAnlik('cust')">Müşteri <i class="fa-solid fa-sort ml-1 opacity-50"></i></th>
+                                    <th class="py-3.5 px-4" onclick="sortAnlik('status')">Durum</th>
+                                    <th class="py-3.5 px-4" onclick="sortAnlik('eAmt')">Sipariş Tutarı</th>
+                                    <th class="py-3.5 px-4" onclick="sortAnlik('cAmt')">Teslimat Tutarı</th>
+                                    <th class="py-3.5 px-4 text-[#ff0050]" onclick="sortAnlik('diffAmt')">Fark</th>
+                                    <th class="py-3.5 px-4">Ürün Detayı</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body-anlik" class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-200 font-medium">
+                                <tr><td colspan="7" class="text-center py-16 text-slate-400">Veri yüklenmedi.</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
             <!-- ========================================== -->
-            <!-- SAYFA: KUSURLU SİPARİŞ KAYDI (DETAY) -->
+            <!-- SAYFA 2: KUSURLU SİPARİŞ KAYDI -->
             <!-- ========================================== -->
             <div id="view-detay" class="space-y-6 hidden animate-[fadeIn_0.3s_ease-in-out]">
                 <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-8 card-shadow border border-indigo-100/60 dark:border-indigo-900/30">
@@ -212,8 +247,8 @@
                         <div class="flex flex-col items-center justify-center space-y-3 pointer-events-none">
                             <div class="w-14 h-14 rounded-2xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-2xl"><i class="fa-solid fa-users-gear"></i></div>
                             <div>
-                                <p class="text-sm font-bold text-slate-700 dark:text-white">Kusurlu Sipariş Raporunu Seçin</p>
-                                <p class="text-xs text-slate-400 mt-1">İade/Kusur dökümünüzü veya Personel Listenizi buraya sürükleyin.</p>
+                                <p class="text-sm font-bold text-slate-700 dark:text-white">Kusurlu Sipariş Raporunu ve <span class="text-indigo-600 dark:text-indigo-400 underline">Personel Listesini</span> Seçin</p>
+                                <p class="text-xs text-slate-400 mt-1">İki dosyayı aynı anda yükleyebilirsiniz. Sistem isimleri otomatik öğrenecektir.</p>
                             </div>
                         </div>
                     </div>
@@ -224,10 +259,7 @@
                     <div class="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex flex-wrap justify-between items-center gap-4">
                         <div class="text-sm font-black flex items-center gap-2"><i class="fa-solid fa-list-check text-indigo-600"></i> Kayıtlar (<span id="record-count-detay">0</span>)</div>
                         <div class="flex flex-wrap items-center gap-2">
-                            <!-- MODÜLLER: PERSONEL DB, WHATSAPP, TARİH, BÖLGE/MAĞAZA, ARAMA -->
                             <button onclick="openPickerModal()" class="bg-slate-800 dark:bg-slate-600 text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-slate-700 transition flex items-center gap-1.5 shadow-sm"><i class="fa-solid fa-user-tie"></i> Personel DB</button>
-                            <button onclick="openWhatsAppModal()" class="bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-600 transition flex items-center gap-1.5 shadow-sm"><i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp</button>
-                            
                             <input type="date" id="filter-date-detay" onchange="renderDetayTable()" class="text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 outline-none font-bold">
                             
                             <!-- BÖLGE FİLTRESİ -->
@@ -268,99 +300,19 @@
                 </div>
             </div>
 
-            <!-- ========================================== -->
-            <!-- SAYFA: ANLIK İŞLEM (TUTAR FARKI TESPİTİ) -->
-            <!-- ========================================== -->
-            <div id="view-anlik" class="space-y-6 hidden animate-[fadeIn_0.3s_ease-in-out]">
-                <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-8 card-shadow border border-emerald-100/60 dark:border-emerald-900/30">
-                    <div id="drop-zone-anlik" class="border-2 border-dashed border-emerald-200 dark:border-emerald-700 hover:border-[#ff0050] rounded-2xl p-8 text-center transition cursor-pointer bg-[#f7fcf9] dark:bg-slate-800 relative">
-                        <input type="file" id="file-input-anlik" multiple accept=".csv, .xlsx, .xls" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="onAnlikFilesSelected(this.files)">
-                        <div class="flex flex-col items-center justify-center space-y-3 pointer-events-none">
-                            <div class="w-14 h-14 rounded-2xl bg-pink-100 text-[#ff0050] flex items-center justify-center text-2xl"><i class="fa-solid fa-bolt"></i></div>
-                            <div>
-                                <p class="text-sm font-bold text-slate-700 dark:text-white">Teslimat CSV ve Sipariş Detay Excel'ini Seçin</p>
-                                <p class="text-xs text-slate-400 mt-1">İki dosyayı aynı anda seçebilir veya sırayla yükleyebilirsiniz. İptaller hariç tutulur, sadece <b>gerçek tutar farkı</b> olanlar listelenir.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="upload-status-anlik" class="mt-4 hidden p-3 rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs flex flex-col gap-2">
-                        <div class="flex items-center gap-2.5 text-slate-700 dark:text-white font-bold" id="status-text-anlik"></div>
-                        <div id="file-badges-anlik" class="flex flex-wrap gap-2"></div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl card-shadow border-l-4 border-l-slate-800 flex items-center justify-between">
-                        <div><p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Toplam İncelenen</p><h3 id="kpi-orders" class="text-2xl font-black text-slate-900 dark:text-white mt-1">-</h3></div>
-                        <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-700"><i class="fa-solid fa-boxes-stacked text-xl"></i></div>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl card-shadow border-l-4 border-l-amber-500 flex items-center justify-between">
-                        <div><p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Tutar Farkı Olan</p><h3 id="kpi-diffs" class="text-2xl font-black text-amber-600 mt-1">0</h3></div>
-                        <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500"><i class="fa-solid fa-triangle-exclamation text-xl"></i></div>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl card-shadow border-l-4 border-l-[#ff0050] flex items-center justify-between">
-                        <div><p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Toplam Fark Tutarı</p><h3 id="kpi-sum" class="text-2xl font-black text-[#ff0050] mt-1">₺0,00</h3></div>
-                        <div class="w-12 h-12 rounded-2xl bg-pink-50 flex items-center justify-center text-[#ff0050]"><i class="fa-solid fa-turkish-lira-sign text-xl"></i></div>
-                    </div>
-                </div>
-
-                <div class="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden card-shadow border border-emerald-100/60 dark:border-slate-700">
-                    <div class="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center gap-4">
-                        <div class="text-sm font-black text-slate-800 dark:text-white flex items-center gap-2"><i class="fa-solid fa-circle-exclamation text-[#ff0050]"></i> Gerçek Tutar Farkı Olan Siparişler</div>
-                        <div class="relative w-full md:w-72">
-                            <input type="text" id="search-input-anlik" onkeyup="renderAnlikTable()" placeholder="Ara..." class="w-full text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-white rounded-xl pl-9 pr-4 py-2 focus:ring-2 focus:ring-pink-500/30 outline-none">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400"></i>
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto max-h-[600px]">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead class="bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-300 font-bold uppercase sticky top-0 z-10">
-                                <tr>
-                                    <th class="py-3.5 px-4" onclick="sortAnlik('id')">Sipariş No <i class="fa-solid fa-sort ml-1 opacity-50"></i></th>
-                                    <th class="py-3.5 px-4" onclick="sortAnlik('cust')">Müşteri</th>
-                                    <th class="py-3.5 px-4" onclick="sortAnlik('status')">Durum</th>
-                                    <th class="py-3.5 px-4" onclick="sortAnlik('eAmt')">Sipariş Tutarı</th>
-                                    <th class="py-3.5 px-4" onclick="sortAnlik('cAmt')">Teslimat Tutarı</th>
-                                    <th class="py-3.5 px-4 text-[#ff0050]" onclick="sortAnlik('diffAmt')">Fark</th>
-                                    <th class="py-3.5 px-4">Ürün Detayı</th>
-                                </tr>
-                            </thead>
-                            <tbody id="table-body-anlik" class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-200 font-medium">
-                                <tr><td colspan="7" class="text-center py-16 text-slate-400">Veri yüklenmedi.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
         </main>
-        
-        <!-- MOBİL ALT MENÜ -->
-        <div class="fixed bottom-0 w-full bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex justify-around p-2 lg:hidden z-50">
-            <button onclick="switchView('dashboard')" class="flex flex-col items-center p-2 text-indigo-500 w-1/4"><i class="fa-solid fa-chart-column text-lg mb-1"></i> <span class="text-[10px] font-bold">Özet</span></button>
-            <button onclick="switchView('league')" class="flex flex-col items-center p-2 text-amber-500 w-1/4"><i class="fa-solid fa-trophy text-lg mb-1"></i> <span class="text-[10px] font-bold">Lig</span></button>
-            <button onclick="switchView('detay')" class="flex flex-col items-center p-2 text-emerald-500 w-1/4"><i class="fa-solid fa-clipboard-list text-lg mb-1"></i> <span class="text-[10px] font-bold">Kusur</span></button>
-            <button onclick="switchView('anlik')" class="flex flex-col items-center p-2 text-[#ff0050] w-1/4"><i class="fa-solid fa-bolt text-lg mb-1"></i> <span class="text-[10px] font-bold">Fark</span></button>
-        </div>
     </div> 
 
     <!-- ========================================== -->
     <!-- MODALLAR -->
     <!-- ========================================== -->
-
-    <!-- FOTOĞRAF BÜYÜTME MODALI -->
-    <div id="image-modal" class="fixed inset-0 bg-slate-900/95 z-[300] hidden items-center justify-center p-4">
-        <button onclick="closeImageModal()" class="absolute top-6 right-6 text-white bg-slate-800 hover:bg-red-500 rounded-full w-10 h-10 flex items-center justify-center transition shadow-xl">
-            <i class="fa-solid fa-times text-xl"></i>
-        </button>
-        <img id="modal-image" src="" class="max-w-full max-h-[90vh] rounded-lg shadow-2xl border-4 border-white/10">
-    </div>
-
     <!-- PERSONEL DB MODALI -->
     <div id="picker-modal" class="fixed inset-0 bg-slate-900/80 z-[80] hidden items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-lg flex flex-col shadow-2xl overflow-hidden animate-[fadeIn_0.3s_ease-in-out]">
             <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
-                <h2 class="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2"><i class="fa-solid fa-user-tie text-indigo-500"></i> Personel Veritabanı</h2>
+                <h2 class="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-user-tie text-indigo-500"></i> Personel Veritabanı
+                </h2>
                 <button onclick="closePickerModal()" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-times text-xl"></i></button>
             </div>
             <div class="p-5 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
@@ -380,57 +332,12 @@
         </div>
     </div>
 
-    <!-- PICKER (TOPLAYICI) KARNESİ MODALI -->
-    <div id="picker-stats-modal" class="fixed inset-0 bg-slate-900/80 z-[100] hidden items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-md flex flex-col shadow-2xl overflow-hidden animate-[fadeIn_0.3s_ease-in-out]">
-            <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-indigo-600 text-white">
-                <h2 class="text-lg font-black flex items-center gap-2"><i class="fa-solid fa-id-card"></i> Personel Performans Karnesi</h2>
-                <button onclick="closePickerStats()" class="hover:text-red-300 transition"><i class="fa-solid fa-times text-xl"></i></button>
-            </div>
-            <div class="p-6 text-center bg-slate-50 dark:bg-slate-900">
-                <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-3 shadow-sm"><i class="fa-solid fa-user-tie"></i></div>
-                <h3 id="ps-name" class="text-xl font-black text-slate-800 dark:text-white">İsim</h3>
-                <p id="ps-id" class="text-xs text-slate-500 font-mono mb-2">ID: 000</p>
-                <p id="ps-store" class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-1 rounded-md inline-block font-bold">Mağaza</p>
-                
-                <div class="grid grid-cols-2 gap-4 mt-6">
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                        <p class="text-[10px] uppercase font-bold text-slate-400">Çalışma Saati</p>
-                        <p id="ps-hours" class="text-xl font-black text-slate-700 dark:text-slate-200 mt-1">-</p>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                        <p class="text-[10px] uppercase font-bold text-slate-400">Toplanan Sipariş</p>
-                        <p id="ps-orders" class="text-xl font-black text-blue-500 mt-1">-</p>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                        <p class="text-[10px] uppercase font-bold text-slate-400">Sipariş / Saat Hızı</p>
-                        <p id="ps-oph" class="text-xl font-black text-emerald-500 mt-1">-</p>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
-                        <p class="text-[10px] uppercase font-bold text-slate-400">Tespit Edilen Kusur</p>
-                        <p id="ps-defects" class="text-xl font-black text-red-500 mt-1">0</p>
-                        <div class="absolute top-0 right-0 w-2 h-full bg-red-500"></div>
-                    </div>
-                </div>
-                <div class="mt-4 text-xs text-slate-400 italic" id="ps-note">Detaylı istatistikler için Picker Performans CSV'sini Lig sekmesine yükleyin.</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- WHATSAPP MODAL -->
-    <div id="whatsapp-modal" class="fixed inset-0 bg-slate-900/80 z-[80] hidden items-center justify-center p-2 sm:p-4">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-2xl max-h-[95vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="fa-brands fa-whatsapp text-emerald-500 text-2xl"></i> Yönetici Özeti</h2>
-                <button onclick="closeWhatsAppModal()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-times text-2xl"></i></button>
-            </div>
-            <div class="p-0 overflow-y-auto flex-1 flex flex-col items-center" style="background-color: #f1f5f9;">
-                <div class="w-full p-4 sm:p-6 flex flex-col relative" id="whatsapp-render-area"></div>
-            </div>
-            <div class="p-4 border-t bg-slate-50 flex justify-end gap-3">
-                <button onclick="copyWhatsAppTextOnly()" class="bg-slate-800 text-white px-4 py-3 rounded-xl text-sm font-bold shadow-sm">Metin Kopyala</button>
-            </div>
-        </div>
+    <!-- FOTOĞRAF BÜYÜTME MODALI -->
+    <div id="image-modal" class="fixed inset-0 bg-slate-900/95 z-[300] hidden items-center justify-center p-4">
+        <button onclick="closeImageModal()" class="absolute top-6 right-6 text-white bg-slate-800 hover:bg-red-500 rounded-full w-10 h-10 flex items-center justify-center transition shadow-xl">
+            <i class="fa-solid fa-times text-xl"></i>
+        </button>
+        <img id="modal-image" src="" class="max-w-full max-h-[90vh] rounded-lg shadow-2xl border-4 border-white/10">
     </div>
 
     <script>
@@ -481,6 +388,7 @@
             try {
                 const pickerDoc = await db.collection('settings').doc('pickerMap').get();
                 if (pickerDoc.exists) { pickerMap = pickerDoc.data(); localStorage.setItem('yS_Picker_Map', JSON.stringify(pickerMap)); }
+                
                 const notesSnap = await db.collection('notes').get();
                 notesSnap.forEach(doc => { savedNotes[doc.id] = doc.data(); });
                 localStorage.setItem('yS_NextDay_Notes', JSON.stringify(savedNotes));
@@ -541,7 +449,7 @@
 
         function switchView(viewName) {
             currentView = viewName;
-            ['dashboard', 'league', 'detay', 'anlik'].forEach(v => {
+            ['dashboard', 'detay', 'anlik'].forEach(v => {
                 const el = document.getElementById(`view-${v}`);
                 if(el) {
                     el.classList.toggle('hidden', v !== viewName);
@@ -556,7 +464,7 @@
             if(viewName === 'dashboard') updateDashboard();
         }
 
-        // Kapatma Fonksiyonları (Dropdown için)
+        // Dropdown Kapatma
         document.addEventListener('click', function(event) {
             const btnS = document.getElementById('multi-store-btn');
             const menuS = document.getElementById('multi-store-menu');
@@ -568,10 +476,8 @@
         // ==========================================
         function parseExcelJson(rows) {
             if (!rows || rows.length < 2) return [];
-            
             let headerIdx = 0;
-            // İlk 15 satırı tara ve en çok anahtar kelime barındıran satırı "başlık" olarak seç
-            for(let i=0; i<Math.min(15, rows.length); i++) {
+            for(let i=0; i<Math.min(10, rows.length); i++) {
                 if(!rows[i]) continue;
                 let matchCount = 0;
                 rows[i].forEach(cell => {
@@ -579,7 +485,7 @@
                     if(str === 'sipariş no' || str === 'order id' || str === 'ara toplam' || 
                        str === 'original amount' || str === 'final amount' || str === 'restoran adı' ||
                        str === 'customer' || str === 'müşteri' || str === 'product name' || str === 'ürün adı' ||
-                       str === 'employee id' || str === 'employee name' || str === 'ccr3' || str === 'date' || str === 'tarih' || str === 'store') {
+                       str === 'employee id' || str === 'employee name' || str === 'ccr3' || str === 'date' || str === 'tarih' || str === 'order date' || str === 'store') {
                         matchCount++;
                     }
                 });
@@ -625,7 +531,6 @@
             return { store: storeStr, region: 'Belirtilmemiş' };
         }
 
-        // EXCEL SERİAL TARİHLERİNİ KUSURSUZ ÇEVİREN FONKSİYON
         function parseDateString(val) {
             if (!val) return '';
             
@@ -653,12 +558,10 @@
                     try {
                         const data = new Uint8Array(e.target.result);
                         resolve(XLSX.read(data, { type: 'array' }));
-                    } catch(err) {
-                        reject(err);
-                    }
+                    } catch(err) { reject(err); }
                 };
                 reader.onerror = reject;
-                reader.readAsArrayBuffer(file); // HER ZAMAN ARRAYBUFFER KULLANILACAK (DAHA GÜVENLİ)
+                reader.readAsArrayBuffer(file);
             });
         }
 
@@ -673,7 +576,7 @@
         }
 
         // ==========================================
-        // KUSURLU SİPARİŞ İŞLEMLERİ
+        // KUSURLU SİPARİŞ İŞLEMLERİ VE FOTOĞRAF
         // ==========================================
         async function onDetayFileSelected(files) {
             if (!files || files.length === 0) return;
@@ -722,11 +625,11 @@
                         const idKey = keys.find(k => String(k).toLowerCase().trim() === 'order id' || String(k).toLowerCase().includes('sipariş'));
                         if(!idKey || !row[idKey]) return;
 
-                        const dateKey = keys.find(k => String(k).toLowerCase().includes('date') || String(k).toLowerCase().includes('tarih'));
-                        const storeKey = keys.find(k => String(k).toLowerCase().includes('store') || String(k).toLowerCase().includes('mağaza'));
-                        const prodKey = keys.find(k => String(k).toLowerCase().includes('product') || String(k).toLowerCase().includes('ürün'));
-                        const reasonKey = keys.find(k => String(k).toLowerCase().includes('ccr3') || String(k).toLowerCase().includes('sebep'));
-                        const pickerKey = keys.find(k => String(k).toLowerCase().includes('picker'));
+                        const dateKey = keys.find(k => String(k).toLowerCase().trim() === 'order date' || String(k).toLowerCase().includes('date') || String(k).toLowerCase().includes('tarih'));
+                        const storeKey = keys.find(k => String(k).toLowerCase().trim() === 'store' || String(k).toLowerCase().includes('mağaza'));
+                        const prodKey = keys.find(k => String(k).toLowerCase().trim() === 'product name' || String(k).toLowerCase().includes('ürün'));
+                        const reasonKey = keys.find(k => String(k).toLowerCase().trim() === 'ccr3' || String(k).toLowerCase().includes('sebep'));
+                        const pickerKey = keys.find(k => String(k).toLowerCase().trim() === 'picker id' || String(k).toLowerCase().includes('picker'));
 
                         let storeStrRaw = storeKey ? String(row[storeKey]) : 'Bilinmiyor';
                         let regionStr = 'Belirtilmemiş';
@@ -784,7 +687,7 @@
 
             } catch(e) {
                 console.error("Detay okuma hatası:", e);
-                if(statusBox) statusBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Dosya okuma hatası! Lütfen geçerli bir Excel (.xlsx) veya CSV dosyası seçtiğinizden emin olun.`;
+                if(statusBox) statusBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Dosya okuma hatası! Lütfen geçerli bir Excel (.xlsx) veya CSV dosyası seçin.`;
             }
         }
 
@@ -923,9 +826,7 @@
                     <td class="py-3 px-4 font-bold text-xs">${p.store}</td>
                     <td class="py-3 px-4 truncate max-w-[150px] text-xs" title="${p.product}">${p.product}</td>
                     <td class="py-3 px-4"><span class="bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-[10px] font-bold">${p.reason}</span></td>
-                    <td class="py-3 px-4">
-                        <button onclick="openPickerStats('${p.picker}', '${p.store}')" class="text-indigo-600 dark:text-indigo-400 hover:underline font-bold text-xs flex items-center gap-1"><i class="fa-solid fa-id-badge"></i> ${p.pickerName}</button>
-                    </td>
+                    <td class="py-3 px-4 font-bold text-xs text-indigo-600">${p.pickerName}</td>
                     <td class="py-3 px-4 w-72">
                         <div class="flex flex-col gap-1.5">
                             <textarea id="note-${p.uid}" rows="2" class="w-full text-[11px] p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none dark:text-white placeholder-slate-400" placeholder="Açıklama...">${p.note || ''}</textarea>
@@ -1123,7 +1024,6 @@
                 let status = (c && c.status) ? c.status : (e ? e.status : 'Tamamlandı');
                 let prods = (e && e.prods) ? e.prods : 'Ürün dökümü yok';
 
-                // İPTAL OLANLARI LİSTEDEN AT
                 const stUpper = status.toUpperCase();
                 if (stUpper.includes('CANCEL') || stUpper.includes('İPTAL')) {
                     return;
@@ -1342,42 +1242,6 @@
             XLSX.writeFile(wb, "Yemeksepeti_Raporu.xlsx");
         }
 
-        // ==========================================
-        // WHATSAPP
-        // ==========================================
-        function openWhatsAppModal() {
-            if (detayParsedData.length === 0) return alert("Lütfen önce veri yükleyin.");
-            const notedItems = detayParsedData.filter(p => (p.note && p.note.trim() !== '') || p.img);
-            if (notedItems.length === 0) return alert("Raporlanacak kayıt yok. Lütfen listedeki siparişlere açıklama/fotoğraf ekleyin.");
-
-            document.getElementById('whatsapp-modal').classList.remove('hidden');
-            document.getElementById('whatsapp-modal').classList.add('flex');
-            
-            let htmlText = `<div style="background: linear-gradient(135deg, #ff0050, #ff4d79); padding: 18px; border-radius: 16px 16px 0 0; color: white; text-align: center;">
-                <h2 style="margin: 0; font-size: 18px; font-weight: 900;">YEMEKSEPETİ KUSUR RAPORU</h2>
-                <p style="margin: 4px 0 0 0; font-size: 12px;">Tarih: ${new Date().toLocaleDateString('tr-TR')} • Toplam: ${notedItems.length}</p>
-            </div><div style="background: #ffffff; padding: 20px; border-radius: 0 0 16px 16px; display: flex; flex-direction: column; gap: 16px;">`;
-
-            notedItems.forEach((p, i) => {
-                htmlText += `<div style="border: 1px solid #f1f5f9; padding: 12px; border-radius: 12px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span style="font-size: 12px; font-weight: 800; color: #ff0050;">Kayıt #${i + 1}</span>
-                        <span style="font-size: 10px; background: #f1f5f9; color: #475569; padding: 2px 6px; border-radius: 4px;">${p.orderId}</span>
-                    </div>
-                    <div style="font-size: 13px; color: #334155; line-height: 1.6;">
-                        <div><b>Mağaza:</b> ${p.store}</div>
-                        <div><b>Ürün:</b> ${p.product}</div>
-                        <div><b>Sebep:</b> <span style="background:#fef3c7; color:#b45309; padding:2px 4px; border-radius:4px; font-weight:bold; font-size:11px;">${p.reason}</span></div>
-                    </div>`;
-                if(p.note) htmlText += `<div style="margin-top: 8px; padding: 8px; background: #f8fafc; border-left: 3px solid #64748b; font-size: 12px;"><b>Not:</b> ${p.note}</div>`;
-                if(p.img) htmlText += `<div style="margin-top: 10px; text-align: center;"><img src="${p.img}" style="max-width:100%; width:320px; border-radius:8px; border:1px solid #cbd5e1;"></div>`;
-                htmlText += `</div>`;
-            });
-            document.getElementById('whatsapp-render-area').innerHTML = htmlText + `</div>`;
-        }
-
-        function closeWhatsAppModal() { document.getElementById('whatsapp-modal').classList.add('hidden'); }
-        function copyWhatsAppTextOnly() { alert("Kopyalama tamamlandı (Demo)."); }
     </script>
 </body>
 </html>
