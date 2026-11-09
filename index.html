@@ -3,46 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yemeksepeti - Sipariş Karşılaştırma Portalı</title>
+    <title>Yemeksepeti Market - Profesyonel Sipariş Karşılaştırma Merkezi</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- SheetJS Kütüphanesi -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <script>
         tailwind.config = {
             darkMode: 'class',
-            theme: { extend: { colors: { brand: { pink: '#ea004b', dark: '#111827' } } }, fontFamily: { sans: ['Inter', 'sans-serif'] } }
+            theme: { 
+                extend: { 
+                    colors: { brand: { pink: '#ea004b', dark: '#0f172a' } },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                } 
+            }
         }
     </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .dark body { background-color: #0f172a; }
-        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.2); }
+        .dark body { background-color: #0b1120; }
+        
+        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.2); }
         .dark .glass-panel { background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255,255,255,0.05); }
+        
         .shadow-soft { box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08); }
         .dark .shadow-soft { box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5); }
+        
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
         .dark ::-webkit-scrollbar-thumb { background: #334155; }
+        
         .row-anim { animation: fadeSlideUp 0.4s ease-out forwards; opacity: 0; transform: translateY(10px); }
         @keyframes fadeSlideUp { to { opacity: 1; transform: translateY(0); } }
+        
         th { cursor: pointer; transition: all 0.2s ease; user-select: none; }
         th:hover { color: #ea004b; background-color: rgba(234, 0, 75, 0.05); }
+        
+        /* Drag and Drop Hover Efekti */
+        .drag-over { border-color: #ea004b !important; background-color: rgba(234, 0, 75, 0.05) !important; }
+        .dark .drag-over { background-color: rgba(234, 0, 75, 0.15) !important; }
     </style>
 </head>
 <body class="text-slate-800 dark:text-slate-200 transition-colors duration-300">
 
-    <!-- HEADER -->
+    <!-- ÜST MENÜ -->
     <header class="glass-panel sticky top-0 z-50 shadow-sm border-b border-slate-200 dark:border-slate-800">
         <div class="max-w-[1600px] mx-auto px-6 py-4 flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-brand-pink text-white flex items-center justify-center shadow-lg shadow-pink-500/20">
+                <div class="w-12 h-12 rounded-2xl bg-brand-pink text-white flex items-center justify-center shadow-lg shadow-pink-500/30">
                     <i class="fa-solid fa-code-compare text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">Sipariş Karşılaştırma Zekası</h1>
-                    <p class="text-xs text-slate-500 font-medium tracking-wide">Yemeksepeti Market - Detaylı Finansal Analiz (İptaller Hariç)</p>
+                    <h1 class="text-xl font-black tracking-tight text-slate-900 dark:text-white">Sipariş Karşılaştırma Zekası</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium tracking-wide">Yemeksepeti Market - Detaylı Finansal Analiz (İptaller Hariç)</p>
                 </div>
             </div>
             <div class="flex items-center gap-3">
@@ -52,7 +69,7 @@
                 <button onclick="toggleTheme()" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center text-slate-600 dark:text-amber-400">
                     <i id="theme-icon" class="fa-solid fa-moon"></i>
                 </button>
-                <button onclick="exportData()" class="bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-2">
+                <button onclick="exportToExcel()" class="bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-2">
                     <i class="fa-solid fa-download"></i> Raporla
                 </button>
                 <button onclick="clearData()" class="bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-600 text-sm font-bold px-4 py-2.5 rounded-xl transition">
@@ -67,19 +84,23 @@
         <!-- YÜKLEME VE ÖZET ALANI -->
         <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
             
-            <!-- DOSYA YÜKLEME -->
-            <div class="xl:col-span-1 bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-soft border border-slate-100 dark:border-slate-800 flex flex-col justify-center">
-                <label for="file-upload" class="border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-brand-pink dark:hover:border-brand-pink rounded-2xl p-8 text-center cursor-pointer transition flex flex-col items-center gap-4 bg-slate-50 dark:bg-slate-900/50 group">
-                    <div class="w-16 h-16 rounded-full bg-pink-50 dark:bg-pink-900/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <!-- DOSYA YÜKLEME (Sürükle Bırak Destekli) -->
+            <div class="xl:col-span-1 bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-soft border border-slate-100 dark:border-slate-800 flex flex-col justify-center relative">
+                <!-- Label'a drag & drop eventleri bağlandı -->
+                <label id="drop-zone" for="file-upload" class="border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-[#ff0050] dark:hover:border-[#ff0050] rounded-2xl p-8 text-center cursor-pointer transition flex flex-col items-center gap-4 bg-slate-50 dark:bg-slate-900/50 group"
+                       ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+                    
+                    <div class="w-16 h-16 rounded-full bg-pink-50 dark:bg-pink-900/20 flex items-center justify-center group-hover:scale-110 transition-transform pointer-events-none">
                         <i class="fa-solid fa-file-import text-3xl text-brand-pink"></i>
                     </div>
-                    <div>
+                    <div class="pointer-events-none">
                         <p class="text-sm font-black text-slate-700 dark:text-slate-200">Dosyaları Buraya Bırakın</p>
                         <p class="text-[11px] text-slate-500 mt-1 font-medium leading-relaxed">orders.csv ve orderDetails.xlsx<br>(Birlikte veya sırayla yükleyebilirsiniz)</p>
                     </div>
-                    <input id="file-upload" type="file" multiple accept=".csv, .xlsx, .xls" class="hidden" onchange="handleFileUpload(event)">
+                    <!-- Tıklanarak yükleme için input -->
+                    <input id="file-upload" type="file" multiple accept=".csv, .xlsx, .xls" class="hidden" onchange="handleFileSelect(event)">
                 </label>
-                <div id="upload-status" class="mt-4 text-xs font-bold text-center text-slate-500 hidden"></div>
+                <div id="upload-status" class="absolute bottom-1 left-0 w-full text-xs font-bold text-center text-slate-500 hidden pb-2"></div>
             </div>
 
             <!-- KPI KARTLARI -->
@@ -111,7 +132,7 @@
                 </div>
 
                 <!-- TOPLAM KAYIP -->
-                <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-soft border border-slate-100 dark:border-slate-800 relative overflow-hidden flex flex-col justify-between group border-b-4 border-b-[#ea004b]">
+                <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-soft border border-slate-100 dark:border-slate-800 relative overflow-hidden flex flex-col justify-between group border-b-4 border-b-brand-pink">
                     <div class="flex justify-between items-start relative z-10">
                         <div>
                             <p class="text-[10px] font-extrabold uppercase tracking-widest text-brand-pink">Kayıp / Fark Toplamı</p>
@@ -152,7 +173,7 @@
             <!-- Tablo Gövdesi -->
             <div class="overflow-x-auto max-h-[650px] relative rounded-b-3xl">
                 <table class="w-full text-left text-xs whitespace-nowrap">
-                    <thead class="bg-slate-100/80 dark:bg-slate-900/80 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider sticky top-0 z-10 backdrop-blur-md shadow-sm">
+                    <thead class="bg-slate-50/90 dark:bg-slate-900/90 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider sticky top-0 z-10 backdrop-blur-md shadow-sm">
                         <tr>
                             <th class="py-4 px-5 border-r border-slate-100 dark:border-slate-800 w-48" onclick="sortTable('id')">Sipariş & Zaman <i class="fa-solid fa-sort ml-1 opacity-30"></i></th>
                             <th class="py-4 px-5 border-r border-slate-100 dark:border-slate-800 w-48" onclick="sortTable('customer')">Müşteri Bilgisi <i class="fa-solid fa-sort ml-1 opacity-30"></i></th>
@@ -214,12 +235,12 @@
 
         function updateThemeIcon() {
             const icon = document.getElementById('theme-icon');
-            if(isDarkMode) { icon.classList.replace('fa-moon', 'fa-sun'); } 
-            else { icon.classList.replace('fa-sun', 'fa-moon'); }
+            if(isDarkMode) { icon.classList.remove('fa-moon'); icon.classList.add('fa-sun'); } 
+            else { icon.classList.remove('fa-sun'); icon.classList.add('fa-moon'); }
         }
 
         function clearData() {
-            if(confirm("Tüm karşılaştırma verileri silinecek. Emin misiniz?")) {
+            if(confirm("Tüm karşılaştırma verileri ve hafıza silinecek. Emin misiniz?")) {
                 localStorage.removeItem('ys_merged_data');
                 localStorage.removeItem('ys_total_count');
                 mergedData = [];
@@ -233,10 +254,46 @@
         }
 
         // =========================================
-        // AKILLI DOSYA OKUMA VE AYRIŞTIRMA (PARSER)
+        // DRAG & DROP (SÜRÜKLE BIRAK) İŞLEYİCİLERİ
+        // =========================================
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('drop-zone').classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('drop-zone').classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('drop-zone').classList.remove('drag-over');
+            
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files && files.length > 0) {
+                // Seçilen dosyaları input'a manuel ata ve işleme gönder
+                document.getElementById('file-upload').files = files;
+                processUploadedFiles(files);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                processUploadedFiles(files);
+            }
+        }
+
+        // =========================================
+        // YARDIMCI FONKSİYONLAR
         // =========================================
         function formatMoney(val) {
-            if (val === null || val === undefined || val === '') return null;
+            if (!val) return null;
             let str = String(val).replace(/TRY/g, '').replace(/₺/g, '').trim();
             if (!str || str.toLowerCase() === 'nan') return null;
             str = str.replace(',', '.');
@@ -249,39 +306,15 @@
             return '₺' + n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
-        async function readWorkbook(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-                        resolve(wb);
-                    } catch(err) { reject(err); }
-                };
-                reader.onerror = reject;
-                reader.readAsArrayBuffer(file);
-            });
-        }
-
-        async function readCSV(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const wb = XLSX.read(e.target.result, { type: 'string' });
-                        resolve(wb);
-                    } catch(err) { reject(err); }
-                };
-                reader.onerror = reject;
-                reader.readAsText(file);
-            });
-        }
-
-        function extractDataFromSheet(sheet) {
+        // =========================================
+        // AKILLI DOSYA OKUYUCU (PARSER)
+        // =========================================
+        function extractExcelData(sheet) {
             const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
             if (!rows || rows.length < 2) return [];
 
             let headerIndex = 0;
+            // İlk 15 satırı tara ve en doğru başlık satırını bul
             for(let i=0; i<Math.min(15, rows.length); i++) {
                 if(!rows[i]) continue;
                 let matches = 0;
@@ -294,7 +327,6 @@
 
             const headers = rows[headerIndex];
             const result = [];
-            
             for(let i = headerIndex + 1; i < rows.length; i++) {
                 if(!rows[i] || rows[i].length === 0) continue;
                 const obj = {};
@@ -306,35 +338,48 @@
             return result;
         }
 
+        // CSV veya Excel okurken hata fırlatmasını (styles.xml) engelleyen kod
+        async function readFileData(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        let wb;
+                        const fName = file.name.toLowerCase();
+                        if (fName.endsWith('.csv')) {
+                            // CSV'yi text olarak okuyoruz
+                            wb = XLSX.read(e.target.result, { type: 'string' });
+                            const data = extractExcelData(wb.Sheets[wb.SheetNames[0]]);
+                            resolve({ type: 'csv', data: data });
+                        } else {
+                            // Excel'i binary buffer okuyoruz ve bozuk stilleri es geçiyoruz
+                            wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellStyles: false, sheetStubs: true });
+                            const data = extractExcelData(wb.Sheets[wb.SheetNames[0]]);
+                            resolve({ type: 'xlsx', data: data });
+                        }
+                    } catch(err) { reject(err); }
+                };
+                reader.onerror = reject;
+                
+                if (file.name.toLowerCase().endsWith('.csv')) reader.readAsText(file);
+                else reader.readAsArrayBuffer(file);
+            });
+        }
+
         // =========================================
-        // ANA İŞLEM BİLOĞU (KARŞILAŞTIRMA)
+        // ANA İŞLEM (KARŞILAŞTIRMA MANTIĞI)
         // =========================================
-        async function handleFileUpload(event) {
-            const files = event.target.files;
-            if (!files || files.length === 0) return;
-            
+        async function processUploadedFiles(files) {
             const statusBox = document.getElementById('upload-status');
             statusBox.classList.remove('hidden');
-            statusBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-brand-pink mr-2"></i> Veriler analiz ediliyor...`;
-
-            let csvCount = 0, xlsxCount = 0;
+            statusBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-brand-pink mr-2"></i> Dosyalar analiz ediliyor...`;
 
             try {
                 for(let file of files) {
-                    const fname = file.name.toLowerCase();
-                    let wb;
-                    if (fname.endsWith('.csv')) {
-                        wb = await readCSV(file);
-                        const data = extractDataFromSheet(wb.Sheets[wb.SheetNames[0]]);
-                        // Sadece en son yüklenen değil, peşpeşe yüklenen CSV'leri birleştir (isteğe bağlı)
-                        csvRawData = csvRawData.concat(data);
-                        csvCount++;
-                    } else if (fname.endsWith('.xlsx') || fname.endsWith('.xls')) {
-                        wb = await readWorkbook(file);
-                        const data = extractDataFromSheet(wb.Sheets[wb.SheetNames[0]]);
-                        xlsxRawData = xlsxRawData.concat(data);
-                        xlsxCount++;
-                    }
+                    const result = await readFileData(file);
+                    // Hafızada tutmak için önceki verilere ekle
+                    if(result.type === 'csv') csvRawData = csvRawData.concat(result.data);
+                    if(result.type === 'xlsx') xlsxRawData = xlsxRawData.concat(result.data);
                 }
 
                 if(csvRawData.length === 0 && xlsxRawData.length === 0) {
@@ -342,24 +387,23 @@
                     return;
                 }
 
-                processMatchLogic();
+                runMatchingLogic();
                 
                 document.getElementById('status-badge').style.display = 'flex';
                 statusBox.innerHTML = `<span class="text-emerald-500"><i class="fa-solid fa-check mr-1"></i> Analiz başarıyla tamamlandı.</span>`;
-                setTimeout(() => statusBox.classList.add('hidden'), 3000);
+                setTimeout(() => statusBox.classList.add('hidden'), 4000);
 
             } catch (err) {
                 console.error(err);
-                statusBox.innerHTML = `<span class="text-red-500"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Dosya formatı desteklenmiyor veya bozuk.</span>`;
+                statusBox.innerHTML = `<span class="text-red-500"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Hata: Dosya formatı bozuk veya okunamıyor.</span>`;
             }
-            event.target.value = '';
         }
 
-        function processMatchLogic() {
+        function runMatchingLogic() {
             const csvMap = new Map();
             const excelMap = new Map();
 
-            // CSV'den verileri topla
+            // 1. CSV AYRIŞTIRMA (orders.csv)
             csvRawData.forEach(r => {
                 const keys = Object.keys(r);
                 const idKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'order id' || s.includes('sipariş no'); });
@@ -370,20 +414,19 @@
                 const statusKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'status' || s.includes('durum'); });
                 const timeKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'placed at' || s.includes('zaman'); });
                 const paymentKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'payment method' || s.includes('ödeme'); });
-                const pickerKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'picker' || s.includes('toplayıcı'); }); // YENİ: PİCKER BİLGİSİ
+                const pickerKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'picker' || s.includes('toplayıcı'); });
 
                 let origAmt = formatMoney(r['Original Amount'] || r['Sipariş Tutarı']);
                 let finalAmt = formatMoney(r['Final Amount'] || r['Teslimat Tutarı']);
                 let statusVal = statusKey ? String(r[statusKey]).trim() : '';
                 
-                // Picker N/A temizliği
                 let pickerVal = pickerKey ? String(r[pickerKey]).replace(/N\/A/ig, '').trim() : '-';
                 if(!pickerVal) pickerVal = '-';
 
                 csvMap.set(oid, { 
                     orig: origAmt, 
                     final: finalAmt, 
-                    cust: custKey ? r[custKey] : 'Bilinmeyen Müşteri', 
+                    cust: custKey ? r[custKey] : 'Müşteri Bilinmiyor', 
                     status: statusVal,
                     time: timeKey ? r[timeKey] : '',
                     payment: paymentKey ? r[paymentKey] : '',
@@ -391,7 +434,7 @@
                 });
             });
 
-            // Excel'den verileri topla
+            // 2. EXCEL AYRIŞTIRMA (orderDetails.xlsx)
             xlsxRawData.forEach(r => {
                 const keys = Object.keys(r);
                 const idKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'sipariş no' || s === 'order id'; });
@@ -411,6 +454,7 @@
                 });
             });
 
+            // 3. EŞLEŞTİRME VE FARK HESAPLAMA
             const allIds = new Set([...csvMap.keys(), ...excelMap.keys()]);
             totalAnalyzedCount = allIds.size;
             mergedData = [];
@@ -419,12 +463,12 @@
                 const c = csvMap.get(id);
                 const e = excelMap.get(id);
 
-                let cust = (c && c.cust !== 'Bilinmeyen Müşteri') ? c.cust : (e && e.cust ? e.cust : 'Bilinmeyen Müşteri');
+                let cust = (c && c.cust !== 'Müşteri Bilinmiyor') ? c.cust : (e && e.cust ? e.cust : 'Müşteri Bilinmiyor');
                 let status = (c && c.status) ? c.status : (e && e.status ? e.status : '-');
                 let prods = (e && e.prods) ? e.prods : 'Ürün verisi bulunamadı';
                 let time = (c && c.time) ? c.time : (e && e.time ? e.time : '-');
                 let payment = (c && c.payment) ? c.payment : 'Online Kredi Kartı';
-                let picker = (c && c.picker) ? c.picker : '-'; // Picker bilgisini çek
+                let picker = (c && c.picker) ? c.picker : '-'; 
 
                 const stUpper = status.toUpperCase();
                 // Kesinlikle iptal olanları listeye dahil etmiyoruz
@@ -435,11 +479,12 @@
                 let expectedAmt = (e && e.araToplam !== null) ? e.araToplam : (c ? c.orig : null);
                 let actualAmt = c ? c.final : null;
 
+                // Veri yoksa veya teslimat tutarı 0 ise pas geç (Sipariş henüz kuryede olabilir)
                 if (expectedAmt === null || actualAmt === null || actualAmt === 0) return;
 
                 let diff = expectedAmt - actualAmt;
                 
-                // Sadece kuruş farkından büyük olan "gerçek" farkları tespit et
+                // Sadece kuruş farkından büyük olan "gerçek" farkları tespit et (örn: 0.05 TL'den büyük farklar)
                 if (Math.abs(diff) >= 0.05) {
                     
                     let aiNote = "";
@@ -455,7 +500,7 @@
                         status: status,
                         time: time,
                         payment: payment,
-                        picker: picker, // Picker datası kaydedildi
+                        picker: picker, 
                         originalAmt: expectedAmt,
                         finalAmt: actualAmt,
                         diffAmt: diff, 
@@ -477,6 +522,7 @@
         // =========================================
         function updateKPIs() {
             let totalLoss = 0;
+            // Sadece Şirketin kaybettiği tutarları topla (Beklenen > Gerçekleşen)
             mergedData.forEach(m => {
                 if (m.diffAmt > 0) totalLoss += m.diffAmt; 
             });
@@ -521,7 +567,7 @@
 
             if (filtered.length === 0) {
                 tbody.innerHTML = `
-                    <tr><td colspan="8" class="text-center py-24">
+                    <tr><td colspan="7" class="text-center py-24">
                         <div class="flex flex-col items-center justify-center text-slate-400">
                             <i class="fa-solid fa-face-smile text-5xl mb-4 opacity-30 text-emerald-500"></i>
                             <p class="font-bold text-sm text-slate-500">Harika! Filtreye uyan tutar farkı bulunamadı.</p>
@@ -553,7 +599,6 @@
                         <p class="font-bold text-sm text-slate-800 dark:text-slate-200 truncate max-w-[150px]" title="${m.customer}">${m.customer}</p>
                         <p class="text-[10px] text-slate-500 mt-1 font-medium truncate max-w-[150px]" title="${m.payment}"><i class="fa-regular fa-credit-card"></i> ${m.payment}</p>
                     </td>
-                    <!-- YENİ: Toplayıcı (Picker) Sütunu -->
                     <td class="py-4 px-5 border-r border-slate-100 dark:border-slate-800">
                         <p class="font-bold text-xs text-indigo-600 dark:text-indigo-400 truncate max-w-[120px]" title="${m.picker}"><i class="fa-solid fa-user-tag text-[10px] mr-1"></i> ${m.picker}</p>
                     </td>
@@ -563,7 +608,7 @@
                     <td class="py-4 px-5 border-r border-slate-100 dark:border-slate-800 text-right font-black ${diffColorClass} text-base">${diffSign}${displayMoney(Math.abs(m.diffAmt))}</td>
                     <td class="py-4 px-5">
                         <div class="flex flex-col gap-2">
-                            <p class="text-xs text-slate-600 dark:text-slate-400 leading-snug whitespace-normal break-words max-w-[350px] line-clamp-2" title="${m.products}">
+                            <p class="text-xs text-slate-600 dark:text-slate-400 leading-snug whitespace-normal break-words max-w-[400px] line-clamp-2" title="${m.products}">
                                 ${m.products}
                             </p>
                             <div>${m.aiNote}</div>
@@ -577,7 +622,7 @@
         // =========================================
         // EXCEL İHRAC (EXPORT)
         // =========================================
-        function exportData() {
+        function exportToExcel() {
             if(mergedData.length === 0) return alert("İndirilecek veri bulunamadı.");
             const exportArr = mergedData.map(m => ({
                 'Sipariş No': m.id,
@@ -594,7 +639,6 @@
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.json_to_sheet(exportArr);
             
-            // Sütun genişliklerini ayarla (Picker sütunu dahil edildi)
             ws['!cols'] = [{wch: 20}, {wch: 18}, {wch: 20}, {wch: 25}, {wch: 20}, {wch: 15}, {wch: 15}, {wch: 25}, {wch: 15}, {wch: 80}];
             
             XLSX.utils.book_append_sheet(wb, ws, "Fark Analizi");
