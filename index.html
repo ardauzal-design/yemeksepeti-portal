@@ -7,7 +7,6 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- SheetJS Kütüphanesi -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <script>
@@ -26,7 +25,7 @@
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .dark body { background-color: #0b1120; }
         
-        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.2); }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.2); }
         .dark .glass-panel { background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255,255,255,0.05); }
         
         .shadow-soft { box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08); }
@@ -43,9 +42,9 @@
         th { cursor: pointer; transition: all 0.2s ease; user-select: none; }
         th:hover { color: #ea004b; background-color: rgba(234, 0, 75, 0.05); }
         
-        /* Drag and Drop Hover Efekti */
-        .drag-over { border-color: #ea004b !important; background-color: rgba(234, 0, 75, 0.05) !important; }
-        .dark .drag-over { background-color: rgba(234, 0, 75, 0.15) !important; }
+        /* Drag and Drop Aktif Sürükleme Efekti */
+        .drag-over { border-color: #ea004b !important; background-color: rgba(234, 0, 75, 0.08) !important; transform: scale(1.02); }
+        .dark .drag-over { background-color: rgba(234, 0, 75, 0.20) !important; }
     </style>
 </head>
 <body class="text-slate-800 dark:text-slate-200 transition-colors duration-300">
@@ -63,16 +62,13 @@
                 </div>
             </div>
             <div class="flex items-center gap-3">
-                <div id="status-badge" class="hidden items-center gap-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-3 py-2 rounded-xl text-xs font-bold border border-emerald-200 dark:border-emerald-800/50">
-                    <i class="fa-solid fa-check-circle"></i> Senkronize
-                </div>
                 <button onclick="toggleTheme()" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center text-slate-600 dark:text-amber-400">
                     <i id="theme-icon" class="fa-solid fa-moon"></i>
                 </button>
-                <button onclick="exportToExcel()" class="bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-2">
+                <button onclick="exportData()" class="bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-2">
                     <i class="fa-solid fa-download"></i> Raporla
                 </button>
-                <button onclick="clearData()" class="bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-600 text-sm font-bold px-4 py-2.5 rounded-xl transition">
+                <button onclick="clearData()" class="bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-600 text-sm font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2">
                     <i class="fa-solid fa-trash-can"></i> Temizle
                 </button>
             </div>
@@ -84,12 +80,9 @@
         <!-- YÜKLEME VE ÖZET ALANI -->
         <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
             
-            <!-- DOSYA YÜKLEME (Sürükle Bırak Destekli) -->
+            <!-- DOSYA YÜKLEME (Gelişmiş JS Sürükle-Bırak Motoru) -->
             <div class="xl:col-span-1 bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-soft border border-slate-100 dark:border-slate-800 flex flex-col justify-center relative">
-                <!-- Label'a drag & drop eventleri bağlandı -->
-                <label id="drop-zone" for="file-upload" class="border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-[#ff0050] dark:hover:border-[#ff0050] rounded-2xl p-8 text-center cursor-pointer transition flex flex-col items-center gap-4 bg-slate-50 dark:bg-slate-900/50 group"
-                       ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
-                    
+                <label id="drop-zone" for="file-upload" class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 flex flex-col items-center gap-4 bg-slate-50 dark:bg-slate-900/50 group">
                     <div class="w-16 h-16 rounded-full bg-pink-50 dark:bg-pink-900/20 flex items-center justify-center group-hover:scale-110 transition-transform pointer-events-none">
                         <i class="fa-solid fa-file-import text-3xl text-brand-pink"></i>
                     </div>
@@ -97,10 +90,9 @@
                         <p class="text-sm font-black text-slate-700 dark:text-slate-200">Dosyaları Buraya Bırakın</p>
                         <p class="text-[11px] text-slate-500 mt-1 font-medium leading-relaxed">orders.csv ve orderDetails.xlsx<br>(Birlikte veya sırayla yükleyebilirsiniz)</p>
                     </div>
-                    <!-- Tıklanarak yükleme için input -->
                     <input id="file-upload" type="file" multiple accept=".csv, .xlsx, .xls" class="hidden" onchange="handleFileSelect(event)">
                 </label>
-                <div id="upload-status" class="absolute bottom-1 left-0 w-full text-xs font-bold text-center text-slate-500 hidden pb-2"></div>
+                <div id="upload-status" class="mt-4 text-xs font-bold text-center text-slate-500 hidden pb-2"></div>
             </div>
 
             <!-- KPI KARTLARI -->
@@ -131,16 +123,16 @@
                     <div class="w-32 h-32 bg-amber-500 rounded-full blur-3xl opacity-5 absolute -bottom-10 -right-10"></div>
                 </div>
 
-                <!-- TOPLAM KAYIP -->
+                <!-- TOPLAM HAREKET -->
                 <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-soft border border-slate-100 dark:border-slate-800 relative overflow-hidden flex flex-col justify-between group border-b-4 border-b-brand-pink">
                     <div class="flex justify-between items-start relative z-10">
                         <div>
-                            <p class="text-[10px] font-extrabold uppercase tracking-widest text-brand-pink">Kayıp / Fark Toplamı</p>
+                            <p class="text-[10px] font-extrabold uppercase tracking-widest text-brand-pink">Toplam Hareket Hacmi</p>
                             <h3 id="kpi-diff-sum" class="text-4xl font-black text-brand-pink mt-2">₺0,00</h3>
                         </div>
                         <div class="w-12 h-12 rounded-2xl bg-pink-50 dark:bg-pink-900/20 flex items-center justify-center text-brand-pink text-xl group-hover:rotate-12 transition-transform"><i class="fa-solid fa-wallet"></i></div>
                     </div>
-                    <p class="text-[11px] font-medium text-slate-400 mt-4 relative z-10"><i class="fa-solid fa-calculator"></i> (Sipariş Tutarı - Teslimat Tutarı)</p>
+                    <p class="text-[11px] font-medium text-slate-400 mt-4 relative z-10"><i class="fa-solid fa-calculator"></i> (Tüm eksi ve artı farkların toplamı)</p>
                     <div class="w-32 h-32 bg-brand-pink rounded-full blur-3xl opacity-5 absolute -bottom-10 -right-10"></div>
                 </div>
             </div>
@@ -159,8 +151,8 @@
                 
                 <div class="flex items-center gap-3 w-full sm:w-auto">
                     <select id="filter-status" onchange="renderTable()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-brand-pink/50 cursor-pointer">
-                        <option value="all">Tüm Farklar</option>
-                        <option value="picked_up">Sadece Teslim Edilenler</option>
+                        <option value="all">Tüm Farklı Siparişler</option>
+                        <option value="picked_up">Sadece Teslim Edilenler (Picked Up)</option>
                     </select>
 
                     <div class="relative w-full sm:w-72">
@@ -219,8 +211,9 @@
         window.onload = () => {
             if (isDarkMode) document.documentElement.classList.add('dark');
             updateThemeIcon();
+            bindDragAndDrop();
+            
             if (mergedData.length > 0) {
-                document.getElementById('status-badge').style.display = 'flex';
                 updateKPIs();
                 renderTable();
             }
@@ -247,39 +240,35 @@
                 csvRawData = [];
                 xlsxRawData = [];
                 totalAnalyzedCount = 0;
-                document.getElementById('status-badge').style.display = 'none';
                 updateKPIs();
                 renderTable();
             }
         }
 
         // =========================================
-        // DRAG & DROP (SÜRÜKLE BIRAK) İŞLEYİCİLERİ
+        // SÜRÜKLE BIRAK (DRAG & DROP) MOTORU
         // =========================================
-        function handleDragOver(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            document.getElementById('drop-zone').classList.add('drag-over');
-        }
+        function bindDragAndDrop() {
+            const dropZone = document.getElementById('drop-zone');
+            if(!dropZone) return;
 
-        function handleDragLeave(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            document.getElementById('drop-zone').classList.remove('drag-over');
-        }
-
-        function handleDrop(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            document.getElementById('drop-zone').classList.remove('drag-over');
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('drag-over');
+            });
             
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            if (files && files.length > 0) {
-                // Seçilen dosyaları input'a manuel ata ve işleme gönder
-                document.getElementById('file-upload').files = files;
-                processUploadedFiles(files);
-            }
+            dropZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('drag-over');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('drag-over');
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    processUploadedFiles(e.dataTransfer.files);
+                }
+            });
         }
 
         function handleFileSelect(e) {
@@ -290,10 +279,10 @@
         }
 
         // =========================================
-        // YARDIMCI FONKSİYONLAR
+        // YARDIMCI DÖNÜŞTÜRÜCÜLER
         // =========================================
         function formatMoney(val) {
-            if (!val) return null;
+            if (val === null || val === undefined || val === '') return null;
             let str = String(val).replace(/TRY/g, '').replace(/₺/g, '').trim();
             if (!str || str.toLowerCase() === 'nan') return null;
             str = str.replace(',', '.');
@@ -307,63 +296,52 @@
         }
 
         // =========================================
-        // AKILLI DOSYA OKUYUCU (PARSER)
+        // AKILLI VE KESİN DOSYA OKUYUCU (PARSER)
         // =========================================
         function extractExcelData(sheet) {
             const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
             if (!rows || rows.length < 2) return [];
 
             let headerIndex = 0;
-            // İlk 15 satırı tara ve en doğru başlık satırını bul
-            for(let i=0; i<Math.min(15, rows.length); i++) {
-                if(!rows[i]) continue;
+            // İlk 20 satırı tara ve en çok anahtar kelime eşleşmesi olan satırı başlık olarak al
+            for(let i=0; i<Math.min(20, rows.length); i++) {
+                if(!rows[i] || !Array.isArray(rows[i])) continue;
                 let matches = 0;
                 rows[i].forEach(cell => {
+                    if(cell === null || cell === undefined) return;
                     const c = String(cell).toLowerCase().trim();
-                    if(c === 'order id' || c === 'sipariş no' || c === 'customer' || c === 'müşteri' || c === 'ara toplam' || c === 'original amount' || c === 'final amount' || c === 'sipariş ürünleri') matches++;
+                    if(c === 'order id' || c === 'sipariş no' || c === 'customer' || c === 'müşteri' || 
+                       c === 'ara toplam' || c === 'original amount' || c === 'final amount' || 
+                       c === 'sipariş ürünleri') matches++;
                 });
                 if(matches >= 2) { headerIndex = i; break; }
             }
 
             const headers = rows[headerIndex];
+            if(!headers) return []; // Geçersiz dosya ise boş döner
+
             const result = [];
             for(let i = headerIndex + 1; i < rows.length; i++) {
                 if(!rows[i] || rows[i].length === 0) continue;
                 const obj = {};
                 headers.forEach((h, idx) => {
-                    if(h) obj[String(h).trim()] = rows[i][idx] !== undefined ? rows[i][idx] : '';
+                    if(h !== undefined && h !== null) {
+                        obj[String(h).trim()] = rows[i][idx] !== undefined ? rows[i][idx] : '';
+                    }
                 });
                 result.push(obj);
             }
             return result;
         }
 
-        // CSV veya Excel okurken hata fırlatmasını (styles.xml) engelleyen kod
-        async function readFileData(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        let wb;
-                        const fName = file.name.toLowerCase();
-                        if (fName.endsWith('.csv')) {
-                            // CSV'yi text olarak okuyoruz
-                            wb = XLSX.read(e.target.result, { type: 'string' });
-                            const data = extractExcelData(wb.Sheets[wb.SheetNames[0]]);
-                            resolve({ type: 'csv', data: data });
-                        } else {
-                            // Excel'i binary buffer okuyoruz ve bozuk stilleri es geçiyoruz
-                            wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellStyles: false, sheetStubs: true });
-                            const data = extractExcelData(wb.Sheets[wb.SheetNames[0]]);
-                            resolve({ type: 'xlsx', data: data });
-                        }
-                    } catch(err) { reject(err); }
-                };
-                reader.onerror = reject;
-                
-                if (file.name.toLowerCase().endsWith('.csv')) reader.readAsText(file);
-                else reader.readAsArrayBuffer(file);
-            });
+        // KESİN ÇÖZÜM: Bütün dosyaları doğrudan ArrayBuffer (Raw Bytes) olarak okuyup parse eder.
+        // Bu sayede FileReader senkronizasyon hataları ve CSV/UTF8 bozulmaları tarihe karışır.
+        async function readSafeFile(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const data = new Uint8Array(arrayBuffer);
+            const wb = XLSX.read(data, { type: 'array' });
+            const sheetData = extractExcelData(wb.Sheets[wb.SheetNames[0]]);
+            return { type: file.name.toLowerCase().endsWith('.csv') ? 'csv' : 'xlsx', data: sheetData };
         }
 
         // =========================================
@@ -376,26 +354,25 @@
 
             try {
                 for(let file of files) {
-                    const result = await readFileData(file);
-                    // Hafızada tutmak için önceki verilere ekle
+                    const result = await readSafeFile(file);
+                    
                     if(result.type === 'csv') csvRawData = csvRawData.concat(result.data);
                     if(result.type === 'xlsx') xlsxRawData = xlsxRawData.concat(result.data);
                 }
 
                 if(csvRawData.length === 0 && xlsxRawData.length === 0) {
-                    statusBox.innerHTML = `<span class="text-red-500">Dosyalar boş veya okunamadı!</span>`;
+                    statusBox.innerHTML = `<span class="text-red-500">Dosyalar boş veya uygun formatta değil!</span>`;
                     return;
                 }
 
                 runMatchingLogic();
                 
-                document.getElementById('status-badge').style.display = 'flex';
                 statusBox.innerHTML = `<span class="text-emerald-500"><i class="fa-solid fa-check mr-1"></i> Analiz başarıyla tamamlandı.</span>`;
                 setTimeout(() => statusBox.classList.add('hidden'), 4000);
 
             } catch (err) {
                 console.error(err);
-                statusBox.innerHTML = `<span class="text-red-500"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Hata: Dosya formatı bozuk veya okunamıyor.</span>`;
+                statusBox.innerHTML = `<span class="text-red-500"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Dosya formatı desteklenmiyor veya bozuk.</span>`;
             }
         }
 
@@ -403,11 +380,11 @@
             const csvMap = new Map();
             const excelMap = new Map();
 
-            // 1. CSV AYRIŞTIRMA (orders.csv)
+            // 1. CSV'den verileri topla
             csvRawData.forEach(r => {
                 const keys = Object.keys(r);
                 const idKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'order id' || s.includes('sipariş no'); });
-                if (!idKey || !r[idKey]) return;
+                if (!idKey || r[idKey] === undefined) return;
                 const oid = String(r[idKey]).trim();
 
                 const custKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'customer' || s.includes('müşteri'); });
@@ -416,45 +393,48 @@
                 const paymentKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'payment method' || s.includes('ödeme'); });
                 const pickerKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'picker' || s.includes('toplayıcı'); });
 
-                let origAmt = formatMoney(r['Original Amount'] || r['Sipariş Tutarı']);
-                let finalAmt = formatMoney(r['Final Amount'] || r['Teslimat Tutarı']);
-                let statusVal = statusKey ? String(r[statusKey]).trim() : '';
+                // Original Amount veya Sipariş Tutarı eşleştirmesi
+                let origKey = keys.find(k => k.toLowerCase().trim() === 'original amount' || k.toLowerCase().trim() === 'sipariş tutarı');
+                let finalKey = keys.find(k => k.toLowerCase().trim() === 'final amount' || k.toLowerCase().trim() === 'teslimat tutarı');
+
+                let origAmt = origKey ? formatMoney(r[origKey]) : null;
+                let finalAmt = finalKey ? formatMoney(r[finalKey]) : null;
                 
+                let statusVal = statusKey ? String(r[statusKey]).trim() : '';
                 let pickerVal = pickerKey ? String(r[pickerKey]).replace(/N\/A/ig, '').trim() : '-';
                 if(!pickerVal) pickerVal = '-';
 
                 csvMap.set(oid, { 
                     orig: origAmt, 
                     final: finalAmt, 
-                    cust: custKey ? r[custKey] : 'Müşteri Bilinmiyor', 
+                    cust: custKey ? String(r[custKey]) : 'Müşteri Bilinmiyor', 
                     status: statusVal,
-                    time: timeKey ? r[timeKey] : '',
-                    payment: paymentKey ? r[paymentKey] : '',
+                    time: timeKey ? String(r[timeKey]) : '',
+                    payment: paymentKey ? String(r[paymentKey]) : '',
                     picker: pickerVal
                 });
             });
 
-            // 2. EXCEL AYRIŞTIRMA (orderDetails.xlsx)
+            // 2. Excel'den verileri topla
             xlsxRawData.forEach(r => {
                 const keys = Object.keys(r);
                 const idKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'sipariş no' || s === 'order id'; });
-                if (!idKey || !r[idKey]) return;
+                if (!idKey || r[idKey] === undefined) return;
                 const oid = String(r[idKey]).trim();
 
-                let araToplam = formatMoney(r['Ara Toplam'] || r['Total'] || r['Sipariş Tutarı']);
+                let araKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'ara toplam' || s === 'total' || s === 'sipariş tutarı'; });
                 let prodKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'sipariş ürünleri' || s === 'product name' || s.includes('ürün'); });
                 let statusKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'sipariş durumu' || s === 'status'; });
                 let timeKey = keys.find(k => { const s = k.toLowerCase().trim(); return s === 'siparişin alındığı zaman'; });
 
                 excelMap.set(oid, { 
-                    araToplam: araToplam, 
-                    prods: prodKey ? r[prodKey] : '', 
+                    araToplam: araKey ? formatMoney(r[araKey]) : null, 
+                    prods: prodKey ? String(r[prodKey]) : '', 
                     status: statusKey ? String(r[statusKey]).trim() : '',
-                    time: timeKey ? r[timeKey] : ''
+                    time: timeKey ? String(r[timeKey]) : ''
                 });
             });
 
-            // 3. EŞLEŞTİRME VE FARK HESAPLAMA
             const allIds = new Set([...csvMap.keys(), ...excelMap.keys()]);
             totalAnalyzedCount = allIds.size;
             mergedData = [];
@@ -468,25 +448,28 @@
                 let prods = (e && e.prods) ? e.prods : 'Ürün verisi bulunamadı';
                 let time = (c && c.time) ? c.time : (e && e.time ? e.time : '-');
                 let payment = (c && c.payment) ? c.payment : 'Online Kredi Kartı';
-                let picker = (c && c.picker) ? c.picker : '-'; 
+                let picker = (c && c.picker) ? c.picker : '-';
 
                 const stUpper = status.toUpperCase();
                 // Kesinlikle iptal olanları listeye dahil etmiyoruz
                 if (stUpper.includes('CANCEL') || stUpper.includes('İPTAL')) {
-                    return;
+                    return; 
                 }
 
+                // Beklenen sipariş tutarı
                 let expectedAmt = (e && e.araToplam !== null) ? e.araToplam : (c ? c.orig : null);
+                // Gerçekleşen (teslim edilen) tutar
                 let actualAmt = c ? c.final : null;
 
-                // Veri yoksa veya teslimat tutarı 0 ise pas geç (Sipariş henüz kuryede olabilir)
+                // Veri yoksa veya teslimat tutarı 0 ise (Sipariş henüz kuryede olabilir)
                 if (expectedAmt === null || actualAmt === null || actualAmt === 0) return;
 
                 let diff = expectedAmt - actualAmt;
                 
-                // Sadece kuruş farkından büyük olan "gerçek" farkları tespit et (örn: 0.05 TL'den büyük farklar)
+                // Sadece kuruş farkından büyük olan "gerçek" farkları tespit et
                 if (Math.abs(diff) >= 0.05) {
                     
+                    // YAPAY ZEKA TESPİTİ
                     let aiNote = "";
                     if(diff > 0) {
                         aiNote = `<span class="text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded text-[10px]"><i class="fa-solid fa-triangle-exclamation"></i> Muhtemel eksik ürün veya stok yokluğu</span>`;
@@ -500,16 +483,17 @@
                         status: status,
                         time: time,
                         payment: payment,
-                        picker: picker, 
+                        picker: picker,
                         originalAmt: expectedAmt,
                         finalAmt: actualAmt,
-                        diffAmt: diff, 
+                        diffAmt: diff, // Eksi veya Artı değerli tutar
                         products: prods,
                         aiNote: aiNote
                     });
                 }
             });
 
+            // Verileri kalıcı hafızaya yaz
             localStorage.setItem('ys_merged_data', JSON.stringify(mergedData));
             localStorage.setItem('ys_total_count', totalAnalyzedCount);
 
@@ -521,15 +505,15 @@
         // UI GÜNCELLEME VE LİSTELEME
         // =========================================
         function updateKPIs() {
-            let totalLoss = 0;
-            // Sadece Şirketin kaybettiği tutarları topla (Beklenen > Gerçekleşen)
+            let totalActivity = 0;
+            // Tüm mutlak hareket (Artı veya eksi farketmez) toplam hacmi yansıtsın
             mergedData.forEach(m => {
-                if (m.diffAmt > 0) totalLoss += m.diffAmt; 
+                totalActivity += Math.abs(m.diffAmt); 
             });
             
             document.getElementById('kpi-total').innerText = totalAnalyzedCount || 0;
             document.getElementById('kpi-diff-count').innerText = mergedData.length;
-            document.getElementById('kpi-diff-sum').innerText = displayMoney(totalLoss);
+            document.getElementById('kpi-diff-sum').innerText = displayMoney(totalActivity);
             document.getElementById('badge-count').innerText = `${mergedData.length} Kayıt`;
         }
 
@@ -557,8 +541,8 @@
 
             if(sortCol) {
                 filtered.sort((a,b) => {
-                    let valA = col === 'diffAmt' ? Math.abs(a[sortCol]) : a[sortCol];
-                    let valB = col === 'diffAmt' ? Math.abs(b[sortCol]) : b[sortCol];
+                    let valA = sortCol === 'diffAmt' ? Math.abs(a[sortCol]) : a[sortCol];
+                    let valB = sortCol === 'diffAmt' ? Math.abs(b[sortCol]) : b[sortCol];
 
                     if(typeof valA === 'string') return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
                     return sortAsc ? valA - valB : valB - valA;
@@ -567,7 +551,7 @@
 
             if (filtered.length === 0) {
                 tbody.innerHTML = `
-                    <tr><td colspan="7" class="text-center py-24">
+                    <tr><td colspan="8" class="text-center py-24">
                         <div class="flex flex-col items-center justify-center text-slate-400">
                             <i class="fa-solid fa-face-smile text-5xl mb-4 opacity-30 text-emerald-500"></i>
                             <p class="font-bold text-sm text-slate-500">Harika! Filtreye uyan tutar farkı bulunamadı.</p>
@@ -586,8 +570,9 @@
                     statusBadge = `<span class="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider"><i class="fa-solid fa-check"></i> Teslim Edildi</span>`;
                 }
 
-                let diffColorClass = m.diffAmt > 0 ? "text-brand-pink" : "text-emerald-500";
-                let diffSign = m.diffAmt > 0 ? "" : "+"; 
+                // Eksi bakiye mi artı bakiye mi? (diff > 0 şirketin zararı, diff < 0 müşterinin fazla ödediği)
+                let diffColorClass = m.diffAmt > 0 ? "text-[#ff0050]" : "text-emerald-500";
+                let diffSign = m.diffAmt > 0 ? "-" : "+";
 
                 return `
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/80 transition border-b border-slate-100 dark:border-slate-700/50 row-anim" style="animation-delay: ${delay}s">
@@ -608,7 +593,7 @@
                     <td class="py-4 px-5 border-r border-slate-100 dark:border-slate-800 text-right font-black ${diffColorClass} text-base">${diffSign}${displayMoney(Math.abs(m.diffAmt))}</td>
                     <td class="py-4 px-5">
                         <div class="flex flex-col gap-2">
-                            <p class="text-xs text-slate-600 dark:text-slate-400 leading-snug whitespace-normal break-words max-w-[400px] line-clamp-2" title="${m.products}">
+                            <p class="text-xs text-slate-600 dark:text-slate-400 leading-snug whitespace-normal break-words max-w-[350px] line-clamp-2" title="${m.products}">
                                 ${m.products}
                             </p>
                             <div>${m.aiNote}</div>
@@ -633,7 +618,7 @@
                 'Durum': m.status,
                 'Beklenen Tutar': m.originalAmt,
                 'Gerçekleşen Teslimat Tutarı': m.finalAmt,
-                'Fark (Kayıp) Tutarı': m.diffAmt,
+                'Fark Tutarı': m.diffAmt,
                 'Siparişteki Ürünler': m.products
             }));
             const wb = XLSX.utils.book_new();
